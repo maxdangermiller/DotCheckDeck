@@ -42,8 +42,14 @@ class Person(db.Model):
     symbol = db.Column(db.String(16))
     label = db.Column(db.String(16))
 
+    def __str__(self) -> str:
+        return f"<Person {self.symbol} {self.label}>"
+    
+    def __repr__(self) -> str:
+        return f"<Person {self.symbol} {self.label}>"
 
-db.create_all()
+
+# db.create_all()
 
 
 def addAllDataFromPDF(file):
@@ -78,6 +84,15 @@ def addAllDataFromPDF(file):
 
 
 if __name__ == "__main__":
-    addAllDataFromPDF("Mvt-1and2.pdf")
+    # addAllDataFromPDF("Mvt-1and2.pdf")
+    # print(Dot.query.all())
+    import convertHashToCords
+
+    person = Dot.query.all()[0]
+    convertHashToCords.convertHashToCords(
+        person.direction, person.line, person.steps, 
+        person.side, person.fbSteps, person.fbDirection, 
+        person.useHash
+    )
 
     
