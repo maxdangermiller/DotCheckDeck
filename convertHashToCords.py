@@ -1,4 +1,9 @@
+from turtle import Turtle
+
+
 def side2Convert(line) -> int:
+    if line == 50:
+        return 50
     if line == 45:
         return 55
     if line == 40:
@@ -19,19 +24,27 @@ def side2Convert(line) -> int:
         return 95
     if line == 0:
         return 100
+    print(f"ERROR WITH LINE: {line}")
     raise ValueError
 
 
-def hashConvert(useHash):
-    pass
+def hashConvert(useHash) -> int:
+    if useHash == "Front side":
+        return 160
+    if useHash == "Front Hash":
+        return 106 + 2/3
+    if useHash == "Back Hash":
+        return 53 + 1/3
+    return 0
 
 
-def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHash):
-    print(f"direction: {direction}, line: {line}, steps: {steps}, side: {side}, fbSteps: {fbSteps}, fbDirection: {fbDirection}, useHash: {useHash}")
+def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHash, width=750, height=400, debug=False):
+    # print(f"direction: {direction}, line: {line}, steps: {steps}, side: {side},"
+    #    + f" fbSteps: {fbSteps}, fbDirection: {fbDirection}, useHash: {useHash}")
 
     # 15 to 8 ratio
-    width = 1500
-    height = 800
+    # width = 750
+    # height = 400
 
     wHalf = width / 2
 
@@ -42,7 +55,7 @@ def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHa
     else:
         dModifier = -1
 
-    if line != "yd":
+    if line != "ln":
         # Side 1 is left
         if side == 1:
             sModifier = 1
@@ -65,17 +78,22 @@ def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHa
     else:
         fbdModifier = 1
 
+    ftInStep = 1.875
 
+    hashY = hashConvert(useHash)
 
-    relY = int(fbSteps) + (dModifier * sModifier * steps)
-    y = round(relY * (height / 100))
-
-
-    print(f"rel: ({relX}%, y) -> ({x}, y)")
-
+    if debug:
+        print(f"{hashY} + {(fbdModifier * fbSteps * ftInStep)} = {hashY + (fbdModifier * fbSteps * ftInStep)}")
+    
+    relY = hashY + (fbdModifier * fbSteps * ftInStep)
     """
-    Front Side Line: 0%
-    Front Hash: 0.33375%
-    Back Hash: 0.66625%
-    Back Side Line 100%
+     relY       ?
+    ------ = --------
+     160      height
     """
+    y = round((relY * height) / 160)
+
+    if debug:
+        print(f"rel: ({relX}yd, {relY}ft) -> ({x}, {y})")
+    
+    return x, y

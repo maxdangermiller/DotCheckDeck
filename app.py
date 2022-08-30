@@ -27,7 +27,7 @@ class Dot(db.Model):
     useHash = db.Column(db.String(32))
 
     def __repr__(self):
-        return f"Dot(setNumb:)"
+        return f"Dot({self.setNumb})"
 
 
 class Set(db.Model):
@@ -72,32 +72,59 @@ def addAllDataFromPDF(file):
                 db.session.commit()
             else:
                 _set = Set.query.filter_by(setID=str(dot.setNumb)).first()
-            print(f"Adding dot: '{dot}' to DATABASE")
+            print(f"Adding dot: '{dot}' to DATABASE [SET {_set.setID}]")
             _dot = Dot(
-                setNumb=_set.id, personID=person.id, direction=str(dot.direction),
+                setNumb=_set.setID, personID=person.id, direction=str(dot.direction),
                 line=str(dot.line), steps=float(dot.steps), side=int(dot.side), fbSteps=float(dot.fbSteps),
                 fbDirection=str(dot.fbDirection), useHash=str(dot.useHash)
             )
             db.session.add(_dot)
             db.session.commit()
-    
+
 
 
 if __name__ == "__main__":
     # addAllDataFromPDF("Mvt-1and2.pdf")
-    # print(Dot.query.all())
+    
+    import tkinter as tk
+    window = tk.Tk()
+
+    window.geometry("750x400")
+
+    c= tk.Canvas(window, width=750, height=400)
+
+    for x in range(11):
+        val = x * (750 / 20)
+        c.create_line(val, 0, val, 400)
+        c.create_text(val, 300, text=f"{x * 5}", fill="black", font=('Helvetica 16'))
+    for x in range(11, 21):
+        val = x * (750 / 20)
+        c.create_line(val, 0, val, 400)
+        c.create_text(val, 300, text=f"{(20 - x) * 5}", fill="black", font=('Helvetica 16'))
+
+
     import convertHashToCords
 
-    person = Dot.query.all()[80]
-    convertHashToCords.convertHashToCords(
-        person.direction, person.line, person.steps, 
-        person.side, person.fbSteps, person.fbDirection, 
-        person.useHash
-    )
-
-    convertHashToCords.convertHashToCords(
-        person.direction, person.line, person.steps,
-        2, person.fbSteps, person.fbDirection,
-        person.useHash
-    )
+    set = Set.query.all()[34]
     
+    dots = Dot.query.filter(Dot.setNumb == set.setID).all()
+    
+    print(f"Showing set {set.setID}; with {len(dots)} dots")
+
+    for dot in dots:
+        x, y = convertHashToCords.convertHashToCords(
+            dot.direction, dot.line, dot.steps, 
+            dot.side, dot.fbSteps, dot.fbDirection, 
+            dot.useHash
+        )
+        # print(f"({x}, {y})")
+        person = Person.query.filter(Person.id == dot.personID).first()
+
+        c.create_oval(x-2,y-2,x+2,y+2)
+        # print(person.label)
+        c.create_text(x, y - 4, text=person.label, fill="black", font=('Helvetica 8'))
+        
+    
+    c.pack()
+    
+    window.mainloop()

@@ -44,11 +44,13 @@ def goThroughTable(regions_raw) -> list:
 				setNumb = part1[0]
 				measure = part1[1]
 				counts = int(part1[2])
+				# print(part1)
 
 				# When it says it's on the 50, it doesn't say side, this handles that
 				if part1[3] != "On":
 					side = int(part1[4].replace(":", ""))
 					steps = float(part1[5].replace("On", "0"))  # The replace method is to convert On to 0, so it can be converted to a float
+
 
 					# Check to see if we're on the line
 					if steps != 0:
@@ -56,7 +58,8 @@ def goThroughTable(regions_raw) -> list:
 						line = part1[8]
 					else:
 						direction = ""
-						line = part1[7]
+						line = part1[6]
+						
 
 				# This means the dot is on the 50!
 				# ['16', '63-66', '16', 'On', '50', 'yd', 'ln']
@@ -78,7 +81,7 @@ def goThroughTable(regions_raw) -> list:
 					line = part1[7]
 				else:
 					direction = ""
-					line = part1[6]
+					line = part1[5]
 
 			part2 = regions_raw[page]["data"][x][3]["text"].split(" ")
 			# ['13.0', 'steps', 'In', 'Front', 'Of', 'Front', 'Hash', '(HS)']
@@ -88,15 +91,14 @@ def goThroughTable(regions_raw) -> list:
 			if part2[0] != "On":
 				fbSteps = float(part2[0])
 				fbDirection = part2[2].replace("In", "Front")
-				if direction == "Front":
-					useHash = f"{part2[5]} {part2[6]}"
-				else:
-					useHash = f"{part2[3]} {part2[4]}"
 			# ['On', 'Front', 'Hash', '(HS)']
 			else:
 				fbSteps = 0.0
 				fbDirection = "On"
-				useHash = f"{part2[1]} {part2[2]}"
+			
+			useHash = f"{part2[len(part2) - 3]} {part2[len(part2) - 2]}"
+			
+			# print(f"{useHash}: {part2}")
 
 			dot = dotHelperClasses.Dot(setNumb, measure, counts, steps, direction, line, side, fbSteps, fbDirection, useHash)
 			dots.append(dot)
@@ -114,7 +116,7 @@ def pdfReader(file) -> list:
 	n_pages = pdfReaderObj.getNumPages()
 
 	pages = [x for x in range(1, n_pages + 1)]
-	# pages = [18, 19]
+	# pages = [15]
 	print(f"Trying to read pages {pages}")
 
 	# Read the top right table in json
