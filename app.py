@@ -88,11 +88,16 @@ if __name__ == "__main__":
     # print(Dot.query.all())
     import convertHashToCords
 
-    person = Dot.query.all()[0]
+    person = Dot.query.all()[80]
     convertHashToCords.convertHashToCords(
         person.direction, person.line, person.steps, 
         person.side, person.fbSteps, person.fbDirection, 
         person.useHash
     )
 
+    convertHashToCords.convertHashToCords(
+        person.direction, person.line, person.steps,
+        2, person.fbSteps, person.fbDirection,
+        person.useHash
+    )
     
