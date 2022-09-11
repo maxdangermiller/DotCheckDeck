@@ -97,3 +97,31 @@ def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHa
         print(f"rel: ({relX}yd, {relY}ft) -> ({x}, {y})")
     
     return x, y
+
+
+# This will give the points between this and next dot
+def findDirectPath(x1, y1, x2, y2, slices=16) -> list():
+    # Calculate how much movement is happening
+    difference = x2 - x1
+
+    # print(f"({x1}, {y1}) -> ({x2}, {y2}), diff: {difference}")
+
+    cords = list()
+    
+    for i in range(1, slices + 1):
+        movement = (difference / slices) * i
+
+        if x2 - x1 != 0:
+            m = (y2 - y1) / (x2 - x1)
+        else:
+            m = 0
+        # print(f"   (y2 - y1) / (x2 - x1) = ({y2} - {y1}) / ({x2} - {x1}) = {y2 - y1} / {x2 - x1}")
+        x = movement
+
+        # y = mx + b | Linear equation
+        y = m * x + y1
+        # print(f"y = mx + b | {y} = ({m})({x}) + {y1}")
+
+        cords.append({"x": round(x + x1), "y": round(y)}) 
+    
+    return cords
