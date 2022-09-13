@@ -44,13 +44,18 @@ class Set(db.Model):
     measure = db.Column(db.String(16))
     counts = db.Column(db.Integer, nullable=False)
 
+    def __str__(self):
+        return f"<Set {self.setID}>"
+
+    def __repr__(self):
+        return f"<Set {self.setID}>"
+
 
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(16))
     label = db.Column(db.String(16))
     email = db.Column(db.String(128), unique=True)
-    """
     password_hash = db.Column(db.String(128))
     firstName = db.Column(db.String(64))
     lastName = db.Column(db.String(64))
@@ -66,11 +71,10 @@ class Users(db.Model):
     
     def __repr__(self) -> str:
         return f"<User {self.firstName} {self.lastName} > {self.symbol} {self.label}>"
-    """
 
 
 # Uncomment when resetting the database
-# db.create_all()
+db.create_all()
 
 # Serializers
 class DotSchema(ma.Schema):
@@ -193,35 +197,40 @@ def addAllDataFromPDF(file):
 
 
 # For testing without web server
-def GUITest():
+def GUITest(width=750, height=400):
     import tkinter as tk
     window = tk.Tk()
 
-    window.geometry("750x400")
+    window.geometry(f"{width}x{height}")
 
-    c= tk.Canvas(window, width=750, height=400)
+    c = tk.Canvas(window, width=width, height=height)
 
     for x in range(11):
-        val = x * (750 / 20)
-        c.create_line(val, 0, val, 400)
-        c.create_text(val, 300, text=f"{x * 5}", fill="black", font=('Helvetica 16'))
+        val = x * (width / 20)
+        c.create_line(val, 0, val, height)
+        c.create_text(val, height * 0.75, text=f"{x * 5}", fill="black", font=('Helvetica 16'))
     for x in range(11, 21):
-        val = x * (750 / 20)
-        c.create_line(val, 0, val, 400)
-        c.create_text(val, 300, text=f"{(20 - x) * 5}", fill="black", font=('Helvetica 16'))
+        val = x * (width / 20)
+        c.create_line(val, 0, val, height)
+        c.create_text(val, height * 0.75, text=f"{(20 - x) * 5}", fill="black", font=('Helvetica 16'))
 
+    c.create_line(0, height * (1 / 3), width, height * (1 / 3))
+    c.create_line(0, height * (2 / 3), width, height * (2 / 3))
 
     import convertHashToCords
 
-    set = Set.query.all()[31]
-    print(set.setID)
-    dots = Dot.query.filter(Dot.setNumb == set.setID).all()
+    print(Set.query.all())
 
-    set2 = Set.query.all()[33]
+    set = Set.query.filter(Set.setID == "1").first()
+    print(set.setID)
+    dots = Dot.query.filter(Dot.setNumb == set.id).all()
+
+    set2 = Set.query.filter(Set.setID == "2").first()
     print(set2.setID)
-    dots2 = Dot.query.filter(Dot.setNumb == set2.setID).all()
+    dots2 = Dot.query.filter(Dot.setNumb == set2.id).all()
     
     print(f"Showing set {set.setID}; with {len(dots)} dots")
+    print(f"Showing set {set2.setID}; with {len(dots2)} dots")
 
     for i in range(len(dots)):
         dot = dots[i]
@@ -229,18 +238,18 @@ def GUITest():
         x, y = convertHashToCords.convertHashToCords(
             dot.direction, dot.line, dot.steps, 
             dot.side, dot.fbSteps, dot.fbDirection, 
-            dot.useHash
+            dot.useHash, width=width, height=height
         )
         x2, y2 = convertHashToCords.convertHashToCords(
             dot2.direction, dot2.line, dot2.steps, 
-            dot2.side, dot.fbSteps, dot2.fbDirection, 
-            dot2.useHash
+            dot2.side, dot2.fbSteps, dot2.fbDirection,
+            dot2.useHash, width=width, height=height
         )
-        # print(f"({x}, {y})")
+        # print(f"({x}, {y}) and ({x2, y2})")
         person = Users.query.filter(Users.id == dot.userID).first()
 
         c.create_oval(x-2,y-2,x+2,y+2)
-        c.create_oval(x2-2,y2-2,x2+2,y2+2)
+        c.create_oval(x2-2,y2-2,x2+2,y2+2, outline="red")
 
         c.create_line(x, y, x2, y2)
 
@@ -249,6 +258,7 @@ def GUITest():
 
         # print(person.label)
         c.create_text(x, y - 4, text=person.label, fill="black", font=('Helvetica 8'))
+        c.create_text(x2, y2 - 4, text=person.label, fill="red", font=('Helvetica 8'))
         
     
     c.pack()
@@ -259,7 +269,7 @@ def GUITest():
 if __name__ == "__main__":
     # addAllDataFromPDF("Mvt-1and2.pdf")
 
-    GUITest()
+    # GUITest(1500, 800)
     
-    # app.run(debug=True)
+    app.run(debug=True)
     

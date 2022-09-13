@@ -28,7 +28,7 @@ def side2Convert(line) -> int:
     raise ValueError
 
 
-def hashConvert(useHash) -> int:
+def hashConvert(useHash) -> float:
     if useHash == "Front side":
         return 160
     if useHash == "Front Hash":
@@ -100,7 +100,7 @@ def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHa
 
 
 # This will give the points between this and next dot
-def findDirectPath(x1, y1, x2, y2, slices=16) -> list():
+def findDirectPath(x1, y1, x2, y2, slices=16) -> []:
     # Calculate how much movement is happening
     difference = x2 - x1
 
