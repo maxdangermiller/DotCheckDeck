@@ -17,7 +17,7 @@ const Canvas = props => {
         let frameCount = 0
         let animationFrameId
 
-        const drawLine = (x0, y0, x1, y1, color, emit) => {
+        const drawLine = (x0, y0, x1, y1, color) => {
             context.beginPath();
             context.moveTo(x0, y0);
             context.lineTo(x1, y1);
@@ -27,22 +27,14 @@ const Canvas = props => {
             context.closePath();
 
             if (!emit) { return; }
-            const w = canvas.width;
-            const h = canvas.height;
-
-            socket.emit('drawing', {
-                x0: x0 / w,
-                y0: y0 / h,
-                x1: x1 / w,
-                y1: y1 / h,
-                color,
-            });
+            // const w = canvas.width;
+            // const h = canvas.height;
         };
 
-        const drawPoint = (x, y, color, emit) => {
+        const drawPoint = (x, y, color) => {
             context.beginPath();
             context.fillStyle = color;
-            context.fillRect(x, y, 1, 1);
+            context.fillCircle(x-1, y-1, 2, 2);
             context.fill();
         };
 
@@ -59,26 +51,30 @@ const Canvas = props => {
                 canvas.height = size;
             }
 
+            clear();
+            
+            // Calls a function provided in props that returns a dict of values
             var data = draw()
-            if (data['type'] === "drawLine") {
-                drawLine(data['startX'], data['startY'], data['endX'], data['endY'])
-            } else if (data['type'] === "draw") {
-                for (let i = 0; i < data['pts'].length; i++) {
-                    const x = data['pts'][i]['x'] * (canvas.width / 512);
-                    const y = data['pts'][i]['y'] * (canvas.width / 512);
 
-                    const r = data['color']['r']
-                    const g = data['color']['g']
-                    const b = data['color']['b']
-
-                    let color = "rgb(" + r + "," + g + "," + b +")"
-
-
-                    drawPoint(x, y, color);
-                }
-            } else if (data['type'] === "clear") {
-                clear();
+            /* 
+            -- Draw Return Structure --
+            {
+                "lines": [ {"startX": 0, "startY": 0, "endX": 100, "endY": 100} ],
+                "pts": [ { "x": 0, "y": 0, "r": 255, "g": 255, "b": 255 } ]
             }
+            */
+            for (var x = 0; x < data["lines"].length; x++) {
+                line = data["lines"][x];
+                color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
+                drawLine(line["startX"], line["startY"], line["endX"], line["endY"], color);
+            }
+
+            for (var x = 0; x < data["pts"].length; x++) {
+                dot = data["pts"][x];
+                color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
+                drawPoint(line["x"], line["y"], color);
+            }
+            
             ctx.restore()
 
             frameCount++

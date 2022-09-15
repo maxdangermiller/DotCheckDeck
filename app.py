@@ -1,12 +1,12 @@
-from calendar import c
-from enum import unique
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
+
+import convertHashToCords
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -74,7 +74,7 @@ class Users(db.Model):
 
 
 # Uncomment when resetting the database
-db.create_all()
+# db.create_all()
 
 # Serializers
 class DotSchema(ma.Schema):
@@ -158,10 +158,43 @@ class UsersListResource(Resource):
     """
 
 
+class CordListResource(Resource):
+    def get(self):
+        setNumb = request.args.get('set_numb', None)
+        userID = request.args.get('user_id', None)
+        width = request.args.get('width', 1500)
+        height = request.args.get('height', 800)
+        print(userID)
+
+        if setNumb is not None and userID is not None:
+            dots = Dot.query.filter(Dot.setNumb == setNumb, Dot.userID == userID).all()
+        elif setNumb is not None:
+            dots = Dot.query.filter(Dot.setNumb == setNumb).all()
+        elif userID is not None:
+            dots = Dot.query.filter(Dot.userID == userID).all()
+        else:
+            dots = Dot.query.all()
+
+        output = list()
+
+        for dot in dots:
+            x, y = convertHashToCords.convertHashToCords(
+                dot.direction, dot.line, dot.steps, 
+                dot.side, dot.fbSteps, dot.fbDirection, 
+                dot.useHash, width=width, height=height
+            )
+
+            person = Users.query.filter(Users.id == dot.userID).first()
+
+            output.append({"x": x, "y": y, "userLabel": person.label, "userID": person.id})
+
+        return dots_schema.dump(dots)
+
 
 api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
 api.add_resource(UsersListResource, '/users')
+api.add_resource(CordListResource, '/cords')
 
 
 # For use to build database
@@ -196,80 +229,11 @@ def addAllDataFromPDF(file):
             db.session.commit()
 
 
-# For testing without web server
-def GUITest(width=750, height=400):
-    import tkinter as tk
-    window = tk.Tk()
-
-    window.geometry(f"{width}x{height}")
-
-    c = tk.Canvas(window, width=width, height=height)
-
-    for x in range(11):
-        val = x * (width / 20)
-        c.create_line(val, 0, val, height)
-        c.create_text(val, height * 0.75, text=f"{x * 5}", fill="black", font=('Helvetica 16'))
-    for x in range(11, 21):
-        val = x * (width / 20)
-        c.create_line(val, 0, val, height)
-        c.create_text(val, height * 0.75, text=f"{(20 - x) * 5}", fill="black", font=('Helvetica 16'))
-
-    c.create_line(0, height * (1 / 3), width, height * (1 / 3))
-    c.create_line(0, height * (2 / 3), width, height * (2 / 3))
-
-    import convertHashToCords
-
-    print(Set.query.all())
-
-    set = Set.query.filter(Set.setID == "1").first()
-    print(set.setID)
-    dots = Dot.query.filter(Dot.setNumb == set.id).all()
-
-    set2 = Set.query.filter(Set.setID == "2").first()
-    print(set2.setID)
-    dots2 = Dot.query.filter(Dot.setNumb == set2.id).all()
-    
-    print(f"Showing set {set.setID}; with {len(dots)} dots")
-    print(f"Showing set {set2.setID}; with {len(dots2)} dots")
-
-    for i in range(len(dots)):
-        dot = dots[i]
-        dot2 = dots2[i]
-        x, y = convertHashToCords.convertHashToCords(
-            dot.direction, dot.line, dot.steps, 
-            dot.side, dot.fbSteps, dot.fbDirection, 
-            dot.useHash, width=width, height=height
-        )
-        x2, y2 = convertHashToCords.convertHashToCords(
-            dot2.direction, dot2.line, dot2.steps, 
-            dot2.side, dot2.fbSteps, dot2.fbDirection,
-            dot2.useHash, width=width, height=height
-        )
-        # print(f"({x}, {y}) and ({x2, y2})")
-        person = Users.query.filter(Users.id == dot.userID).first()
-
-        c.create_oval(x-2,y-2,x+2,y+2)
-        c.create_oval(x2-2,y2-2,x2+2,y2+2, outline="red")
-
-        c.create_line(x, y, x2, y2)
-
-        # for thing in convertHashToCords.findDirectPath(x, y, x2, y2):
-        #    c.create_oval(thing['x'] - 2, thing['y']- 2, thing['x'] + 2, thing['y'] + 2)
-
-        # print(person.label)
-        c.create_text(x, y - 4, text=person.label, fill="black", font=('Helvetica 8'))
-        c.create_text(x2, y2 - 4, text=person.label, fill="red", font=('Helvetica 8'))
-        
-    
-    c.pack()
-    
-    window.mainloop()
-
-
 if __name__ == "__main__":
     # addAllDataFromPDF("Mvt-1and2.pdf")
 
-    # GUITest(1500, 800)
+    from GUITest import GUITest
+    # GUITest(1125, 600)
     
     app.run(debug=True)
     
