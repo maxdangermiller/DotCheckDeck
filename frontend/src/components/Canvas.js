@@ -35,16 +35,77 @@ const Canvas = props => {
             context.fillStyle = color;
             context.arc(x, y, 4, 0, 2 * Math.PI);
             context.fill();
+            context.closePath();
 
             context.beginPath();
             context.font = '14px serif';
             context.textBaseline = "middle";
             context.textAlign = "center";
             context.fillText(userLabel, x, y);
+            context.closePath();
         };
 
         const clear = () => {
+            // Clear everything
             context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // This draws the 5 yard lines up through the 50, from the left
+            for (var x = 0; x < 11; x++) {
+                var val = x * (canvas.width / 20);
+
+                context.beginPath();
+                context.moveTo(val, 0);
+                context.lineTo(val, canvas.height);
+                context.strokeStyle = "black";
+                context.lineWidth = 2;
+                context.stroke();
+                context.closePath();
+
+                context.beginPath();
+                context.font = '16px serif';
+                context.textBaseline = "middle";
+                context.textAlign = "center";
+                context.fillText(x * 5, val, canvas.height * 0.75);
+                context.closePath();
+            }
+
+            // This draws the 5 year lines following the 50, from the left
+            for (var x = 11; x < 21; x++) {
+                var val = x * (canvas.width / 20);
+
+                context.beginPath();
+                context.moveTo(val, 0);
+                context.lineTo(val, canvas.height);
+                context.strokeStyle = "black";
+                context.lineWidth = 2;
+                context.stroke();
+                context.closePath();
+
+                context.beginPath();
+                context.font = '16px serif';
+                context.textBaseline = "middle";
+                context.textAlign = "center";
+                context.fillText((20 - x) * 5, val, canvas.height * 0.75);
+                context.closePath();
+            }
+
+            // Draw the front HS Hash
+            context.beginPath();
+            context.moveTo(0, canvas.height * (1 / 3));
+            context.lineTo(canvas.width, canvas.height * (1 / 3));
+            context.strokeStyle = "black";
+            context.lineWidth = 2;
+            context.stroke();
+            context.closePath();
+            
+            // Draw the back HS Hash
+            context.beginPath();
+            context.moveTo(0, canvas.height * (2 / 3));
+            context.lineTo(canvas.width, canvas.height * (2 / 3));
+            context.strokeStyle = "black";
+            context.lineWidth = 2;
+            context.stroke();
+            context.closePath();
         };
 
         const render = ctx => {
