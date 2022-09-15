@@ -4,10 +4,13 @@ import './App.css';
 import Canvas from './Canvas'
 
 function App() {
-  const {dots, setDots} = useState([]);
+  const [dots, setDots] = useState([]);
+  const [curSet, setCurSet]  = useState("1");
+  const [width, setWidth]  = useState(1500);
+  const [height, setHeight]  = useState(800);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/dots?set_numb=1")
+    fetch("http://127.0.0.1:5000/cords?set_numb=1")
       .then(res => res.json())
       .then(
         (result) => {
@@ -25,7 +28,7 @@ function App() {
 
 
 
-  const draw = () => {
+  const draw = (width, height) => {
     /* 
     {
       "lines": [
@@ -47,7 +50,7 @@ function App() {
       ]
     }
     */
-    return {"lines": [], "pts": []}
+    return dots
   }
 
   return (

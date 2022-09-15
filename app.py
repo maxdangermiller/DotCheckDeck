@@ -2,6 +2,7 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
+from flask_cors import CORS, cross_origin
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
@@ -18,6 +19,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 api = Api(app)
+CORS(app)
 
 
 class Dot(db.Model):
@@ -164,7 +166,7 @@ class CordListResource(Resource):
         userID = request.args.get('user_id', None)
         width = request.args.get('width', 1500)
         height = request.args.get('height', 800)
-        print(userID)
+        # print(userID)
 
         if setNumb is not None and userID is not None:
             dots = Dot.query.filter(Dot.setNumb == setNumb, Dot.userID == userID).all()
@@ -186,9 +188,9 @@ class CordListResource(Resource):
 
             person = Users.query.filter(Users.id == dot.userID).first()
 
-            output.append({"x": x, "y": y, "userLabel": person.label, "userID": person.id})
+            output.append({"x": x, "y": y, "userLabel": person.label, "userID": person.id, "r": 0, "g": 0, "b": 0})
 
-        return dots_schema.dump(dots)
+        return {"pts": output, "lines": []}
 
 
 api.add_resource(DotListResource, '/dots')

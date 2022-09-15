@@ -26,7 +26,6 @@ const Canvas = props => {
             context.stroke();
             context.closePath();
 
-            if (!emit) { return; }
             // const w = canvas.width;
             // const h = canvas.height;
         };
@@ -34,7 +33,7 @@ const Canvas = props => {
         const drawPoint = (x, y, color) => {
             context.beginPath();
             context.fillStyle = color;
-            context.fillCircle(x-1, y-1, 2, 2);
+            context.arc(x, y, 4, 0, 2 * Math.PI);
             context.fill();
         };
 
@@ -63,16 +62,21 @@ const Canvas = props => {
                 "pts": [ { "x": 0, "y": 0, "r": 255, "g": 255, "b": 255 } ]
             }
             */
-            for (var x = 0; x < data["lines"].length; x++) {
-                line = data["lines"][x];
-                color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
-                drawLine(line["startX"], line["startY"], line["endX"], line["endY"], color);
+            console.log(data)
+            if (data["lines"]) {
+                for (var x = 0; x < data["lines"].length; x++) {
+                    var line = data["lines"][x];
+                    var color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
+                    drawLine(line["startX"], line["startY"], line["endX"], line["endY"], color);
+                }
             }
 
-            for (var x = 0; x < data["pts"].length; x++) {
-                dot = data["pts"][x];
-                color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
-                drawPoint(line["x"], line["y"], color);
+            if (data["pts"]) {
+                for (var x = 0; x < data["pts"].length; x++) {
+                    var dot = data["pts"][x];
+                    var color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                    drawPoint(dot["x"], dot["y"], color);
+                }
             }
             
             ctx.restore()
