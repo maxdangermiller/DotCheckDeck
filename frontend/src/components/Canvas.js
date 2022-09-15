@@ -30,11 +30,17 @@ const Canvas = props => {
             // const h = canvas.height;
         };
 
-        const drawPoint = (x, y, color) => {
+        const drawPoint = (x, y, color, userLabel) => {
             context.beginPath();
             context.fillStyle = color;
             context.arc(x, y, 4, 0, 2 * Math.PI);
             context.fill();
+
+            context.beginPath();
+            context.font = '14px serif';
+            context.textBaseline = "middle";
+            context.textAlign = "center";
+            context.fillText(userLabel, x, y);
         };
 
         const clear = () => {
@@ -75,7 +81,7 @@ const Canvas = props => {
                 for (var x = 0; x < data["pts"].length; x++) {
                     var dot = data["pts"][x];
                     var color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                    drawPoint(dot["x"], dot["y"], color);
+                    drawPoint(dot["x"], dot["y"], color, dot["userLabel"]);
                 }
             }
             

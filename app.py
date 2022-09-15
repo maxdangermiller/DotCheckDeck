@@ -88,7 +88,8 @@ class School(db.Model):
 
     # GENERATE CODE!!!
     def generateCode(self) -> str:
-        self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        # self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        self.code = "12345678"
         return self.code
 
     def __str__(self) -> str:
@@ -187,20 +188,31 @@ class CordListResource(Resource):
     def get(self):
         setNumb = request.args.get('set_numb', None)
         userID = request.args.get('user_id', None)
+        schoolCode = request.args.get('school_code', None)
         width = request.args.get('width', 1500)
         height = request.args.get('height', 800)
         # print(userID)
 
+        # REQUIRE A SCHOOL CODE
+        if schoolCode == None:
+            return "Missing School Code", 404
+
+        # CHECK IF CODE IS VALID
+        school = School.query.filter(School.code == schoolCode).first()
+        if school is None:
+            return "INVALID SCHOOL CODE", 404
+        
+
         if setNumb is not None and userID is not None:
-            setObj = Set.query.filter(Set.setNumb == setNumb).first()
-            dots = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == userID).all()
+            setObj = Set.query.filter(Set.setNumb == setNumb, Set.schoolID == school.id).first()
+            dots = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == userID, Dot.schoolID == school.id).all()
         elif setNumb is not None:
-            setObj = Set.query.filter(Set.setNumb == setNumb).first()
-            dots = Dot.query.filter(Dot.setID == setObj.id).all()
+            setObj = Set.query.filter(Set.setNumb == setNumb, Set.schoolID == school.id).first()
+            dots = Dot.query.filter(Dot.setID == setObj.id, Dot.schoolID == school.id).all()
         elif userID is not None:
-            dots = Dot.query.filter(Dot.userID == userID).all()
+            dots = Dot.query.filter(Dot.userID == userID, Dot.schoolID == school.id).all()
         else:
-            dots = Dot.query.all()
+            dots = Dot.query.filter(Dot.schoolID == school.id).all()
 
         output = list()
 
@@ -211,9 +223,15 @@ class CordListResource(Resource):
                 dot.useHash, width=width, height=height
             )
 
-            person = Users.query.filter(Users.id == dot.userID).first()
+            person = Users.query.filter(Users.id == dot.userID, Users.schoolID == school.id).first()
 
-            output.append({"x": x, "y": y, "userLabel": person.label, "userID": person.id, "r": 0, "g": 0, "b": 0})
+            output.append({
+                "x": x, "y": y, 
+                "userLabel": person.label, 
+                "userID": person.id, 
+                "userName": f"{person.firstName} {person.lastName}", 
+                "r": 0, "g": 0, "b": 0
+            })
 
         return {"pts": output}
 
@@ -223,23 +241,34 @@ class PathsListResource(Resource):
         setNumb1 = request.args.get('set_numb_1', "1")
         setNumb2 = request.args.get('set_numb_2', None)
         userID = request.args.get('user_id', None)
+        schoolCode = request.args.get('school_code', None)
         width = request.args.get('width', 1500)
         height = request.args.get('height', 800)
         # print(userID)
 
+        # REQUIRE A SCHOOL CODE
+        if schoolCode == None:
+            return "Missing School Code", 404
+
+        # CHECK IF CODE IS VALID
+        school = School.query.filter(School.code == schoolCode).first()
+        if school is None:
+            return "INVALID SCHOOL CODE", 404
+
+
         if setNumb2 == None:
-            tempSet1 = Set.query.filter(Set.setNumb == setNumb1).first()
-            setNumb2 = Set.query.filter(Set.id == tempSet1.id).first().setNumb
-            print(School.query.filter(School.id == tempSet1.schoolID).first())
+            tempSet1 = Set.query.filter(Set.setNumb == setNumb1, Set.schoolID == school.id).first()
+            setNumb2 = Set.query.filter(Set.id == tempSet1.id, Set.schoolID == school.id).first().setNumb
+            # print(School.query.filter(School.id == tempSet1.schoolID).first().code)
 
         if setNumb1 is not None and userID is not None:
-            setObj = Set.query.filter(Set.setNumb == setNumb1).first()
-            dots1 = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == userID).all()
+            setObj = Set.query.filter(Set.setNumb == setNumb1, Set.schoolID == school.id).first()
+            dots1 = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == userID, Dot.schoolID == school.id).all()
         elif setNumb1 is not None:
-            setObj = Set.query.filter(Set.setNumb == setNumb1).first()
-            dots1 = Dot.query.filter(Dot.setID == setObj.id).all()
+            setObj = Set.query.filter(Set.setNumb == setNumb1, Set.schoolID == school.id).first()
+            dots1 = Dot.query.filter(Dot.setID == setObj.id, Dot.schoolID == school.id).all()
         else:
-            dots1 = Dot.query.all()
+            dots1 = Dot.query.filter(Dot.schoolID == school.id).all()
 
         lines = list()
 
@@ -250,10 +279,10 @@ class PathsListResource(Resource):
                 dot.useHash, width=width, height=height
             )
 
-            person = Users.query.filter(Users.id == dot.userID).first()
+            person = Users.query.filter(Users.id == dot.userID, Users.schoolID == school.id).first()
 
-            setObj = Set.query.filter(Set.setNumb == setNumb2).first()
-            nextDot = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == person.id).first()
+            setObj = Set.query.filter(Set.setNumb == setNumb2, Set.schoolID == school.id).first()
+            nextDot = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == person.id, Dot.schoolID == school.id).first()
 
             x2, y2 = convertHashToCords.convertHashToCords(
                 nextDot.direction, nextDot.line, nextDot.steps, 
@@ -263,7 +292,7 @@ class PathsListResource(Resource):
 
             # Test here for if it's a follow the leader or straight line path
             lines.append({
-                "x": x, "y": y, "x2": x2, "y2": y2, 
+                "startX": x, "startY": y, "endX": x2, "endY": y2, 
                 "userLabel": person.label, "userID": person.id, 
                 "r": 0, "g": 0, "b": 0
             })

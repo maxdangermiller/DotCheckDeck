@@ -3,6 +3,8 @@ import logo from '../logo.svg';
 import './App.css';
 import Canvas from './Canvas'
 
+const SCHOOL_CODE = "12345678";
+
 function App() {
   const [dots, setDots] = useState([]);
   const [paths, setPaths] = useState([]);
@@ -11,7 +13,7 @@ function App() {
   const [height, setHeight]  = useState(800);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/cords?set_numb=" + curSet + "&width=" + width + "&height=" + height)
+    fetch("http://127.0.0.1:5000/cords?set_numb=" + curSet + "&school_code=" + SCHOOL_CODE + "&width=" + width + "&height=" + height)
       .then(res => res.json())
       .then(
         (result) => {
@@ -25,7 +27,7 @@ function App() {
           console.log(error);
         }
     );
-    fetch("http://127.0.0.1:5000/paths?set_numb_1=" + curSet + "&width=" + width + "&height=" + height)
+    fetch("http://127.0.0.1:5000/paths?set_numb_1=" + curSet + "&school_code=" + SCHOOL_CODE + "&width=" + width + "&height=" + height)
       .then(res => res.json())
       .then(
         (result) => {
