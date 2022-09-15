@@ -13,13 +13,13 @@ def increaseSet(canvasRef, width=750, height=400, modifier=1):
         _curSet = _curSet + modifier
 
     drawFieldLines(c=canvasRef, width=width, height=height, setID=_sets[_curSet], nextSetID=_sets[_curSet + 1])
-    renderDots(c=canvasRef, setID=_sets[_curSet], nextSetID=_sets[_curSet + 1], color="black", width=width, height=height)
+    renderDots(c=canvasRef, setNumb=_sets[_curSet], nextSetNumb=_sets[_curSet + 1], color="black", width=width, height=height)
 
 
-def renderDots(c, setID, nextSetID, color, width, height):
+def renderDots(c, setNumb, nextSetNumb, color, width, height):
     import convertHashToCords
 
-    set = Set.query.filter(Set.setID == setID).first()
+    set = Set.query.filter(Set.setNumb == setNumb).first()
     if set == None:
         global _curSet
         _curSet = str(int(_curSet) - 1)
@@ -28,14 +28,14 @@ def renderDots(c, setID, nextSetID, color, width, height):
         
         return
 
-    dots = Dot.query.filter(Dot.setNumb == set.id).all()
+    dots = Dot.query.filter(Dot.setID == set.id).all()
 
 
-    set2 = Set.query.filter(Set.setID == nextSetID).first()
-    dots2 = Dot.query.filter(Dot.setNumb == set2.id).all()
+    set2 = Set.query.filter(Set.setNumb == nextSetNumb).first()
+    dots2 = Dot.query.filter(Dot.setID == set2.id).all()
     
-    print(f"Showing set {set.setID}; with {len(dots)} dots")
-    print(f"Showing set {set2.setID}; with {len(dots2)} dots")
+    print(f"Showing set {set.setNumb}; with {len(dots)} dots")
+    print(f"Showing set {set2.setNumb}; with {len(dots2)} dots")
 
     for i in range(len(dots)):
         dot = dots[i]
@@ -93,11 +93,11 @@ def GUITest(width=750, height=400):
 
     global _sets
     for set in Set.query.all():
-        _sets.append(set.setID)
+        _sets.append(set.setNumb)
 
     drawFieldLines(c=c, width=width, height=height, setID=_sets[_curSet], nextSetID=_sets[_curSet + 1])
 
-    renderDots(c=c, setID=_sets[_curSet], nextSetID=_sets[_curSet + 1], color="black", width=width, height=height)
+    renderDots(c=c, setNumb=_sets[_curSet], nextSetNumb=_sets[_curSet + 1], color="black", width=width, height=height)
     
     c.pack()
 

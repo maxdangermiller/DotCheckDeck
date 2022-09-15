@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
 from flask_cors import CORS, cross_origin
+import random
+import string
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
@@ -24,8 +26,9 @@ CORS(app)
 
 class Dot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    setNumb = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
+    setID = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
     userID = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 
     direction = db.Column(db.String(16))
     line = db.Column(db.String(16))
@@ -37,24 +40,26 @@ class Dot(db.Model):
     useHash = db.Column(db.String(32))
 
     def __repr__(self):
-        return f"Dot({self.setNumb})"
+        return f"Dot({self.setID})"
 
 
 class Set(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    setID = db.Column(db.String(8), nullable=False)
+    schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+    setNumb = db.Column(db.String(8), nullable=False)
     measure = db.Column(db.String(16))
     counts = db.Column(db.Integer, nullable=False)
 
     def __str__(self):
-        return f"<Set {self.setID}>"
+        return f"<Set {self.setNumb}>"
 
     def __repr__(self):
-        return f"<Set {self.setID}>"
+        return f"<Set {self.setNumb}>"
 
 
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
     symbol = db.Column(db.String(16))
     label = db.Column(db.String(16))
     email = db.Column(db.String(128), unique=True)
@@ -75,14 +80,32 @@ class Users(db.Model):
         return f"<User {self.firstName} {self.lastName} > {self.symbol} {self.label}>"
 
 
+class School(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(8), unique=True)
+    name = db.Column(db.String(256))
+    email = db.Column(db.String(128))
+
+    # GENERATE CODE!!!
+    def generateCode(self) -> str:
+        self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        return self.code
+
+    def __str__(self) -> str:
+        return f"<School {self.name}>"
+    
+    def __repr__(self) -> str:
+        return f"<School {self.name}>"
+
+
 # Uncomment when resetting the database
-# db.create_all()
+db.create_all()
 
 # Serializers
 class DotSchema(ma.Schema):
     class Meta:
         fields = (
-            "id", "setNumb", "userID", "direction", "line", 
+            "id", "setID", "userID", "direction", "line", 
             "steps", "side", "fbSteps", "fbDirectsion", "useHash"
         )
         model = Dot
@@ -90,7 +113,7 @@ class DotSchema(ma.Schema):
 
 class SetSchema(ma.Schema):
     class Meta:
-        fields = ("id", "setID", "measure", "counts")
+        fields = ("id", "setNumb", "measure", "counts")
         model = Set
  
 
@@ -117,9 +140,9 @@ class DotListResource(Resource):
         print(userID)
 
         if setNumb is not None and userID is not None:
-            dots = Dot.query.filter(Dot.setNumb == setNumb, Dot.userID == userID).all()
+            dots = Dot.query.filter(Dot.setID == setNumb, Dot.userID == userID).all()
         elif setNumb is not None:
-            dots = Dot.query.filter(Dot.setNumb == setNumb).all()
+            dots = Dot.query.filter(Dot.setID == setNumb).all()
         elif userID is not None:
             dots = Dot.query.filter(Dot.userID == userID).all()
         else:
@@ -134,9 +157,9 @@ class SetListResource(Resource):
         measure = request.args.get('measure', None)
 
         if setID is not None and measure is not None:
-            sets = Set.query.filter(Set.setID == setID, Set.measure == measure).all()
+            sets = Set.query.filter(Set.setNumb == setID, Set.measure == measure).all()
         elif setID is not None:
-            sets = Set.query.filter(Set.setID == setID).all()
+            sets = Set.query.filter(Set.setNumb == setID).all()
         elif measure is not None:
             sets = Set.query.filter(Set.measure == measure).all()
         else:
@@ -169,9 +192,11 @@ class CordListResource(Resource):
         # print(userID)
 
         if setNumb is not None and userID is not None:
-            dots = Dot.query.filter(Dot.setNumb == setNumb, Dot.userID == userID).all()
+            setObj = Set.query.filter(Set.setNumb == setNumb).first()
+            dots = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == userID).all()
         elif setNumb is not None:
-            dots = Dot.query.filter(Dot.setNumb == setNumb).all()
+            setObj = Set.query.filter(Set.setNumb == setNumb).first()
+            dots = Dot.query.filter(Dot.setID == setObj.id).all()
         elif userID is not None:
             dots = Dot.query.filter(Dot.userID == userID).all()
         else:
@@ -190,13 +215,68 @@ class CordListResource(Resource):
 
             output.append({"x": x, "y": y, "userLabel": person.label, "userID": person.id, "r": 0, "g": 0, "b": 0})
 
-        return {"pts": output, "lines": []}
+        return {"pts": output}
+
+
+class PathsListResource(Resource):
+    def get(self):
+        setNumb1 = request.args.get('set_numb_1', "1")
+        setNumb2 = request.args.get('set_numb_2', None)
+        userID = request.args.get('user_id', None)
+        width = request.args.get('width', 1500)
+        height = request.args.get('height', 800)
+        # print(userID)
+
+        if setNumb2 == None:
+            tempSet1 = Set.query.filter(Set.setNumb == setNumb1).first()
+            setNumb2 = Set.query.filter(Set.id == tempSet1.id).first().setNumb
+            print(School.query.filter(School.id == tempSet1.schoolID).first())
+
+        if setNumb1 is not None and userID is not None:
+            setObj = Set.query.filter(Set.setNumb == setNumb1).first()
+            dots1 = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == userID).all()
+        elif setNumb1 is not None:
+            setObj = Set.query.filter(Set.setNumb == setNumb1).first()
+            dots1 = Dot.query.filter(Dot.setID == setObj.id).all()
+        else:
+            dots1 = Dot.query.all()
+
+        lines = list()
+
+        for dot in dots1:
+            x, y = convertHashToCords.convertHashToCords(
+                dot.direction, dot.line, dot.steps, 
+                dot.side, dot.fbSteps, dot.fbDirection, 
+                dot.useHash, width=width, height=height
+            )
+
+            person = Users.query.filter(Users.id == dot.userID).first()
+
+            setObj = Set.query.filter(Set.setNumb == setNumb2).first()
+            nextDot = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == person.id).first()
+
+            x2, y2 = convertHashToCords.convertHashToCords(
+                nextDot.direction, nextDot.line, nextDot.steps, 
+                nextDot.side, nextDot.fbSteps, nextDot.fbDirection, 
+                nextDot.useHash, width=width, height=height
+            )
+
+            # Test here for if it's a follow the leader or straight line path
+            lines.append({
+                "x": x, "y": y, "x2": x2, "y2": y2, 
+                "userLabel": person.label, "userID": person.id, 
+                "r": 0, "g": 0, "b": 0
+            })
+
+        return {"lines": lines, "paths": []}
+
 
 
 api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
 api.add_resource(UsersListResource, '/users')
 api.add_resource(CordListResource, '/cords')
+api.add_resource(PathsListResource, '/paths')
 
 
 # For use to build database
@@ -205,27 +285,36 @@ def addAllDataFromPDF(file):
     import pdfReader
 
     stuff = pdfReader.pdfReader(file)
-    print(stuff[34])
+
+    if len(School.query.all()) == 0:
+        school = School(name="U-High")
+        school.generateCode()
+        db.session.add(school)
+        db.session.commit()
+    else:
+        school = School.query.first()
+    
+    # print(stuff[34])
     for dotSheet in stuff:
         if Users.query.filter_by(symbol=dotSheet.symbol, label=dotSheet.label).first() is None:
-            user = Users(symbol=dotSheet.symbol, label=dotSheet.label)
+            user = Users(symbol=dotSheet.symbol, label=dotSheet.label, schoolID=school.id)
             db.session.add(user)
             db.session.commit()
         else:
             user = Users.query.filter_by(symbol=dotSheet.symbol, label=dotSheet.label).first()
             
         for dot in dotSheet.dots:
-            if Set.query.filter_by(setID=str(dot.setNumb)).first() is None:
-                _set = Set(setID=str(dot.setNumb), measure=dot.measure, counts=dot.counts)
+            if Set.query.filter_by(setNumb=dot.setNumb, schoolID = school.id).first() is None:
+                _set = Set(setNumb=dot.setNumb, measure=dot.measure, counts=dot.counts, schoolID=school.id)
                 db.session.add(_set)
                 db.session.commit()
             else:
-                _set = Set.query.filter_by(setID=str(dot.setNumb)).first()
-            print(f"Adding dot: '{dot}' to DATABASE [SET {_set.setID}]")
+                _set = Set.query.filter_by(setNumb = dot.setNumb, schoolID = school.id).first()
+            print(f"Adding dot: '{dot}' to DATABASE [SET {_set.setNumb}]")
             _dot = Dot(
-                setNumb=_set.id, userID=user.id, direction=str(dot.direction),
+                setID=_set.id, userID=user.id, direction=str(dot.direction),
                 line=str(dot.line), steps=float(dot.steps), side=int(dot.side), fbSteps=float(dot.fbSteps),
-                fbDirection=str(dot.fbDirection), useHash=str(dot.useHash)
+                fbDirection=str(dot.fbDirection), useHash=str(dot.useHash), schoolID=school.id
             )
             db.session.add(_dot)
             db.session.commit()
@@ -234,7 +323,7 @@ def addAllDataFromPDF(file):
 if __name__ == "__main__":
     # addAllDataFromPDF("Mvt-1and2.pdf")
 
-    from GUITest import GUITest
+    # from GUITest import GUITest
     # GUITest(1125, 600)
     
     app.run(debug=True)
