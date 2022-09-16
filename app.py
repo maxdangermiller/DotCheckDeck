@@ -1,8 +1,10 @@
+from email.policy import default
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
 from flask_cors import CORS, cross_origin
+import datetime
 import random
 import string
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -66,6 +68,10 @@ class Users(db.Model):
     password_hash = db.Column(db.String(128))
     firstName = db.Column(db.String(64))
     lastName = db.Column(db.String(64))
+    
+    activated_date = db.Column(db.DateTime, default=None, nullable=True)
+    created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+    last_updated = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -175,13 +181,65 @@ class UsersListResource(Resource):
         users = Users.query.all()
 
         return users_schema.dump(users)
-    """
+
+
+# To allow a user to setup their credentials, as by default they cannot login
+class SetUpUserResource(Resource):
+    # REQUIRES: {
+    #   "school_code": "12345678", "label": "d7",
+    #   "email": "mmiller5@uhigh.illinoisstate.edu", 
+    #   "password": "Password12345", 
+    #   "first_name": "Max", "last_name": "Miller"
+    # }
     def post(self):
-        user = Users.query.filter(
-            title=request.json['title'],
-            content=request.json['content']
-        ).first()
-    """
+        if "school_code" not in request.json:
+            return "Missing School Code param", 404
+        if "label" not in request.json:
+            return "Missing Label param", 404
+        if "email" not in request.json:
+            return "Missing Email param", 404
+        if "password" not in request.json:
+            return "Missing Password param", 404
+        if "first_name" not in request.json:
+            return "Missing First Name param", 404
+        if "last_name" not in request.json:
+            return "Missing Last Name param", 404
+
+        # Attempt to load the School with that code
+        school = School.query.filter(School.code == request.json['school_code']).first()
+        
+        # Check to see if we got a school obj
+        if school is None:
+            return "INVALID SCHOOL CODE", 404
+
+        # Find users that fit the params, 
+        # it's possible for multiple users to have the same label so we have to do this for now.
+        users = Users.query.filter(
+            schoolID=school.id,
+            label=request.json['label']
+        )
+
+        if len(users) > 1:
+            return "Multiple Users found for that query, INTERNAL SERVER ERROR!", 402
+        if len(users) != 1:
+            return "No users found with that school_id and label"
+        
+        user = users.first()
+
+        if user.activated_date is not None:
+            return "User has already been activated", 404
+
+        user.email = request.json["email"]
+        user.firstName = request.json["first_name"]
+        user.lastName = request.json["last_name"]
+        user.activated_date = datetime.datetime.now()
+
+        user.set_password(request.json["password"])
+
+        db.session.add(user)
+        db.session.commit()
+
+        return "Successfully activated user", 201
 
 
 class CordListResource(Resource):
@@ -304,6 +362,7 @@ class PathsListResource(Resource):
 api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
 api.add_resource(UsersListResource, '/users')
+api.add_resource(SetUpUserResource, '/user/activate')
 api.add_resource(CordListResource, '/cords')
 api.add_resource(PathsListResource, '/paths')
 
