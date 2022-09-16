@@ -126,7 +126,7 @@ class SetSchema(ma.Schema):
 
 class UsersSchema(ma.Schema):
     class Meta:
-        fields = ("id", "symbol", "label")
+        fields = ("id", "symbol", "label", "firstName", "lastName", "email")
         model = Users
 
 
@@ -191,6 +191,24 @@ class SetUpUserResource(Resource):
     #   "password": "Password12345", 
     #   "first_name": "Max", "last_name": "Miller"
     # }
+    """
+    fetch('http://127.0.0.1:5000/users/activate', {
+        method: 'POST',
+        body: JSON.stringify({
+            school_code: '12345678',
+            label: 'd7',
+            email: "mmiller5@uhigh.illinoisstate.edu", 
+            password: "Password12345", 
+            first_name: "Max", 
+            last_name: "Miller"
+        }),
+        headers: {
+            'Content-type': 'application/json; charset=UTF-8'
+        }
+        })
+        .then(res => res.json())
+        .then(console.log)
+    """
     def post(self):
         if "school_code" not in request.json:
             return "Missing School Code param", 404
@@ -215,16 +233,17 @@ class SetUpUserResource(Resource):
         # Find users that fit the params, 
         # it's possible for multiple users to have the same label so we have to do this for now.
         users = Users.query.filter(
-            schoolID=school.id,
-            label=request.json['label']
-        )
+            Users.schoolID == school.id,
+            Users.label == request.json['label']
+        ).all()
+        print(users)
 
         if len(users) > 1:
             return "Multiple Users found for that query, INTERNAL SERVER ERROR!", 402
         if len(users) != 1:
             return "No users found with that school_id and label"
         
-        user = users.first()
+        user = users[0]
 
         if user.activated_date is not None:
             return "User has already been activated", 404
@@ -362,7 +381,7 @@ class PathsListResource(Resource):
 api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
 api.add_resource(UsersListResource, '/users')
-api.add_resource(SetUpUserResource, '/user/activate')
+api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(CordListResource, '/cords')
 api.add_resource(PathsListResource, '/paths')
 
