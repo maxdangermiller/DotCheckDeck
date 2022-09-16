@@ -1,6 +1,6 @@
 from app import Dot, Set, Users
 
-_curSet = 0
+_curSet = 21
 _sets = []
 
 # Space Key Pressed
@@ -37,6 +37,8 @@ def renderDots(c, setNumb, nextSetNumb, color, width, height):
     print(f"Showing set {set.setNumb}; with {len(dots)} dots")
     print(f"Showing set {set2.setNumb}; with {len(dots2)} dots")
 
+    cords = list()
+
     for i in range(len(dots)):
         dot = dots[i]
         dot2 = dots2[i]
@@ -45,6 +47,8 @@ def renderDots(c, setNumb, nextSetNumb, color, width, height):
             dot.side, dot.fbSteps, dot.fbDirection, 
             dot.useHash, width=width, height=height
         )
+        cords.append({"x": x, "y": y})
+
         # """
         x2, y2 = convertHashToCords.convertHashToCords(
             dot2.direction, dot2.line, dot2.steps, 
@@ -62,6 +66,7 @@ def renderDots(c, setNumb, nextSetNumb, color, width, height):
 
         c.create_text(x, y - 4, text=person.label, fill=color, font=('Helvetica 8'))
         c.create_text(x2, y2 - 4, text=person.label, fill=color, font=('Helvetica 8'))
+    convertHashToCords.OrderByDistance(cords)
 
 
 def drawFieldLines(c, width, height, setID="None", nextSetID="None"):

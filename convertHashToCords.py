@@ -100,7 +100,7 @@ def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHa
 
 
 # This will give the points between this and next dot
-def findDirectPath(x1, y1, x2, y2, slices=16) -> []:
+def findDirectPath(x1, y1, x2, y2, slices=16) -> list:
     # Calculate how much movement is happening
     difference = x2 - x1
 
@@ -125,3 +125,49 @@ def findDirectPath(x1, y1, x2, y2, slices=16) -> []:
         cords.append({"x": round(x + x1), "y": round(y)}) 
     
     return cords
+
+
+def OrderByDistance(cords):
+    # Find bounds
+    highX = None
+    highY = None
+    lowX = None
+    lowY = None
+    for cord in cords:
+        if highX == None:
+            highX = cord
+            highY = cord
+            lowX = cord
+            lowY = cord
+            print(f"Assigning Default of: ({cord['x']}, {cord['y']})")
+        elif cord["x"] > highX["x"]:
+            highX = cord
+        elif cord["y"] > highY["y"]:
+            highY = cord
+        elif cord["x"] < lowX["x"]:
+            lowX = cord
+        elif cord["y"] < lowY["y"]:
+            lowY = cord
+
+
+    # Find the dot closest to center
+    centerX = ((highX["x"] - lowX["x"]) / 2) + lowX["x"]
+    centerY = ((highY["y"] - lowY["y"]) / 2) + lowY["y"]
+
+    print(f"Bounds ({lowX['x']}, {lowY['y']}) -> ({highX['x']}, {highY['y']}). Center: ({centerX}, {centerY})")
+
+    import numpy as np
+
+    xVals = list()
+    yVals = list()
+
+    for cord in cords:
+        xVals.append(cord["x"])
+        yVals.append(cord["y"])
+
+    x = np.array(xVals)
+    y = np.array(yVals)
+
+    test = [np.polyfit(x[i:(i+2)], y[i:(i+2)],2) for i in range(len(x)-1)]
+    print(len(test))
+
