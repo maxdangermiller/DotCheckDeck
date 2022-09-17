@@ -1,83 +1,90 @@
 import React, { useState, useEffect } from 'react'
-import logo from '../logo.svg';
 import './App.css';
 import Canvas from './Canvas'
 
 const SCHOOL_CODE = "12345678";
 
 function App() {
-  const [dots, setDots] = useState([]);
-  const [paths, setPaths] = useState([]);
-  const [curSet, setCurSet]  = useState("1");
-  const [width, setWidth]  = useState(1500);
-  const [height, setHeight]  = useState(800);
+	const [dots, setDots] = useState([]);
+	const [paths, setPaths] = useState([]);
+	const [curSet, setCurSet]  = useState(0);
+	const [sets, setSets] = useState([]);
+	const [dimensions, setDimensions]  = useState({"w": 0, "h": 0});
 
-  useEffect(() => {
-    fetch("http://127.0.0.1:5000/cords?set_numb=" + curSet + "&school_code=" + SCHOOL_CODE + "&width=" + width + "&height=" + height)
-      .then(res => res.json())
-      .then(
-        (result) => {
-          console.log(result)
-          setDots(result);
-        },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        (error) => {
-          console.log(error);
-        }
-    );
-    fetch("http://127.0.0.1:5000/paths?set_numb_1=" + curSet + "&school_code=" + SCHOOL_CODE + "&width=" + width + "&height=" + height)
-      .then(res => res.json())
-      .then(
-        (result) => {
-          console.log(result)
-          setPaths(result);
-        },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        (error) => {
-          console.log(error);
-        }
-    );
-  }, [])
+	useEffect(() => {
+		if (dimensions["w"] !== 0 && dimensions["h"] !== 0 && sets.length !== 0) {
+			console.log("Recalculating Points! " + dimensions["w"] + "x" + dimensions["h"]);
 
+			const url1 = "http://127.0.0.1:5000/cords?set_numb=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
+				"&width=" + dimensions["w"] + "&height=" + dimensions["h"];
+			fetch(url1)
+				.then(res => res.json())
+				.then(
+					(result) => {
+						// console.log(result)
+						setDots(result);
+					},
+					// Note: it's important to handle errors here
+					// instead of a catch() block so that we don't swallow
+					// exceptions from actual bugs in components.
+					(error) => {
+						console.log(error);
+					}
+				);
+			const url2 = "http://127.0.0.1:5000/paths?set_numb_1=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
+				"&width=" + dimensions["w"] + "&height=" + dimensions["h"];
+			fetch(url2)
+				.then(res => res.json())
+				.then(
+					(result) => {
+						// console.log(result)
+						setPaths(result);
+					},
+					// Note: it's important to handle errors here
+					// instead of a catch() block so that we don't swallow
+					// exceptions from actual bugs in components.
+					(error) => {
+						console.log(error);
+					}
+			);
+		}
+	}, [curSet, dimensions, sets])
 
+	useEffect(() => {
+		fetch("http://127.0.0.1:5000/sets?school_code=" + SCHOOL_CODE)
+			.then(res => res.json())
+			.then(
+				(result) => {
+					// console.log(result)
+					setSets(result);
+				},
+				// Note: it's important to handle errors here
+				// instead of a catch() block so that we don't swallow
+				// exceptions from actual bugs in components.
+				(error) => {
+					console.log(error);
+				}
+		);
+	}, [])
 
-  const draw = () => {
-    /* 
-    {
-      "lines": [
-        {
-          "startX": 0
-          "startY": 0
-          "endX": 100
-          "endY": 100
-        }
-      ],
-      "pts": [
-        {
-          "x": 0,
-          "y": 0,
-          "r": 255,
-          "g": 255,
-          "b": 255
-        }
-      ]
-    }
-    */
-    return {"dots": dots["dots"], "lines": paths["lines"], "paths": paths["paths"]};
-  }
+	const draw = () => {
+		// console.log("DRAWING!")
+		return {"pts": dots["pts"], "lines": paths["lines"], "paths": paths["paths"], "sets": sets, "curSet": curSet};
+	}
 
-  const setDimensions = (width, height) => {
-    setWidth(width);
-    setHeight(height);
-  }
+	const changeCurSet = (x) => {
+	  if (x >= 0 && x < sets.length) {
+		  setCurSet(x);
+	  }
+	}
 
-  return (
-    <Canvas draw={draw} setDimensions={setDimensions} />
-  );
+	return (
+		<div>
+			<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions}/>
+			<button style={{position: 'absolute', bottom: '2vh', right: '7vh', width: '4vh', height: '4vh'}} onClick={() => changeCurSet(curSet - 1)}>&#8592;</button>
+			<button style={{position: 'absolute', bottom: '2vh', right: '2vh', width: '4vh', height: '4vh'}} onClick={() => changeCurSet(curSet + 1)}>&#8594;</button>
+		</div>
+	);
 }
 
 export default App;
