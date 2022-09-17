@@ -9,6 +9,7 @@ const Canvas = props => {
     // const canvasRef = useCanvas(draw, {predraw, postdraw})
     const canvasRef = useRef(null)
     const [dots, setDots] = useState([]);
+    const [hoverDot, setHoverDot] = useState({});
 
     var useWidth = 0;
 
@@ -18,6 +19,57 @@ const Canvas = props => {
         const context = canvas.getContext('2d')
         let frameCount = 0
         let animationFrameId
+
+        const drawUserDialogue = (dotX, dotY, dot) => {
+            // console.log("drawing dialogue: " + dot["userLabel"])
+            const w = canvas.width * 0.075;
+            const h = canvas.height * 0.075;
+            const x = dotX + canvas.height * 0.01;
+            const y = dotY - h - canvas.height * 0.01;
+            const radius = 5;
+
+
+
+            const r = x + w;
+            const b = y + h;
+
+            context.beginPath();
+            context.strokeStyle="black";
+            context.fillStyle="rgb(240, 240, 240)";
+            context.lineWidth="4";
+            context.moveTo(x+radius, y);
+            context.lineTo(r-radius, y);
+            context.quadraticCurveTo(r, y, r, y+radius);
+            context.lineTo(r, y+h-radius);
+            context.quadraticCurveTo(r, b, r-radius, b);
+            context.lineTo(x+radius, b);
+            context.quadraticCurveTo(x, b, x, b-radius);
+            context.lineTo(x, y+radius);
+            context.quadraticCurveTo(x, y, x+radius, y);
+            context.stroke();
+            context.fill();
+            context.closePath();
+
+            context.beginPath();
+            context.font = canvas.height * 0.03 + 'px serif';
+            context.fillStyle = "black";
+            context.textBaseline = "middle";
+            context.textAlign = "center";
+            context.fillText(dot["userLabel"], x + w * 0.2, y + h * 0.25);
+
+            if (dot["userName"] !== "None None") {
+                context.font = canvas.height * 0.025 + 'px serif';
+
+                context.fillText(dot["userName"], x + w * 0.5, y + h * 0.6);
+                context.closePath();
+            } else {
+                context.font = canvas.height * 0.025 + 'px serif';
+                context.fillStyle = "red";
+
+                context.fillText("Unactivated", x + w * 0.5, y + h * 0.6);
+                context.closePath();
+            }
+        }
 
         const drawLine = (x0, y0, x1, y1, color) => {
             // console.log("(" + x0, ", " + y0 + ") -> (" + x1 + ", " + y1 + ")");
@@ -183,15 +235,20 @@ const Canvas = props => {
             }
 
             if (data["sets"] && data["curSet"] !== null) {
-                context.beginPath();
-                context.font = '36px serif';
-                context.fillStyle = "black";
-                context.textBaseline = "middle";
-                context.textAlign = "center";
-                context.fillText(data["sets"][data["curSet"]]["setNumb"], canvas.width * 0.025, canvas.height * 0.9);
-                context.closePath();
+                if (data["sets"][data["curSet"]] !== undefined) {
+                    context.beginPath();
+                    context.font = '36px serif';
+                    context.fillStyle = "black";
+                    context.textBaseline = "middle";
+                    context.textAlign = "center";
+                    context.fillText(data["sets"][data["curSet"]]["setNumb"], canvas.width * 0.025, canvas.height * 0.9);
+                    context.closePath();
+                }
             }
-            
+
+            if (hoverDot["x"] !== undefined) {
+                drawUserDialogue(hoverDot["x"], hoverDot["y"], hoverDot);
+            }
             ctx.restore()
 
             frameCount++
@@ -203,20 +260,28 @@ const Canvas = props => {
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
-    }, [draw])
+    }, [draw, hoverDot])
 
     const canvasClick = (event) => {
         var x = event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft),
             y = event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
 
-        const margin = canvasRef.current.height * 0.006
+        const margin = canvasRef.current.height * 0.006;
+
+        var wasOnDot = false;
 
         // Collision detection between clicked offset and element.
         dots.forEach(function(dot) {
             if (y > dot["y"] - margin && y < dot["y"] + margin  && x > dot["x"] - margin && x < dot["x"] + margin) {
-                alert('This is: ' + dot["userLabel"]);
+                // alert('This is: ' + dot["userLabel"]);
+                wasOnDot = true;
+                setHoverDot(dot);
             }
         });
+
+        if (!wasOnDot) {
+            setHoverDot({});
+        }
     }
 
     return <canvas ref={canvasRef} style={{position: 'absolute', width: '100%'}} onClick={(e) => canvasClick(e)} onMouseMove={(e) => canvasClick(e)}/>
