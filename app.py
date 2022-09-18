@@ -341,7 +341,7 @@ class PathsListResource(Resource):
 		# print(userID)
 
 		# REQUIRE A SCHOOL CODE
-		if schoolCode == None:
+		if schoolCode is None:
 			return "Missing School Code", 404
 
 		# CHECK IF CODE IS VALID
@@ -349,11 +349,15 @@ class PathsListResource(Resource):
 		if school is None:
 			return "INVALID SCHOOL CODE", 404
 
-		if setNumb2 == None:
+		if setNumb2 is None:
 			tempSet1 = Set.query.filter(Set.setNumb == setNumb1, Set.schoolID == school.id).first()
 			if tempSet1 is None:
 				return "INVALID SET NUMB!", 404
-			setNumb2 = Set.query.filter(Set.id == tempSet1.id, Set.schoolID == school.id).first().setNumb
+			nextSet = Set.query.filter(Set.id == tempSet1.id + 1, Set.schoolID == school.id).first()
+			print(nextSet)
+			if nextSet is None:
+				return "NO MORE SETS AFTER THIS!"
+			setNumb2 = nextSet.setNumb
 		# print(School.query.filter(School.id == tempSet1.schoolID).first().code)
 
 		if setNumb1 is not None and userID is not None:
@@ -377,20 +381,24 @@ class PathsListResource(Resource):
 			person = Users.query.filter(Users.id == dot.userID, Users.schoolID == school.id).first()
 
 			setObj = Set.query.filter(Set.setNumb == setNumb2, Set.schoolID == school.id).first()
-			nextDot = Dot.query.filter(Dot.setID == setObj.id + 1, Dot.userID == person.id, Dot.schoolID == school.id).first()
+			nextDot = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == person.id, Dot.schoolID == school.id).first()
+			# print(nextDot)
+			if nextDot is not None:
+				x2, y2 = convertHashToCords.convertHashToCords(
+					nextDot.direction, nextDot.line, nextDot.steps,
+					nextDot.side, nextDot.fbSteps, nextDot.fbDirection,
+					nextDot.useHash, width=width, height=height
+				)
 
-			x2, y2 = convertHashToCords.convertHashToCords(
-				nextDot.direction, nextDot.line, nextDot.steps,
-				nextDot.side, nextDot.fbSteps, nextDot.fbDirection,
-				nextDot.useHash, width=width, height=height
-			)
-
-			# Test here for if it's a follow the leader or straight line path
-			lines.append({
-				"startX": x, "startY": y, "endX": x2, "endY": y2,
-				"userLabel": person.label, "userID": person.id,
-				"r": 0, "g": 0, "b": 0
-			})
+				# Test here for if it's a follow the leader or straight line path
+				lines.append({
+					"startX": x, "startY": y, "endX": x2, "endY": y2,
+					"userLabel": person.label, "userID": person.id,
+					"r": 0, "g": 0, "b": 0
+				})
+			else:
+				x2 = 0
+				y2 = 0
 
 		return {"lines": lines, "paths": []}
 
@@ -446,6 +454,7 @@ def addAllDataFromPDF(file):
 
 if __name__ == "__main__":
 	# addAllDataFromPDF("Mvt-1and2.pdf")
+	# addAllDataFromPDF("Mvt-3.pdf")
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)

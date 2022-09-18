@@ -79,8 +79,13 @@ function App() {
 	}
 
 	return (
-		<div>
-			<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions}/>
+		<div className="flex-row justify-content-center d-flex align-items-center fullScreen">
+			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass">
+				<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions}/>
+			</div>
+			<div className="flex-column justify-content-center d-flex align-items-center sideBarClass">
+				HELLO?
+			</div>
 			<button style={{position: 'absolute', bottom: '2vh', right: '7vh', width: '4vh', height: '4vh'}} onClick={() => changeCurSet(curSet - 1)}>&#8592;</button>
 			<button style={{position: 'absolute', bottom: '2vh', right: '2vh', width: '4vh', height: '4vh'}} onClick={() => changeCurSet(curSet + 1)}>&#8594;</button>
 		</div>

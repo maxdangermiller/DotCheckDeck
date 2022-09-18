@@ -1,6 +1,9 @@
 import React, {useRef, useEffect, useState} from 'react'
 
-const FUTURE_DOT_COLOR = "rgb(255, 0, 0)"
+const FUTURE_DOT_COLOR = "rgb(0, 100, 0)";
+const MAX_ZOOM = 3;
+const MIN_ZOOM = 1;
+const SCROLL_SENSITIVITY = 0.0005;
 
 const Canvas = props => {
 
@@ -10,8 +13,15 @@ const Canvas = props => {
     const canvasRef = useRef(null)
     const [dots, setDots] = useState([]);
     const [hoverDot, setHoverDot] = useState({});
+    const [cameraOffset, setCameraOffset] = useState(null);
+    const [lastCameraOffset, setLastCameraOffset] = useState(null);
+    // const [totalMovement, setTotalMovement] = useState({x: 0, y: 0})
+    const [cameraZoom, setCameraZoom] = useState(1);
 
-    var useWidth = 0;
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [initialPinchDistance, setInitialPinchDistance] = useState(null);
+    const [lastZoom, setLastZoom] = useState(1);
 
     useEffect(() => {
 
@@ -183,16 +193,12 @@ const Canvas = props => {
                     // canvas.height = canvas.offsetHeight;
                     canvas.height = canvas.offsetHeight;
 
-                    useWidth = false;
-
                     canvasRef.current.style.width = "";
                     canvasRef.current.style.height = "100%";
                 } else {
                     canvas.width  = canvas.offsetWidth;
                     // canvas.height = canvas.offsetHeight;
                     canvas.height = heightRatio;
-
-                    useWidth = true;
 
                     canvasRef.current.style.width = "100%";
                     canvasRef.current.style.height = "";
@@ -201,6 +207,40 @@ const Canvas = props => {
 
             if (curDimensions["w"] !== canvas.width || curDimensions["h" !== canvas.height]) {
                 setDimensions({"w": canvas.width, "h": canvas.height});
+            }
+            if (cameraOffset === null) {
+                // setCameraOffset({x: canvas.width / 2, y: canvas.height / 2});
+                setCameraOffset({x: 0, y: 0})
+            }
+
+            if (cameraOffset !== null) {
+                ctx.translate( canvas.width / 2, canvas.height / 2 )        // Translate to center for zoom
+                ctx.scale(cameraZoom, cameraZoom)                           // Zoom
+                ctx.translate( -canvas.width / 2, -canvas.height / 2 )      // Go back
+
+                ctx.translate(cameraOffset.x, cameraOffset.y);
+                const m = ctx.getTransform();
+                const translationX = m.e;
+                const translationY = m.f;
+                const scale = Math.hypot(m.a, m.b);
+
+                const xInBound = -translationX / scale >= 0 && -translationX + canvas.width <= canvas.width * scale;
+                const yInBound = -translationY / scale >= 0 && -translationY + canvas.height <= canvas.height * scale;
+                // console.log(translationX, translationY, scale)
+                ctx.translate(-cameraOffset.x, -cameraOffset.y);
+
+                if (!xInBound || !yInBound) {
+                    if (!isDragging) {
+                        setCameraOffset({x: lastCameraOffset.x, y: lastCameraOffset.y});
+                    } else {
+                        ctx.translate(lastCameraOffset.x, lastCameraOffset.y);
+                    }
+                } else {
+                    ctx.translate(cameraOffset.x, cameraOffset.y);
+                    if (lastCameraOffset !== cameraOffset) {
+                        setLastCameraOffset(cameraOffset);
+                    }
+                }
             }
 
             clear();
@@ -260,9 +300,9 @@ const Canvas = props => {
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
-    }, [draw, hoverDot])
+    }, [draw, hoverDot, cameraOffset, cameraZoom])
 
-    const canvasClick = (event) => {
+    const dotHover = (event) => {
         var x = event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft),
             y = event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
 
@@ -284,7 +324,98 @@ const Canvas = props => {
         }
     }
 
-    return <canvas ref={canvasRef} style={{position: 'absolute', width: '100%'}} onClick={(e) => canvasClick(e)} onMouseMove={(e) => canvasClick(e)}/>
+    // PAN TILT SECTION
+    const getEventLocation = (e) => {
+        if (e.touches && e.touches.length === 1) {
+            const x = e.touches[0].pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft),
+            y = e.touches[0].pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
+
+            return { x: x, y: y }
+        }
+        else if (e.clientX && e.clientY) {
+            const x = e.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft),
+            y = e.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
+
+            // console.log(x, y)
+            return { x: x, y: y }
+        }
+    }
+
+    const onPointerDown = (e) => {
+        setIsDragging(true);
+        setDragStart({
+            x: getEventLocation(e).x / cameraZoom - cameraOffset.x,
+            y: getEventLocation(e).y / cameraZoom - cameraOffset.y
+        });
+    }
+
+    const onPointerUp = (e) => {
+        setIsDragging(false);
+        setInitialPinchDistance(null);
+        setLastZoom(cameraZoom);
+    }
+
+    const onPointerMove = (e) => {
+        // console.log("MOUSE")
+        if (isDragging) {
+            setCameraOffset({x: getEventLocation(e).x/cameraZoom - dragStart.x, y: getEventLocation(e).y/cameraZoom - dragStart.y});
+        }
+        dotHover(e);
+    }
+
+    const handleTouch = (e, singleTouchHandler) => {
+        if ( e.touches.length === 1 ) {
+            singleTouchHandler(e)
+        } else if (e.type === "touchmove" && e.touches.length === 2) {
+            setIsDragging(false);
+            handlePinch(e)
+        }
+    }
+
+    const handlePinch = (e) => {
+        e.preventDefault()
+
+        let touch1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        let touch2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }
+
+        // This is distance squared, but no need for an expensive sqrt as it's only used in ratio
+        let currentDistance = (touch1.x - touch2.x)**2 + (touch1.y - touch2.y)**2
+
+        if (initialPinchDistance == null) {
+            setInitialPinchDistance(currentDistance);
+        } else {
+            adjustZoom( null, currentDistance/initialPinchDistance )
+        }
+    }
+
+    const adjustZoom = (zoomAmount, zoomFactor) => {
+        if (!isDragging) {
+            var tempCameraZoom = cameraZoom;
+            if (zoomAmount) {
+                tempCameraZoom = tempCameraZoom + zoomAmount;
+            } else if (zoomFactor) {
+                // console.log(zoomFactor)
+                tempCameraZoom = zoomFactor*lastZoom;
+            }
+
+            tempCameraZoom = Math.min(tempCameraZoom, MAX_ZOOM);
+            setCameraZoom(Math.max(tempCameraZoom, MIN_ZOOM));
+
+            // console.log(zoomAmount)
+        }
+    }
+
+    return <canvas
+        ref={canvasRef}
+        style={{width: '100%'}}
+        onMouseDown={onPointerDown}
+        onTouchStart={(e) => handleTouch(e, onPointerDown)}
+        onMouseUp={onPointerUp}
+        onTouchEnd={(e) => handleTouch(e, onPointerUp)}
+        onMouseMove={onPointerMove}
+        onTouchMove={(e) => handleTouch(e, onPointerMove)}
+        onWheel={(e) => adjustZoom(e.deltaY*SCROLL_SENSITIVITY)}
+    />;
 }
 
 export default Canvas
