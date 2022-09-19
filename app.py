@@ -455,6 +455,7 @@ def addAllDataFromPDF(file):
 if __name__ == "__main__":
 	# addAllDataFromPDF("Mvt-1and2.pdf")
 	# addAllDataFromPDF("Mvt-3.pdf")
+	# addAllDataFromPDF("Mvt-4.pdf")
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)

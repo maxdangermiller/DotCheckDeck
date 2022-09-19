@@ -8,6 +8,8 @@ def goThroughTable(regions_raw) -> list:
 	if regions_raw[0]["extraction_method"] == "":
 		return []
 
+	skipStrings = ["cou", "counts"]
+
 	# Write to a test file for debugging
 	# fileWrite = open("./test.json", "w")
 	# fileWrite.write(json.dumps(regions_raw, indent=4))
@@ -40,10 +42,16 @@ def goThroughTable(regions_raw) -> list:
 			# print(part1)
 
 			# Check to see if this is opening set
-			if part1[2] != "Side":
+			if part1[2] != "Side" and part1[2] != "On":
 				setNumb = part1[0]
 				measure = part1[1]
-				counts = int(part1[2])
+				try:
+					counts = int(part1[2])
+				except:
+					if part1[2] in skipStrings:
+						# input(f"Is \"{part2}\" a valid value that should stay, or should it be removed?")
+						part1 = part1[0:2] + part1[3:]
+						counts = int(part1[2])
 				# print(part1)
 
 				# When it says it's on the 50, it doesn't say side, this handles that
@@ -71,14 +79,29 @@ def goThroughTable(regions_raw) -> list:
 			else:
 				setNumb = part1[0]
 				measure = ""
-				counts = int(part1[1])
-				side = int(part1[3].replace(":", ""))
-				steps = float(part1[4].replace("On", "0"))  # The replace method is to convert On to 0, so it can be converted to a float
+
+				# counts sometimes ends up with a weird string it in, this just moves on to the next value if that's the case
+				try:
+					counts = int(part1[1])
+				except:
+					if part1[1] in skipStrings:
+						part1 = part1[0:1] + part1[2:]
+						counts = int(part1[1])
+
+				if part1[2] != "On":
+					side = int(part1[3].replace(":", ""))
+					steps = float(part1[4].replace("On", "0"))  # The replace method is to convert On to 0, so it can be converted to a float
+				else:
+					side = 0
+					steps = float(part1[2].replace("On", "0"))  # The replace method is to convert On to 0, so it can be converted to a float
 
 				# Check to see if we're on the line
 				if steps != 0:
 					direction = part1[6]
 					line = part1[7]
+				elif steps == 0 and side == 0:
+					direction = ""
+					line = part1[3]
 				else:
 					direction = ""
 					line = part1[5]
