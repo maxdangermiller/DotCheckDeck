@@ -38,6 +38,8 @@ const Canvas = props => {
     const [initialPinchDistance, setInitialPinchDistance] = useState(null);
     const [lastZoom, setLastZoom] = useState(1);
 
+    const [translation, setTranslation] = useState({x: 0, y: 0})
+
     useEffect(() => {
 
         const canvas = canvasRef.current
@@ -58,6 +60,7 @@ const Canvas = props => {
             const r = x + w;
             const b = y + h;
 
+            // Draw rounded rectangle
             context.beginPath();
             context.strokeStyle="black";
             context.fillStyle="rgb(240, 240, 240)";
@@ -83,17 +86,30 @@ const Canvas = props => {
             context.fillText(dot["userLabel"], x + w * 0.2, y + h * 0.25);
 
             if (dot["userName"] !== "None None") {
-                context.font = canvas.height * 0.025 + 'px serif';
+                context.font = canvas.height * 0.015 + 'px serif';
 
-                context.fillText(dot["userName"], x + w * 0.5, y + h * 0.6);
+                context.fillText(dot["userName"], x + w * 0.65, y + h * 0.25);
                 context.closePath();
             } else {
-                context.font = canvas.height * 0.025 + 'px serif';
+                context.font = canvas.height * 0.015 + 'px serif';
                 context.fillStyle = "red";
 
-                context.fillText("Unactivated", x + w * 0.5, y + h * 0.6);
+                context.fillText("Unactivated", x + w * 0.65, y + h * 0.25);
                 context.closePath();
             }
+            
+            // {self.steps} {self.direction} {self.line} on {self.side}; {self.fbSteps} {self.fbDirection} {self.useHash}, for {self.counts} counts"
+            context.beginPath();
+            context.font = canvas.height * 0.015 + 'px serif';
+            context.fillStyle = "black";
+
+            const dotI = dot["dot"]
+            const dotStr = dotI["direction"] + " " + dotI["line"] + " on "+ dotI["side"] + "; " + 
+                    dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dotI["counts"] + " counts"
+
+            context.fillText(dotStr, x + w * 0.5, y + h * 0.5);
+            console.log(dot);
+            context.closePath();
         }
 
         const drawLine = (x0, y0, x1, y1, color, thickness) => {
@@ -109,7 +125,7 @@ const Canvas = props => {
             // const w = canvas.width;
             // const h = canvas.height;
         };
-
+        
         const drawPoint = (x, y, color, userLabel) => {
             context.beginPath();
             context.fillStyle = color;
@@ -125,6 +141,7 @@ const Canvas = props => {
             context.closePath();
         };
 
+        // This draws a vertical line across the screen
         const drawVerticalGirdLine = (x, color, thickness) => {
             context.beginPath();
             context.moveTo(x, 0);
@@ -135,6 +152,7 @@ const Canvas = props => {
             context.closePath();
         };
 
+        // This draws a horizontal line across the screen
         const drawHorizontalGirdLine = (y, color, thickness) => {
             context.beginPath();
             context.moveTo(0, y);
@@ -145,6 +163,7 @@ const Canvas = props => {
             context.closePath();
         };
 
+        // This draws the little hash marks
         const drawHash = (startX, endX, y) => {
             // Draw little lines for each yard | There are 5 yards between each major yard line 
             for (var i = 0; i < 5; i++) {
@@ -154,69 +173,105 @@ const Canvas = props => {
             }
         }
 
-        const drawGridLines = (startX, endX, startY, endY) => {
+        // This draw all the Vertical grid lines
+        const drawVerticalGrid = (startX, endX, major) => {
             for (var i = 1; i < STEPS_TO_5_MAJOR; i++) {
                 const x = ((endX - startX) / STEPS_TO_5_MAJOR) * i + startX;
 
-                drawVerticalGirdLine(x, GRID_MAJOR_DIVISION_COLOR, 1);
-                
-                // Draw all the minor division grid lines between the major divisions
-                for (var ii = 1; ii < STEPS_TO_5_MINOR; ii++) {
-                    const x2 = ((endX - startX) / STEPS_TO_5_MINOR) * ii + startX;
+                if (major) {
+                    drawVerticalGirdLine(x, GRID_MAJOR_DIVISION_COLOR, 1);
+                } else {
+                     // Draw all the minor division grid lines between the major divisions
+                    for (var ii = 1; ii < STEPS_TO_5_MINOR; ii++) {
+                        const x2 = ((endX - startX) / STEPS_TO_5_MINOR) * ii + startX;
 
-                    if (x2 !== x) {
-                        drawVerticalGirdLine(x2, GRID_MINOR_DIVISION_COLOR, 1);
+                        if (x2 !== x) {
+                            drawVerticalGirdLine(x2, GRID_MINOR_DIVISION_COLOR, 1);
+                        }
+                    
                     }
-                
                 }
+            
             }
             
         }
 
-        const drawHorizontalGrid = (hashRatio, color) => {
-            // const startY = (canvas.height * FRONT_HASH_RATIO);
-            //const endY = (canvas.height * BACK_HASH_RATIO);
-
-            // const hashes = DISTANCE_BETWEEN_HASHES_IN_YDS / 5 * STEPS_TO_5_MAJOR;
-
-            // const startY = 0;
-            // const endY = (canvas.height * FRONT_HASH_RATIO);;
-
-            // const hashes = DISTANCE_BETWEEN_HASHES_IN_YDS / 5 * STEPS_TO_5_MAJOR;
-
+        // This draws all the Horizontal grid lines centered on the hashRatio var which is a ratio less than 1
+        const drawHorizontalGrid = (hashRatio, major) => {
             const hashes = 28;
+
+            const majorHashes = 8;
             const hashLocation = hashRatio * canvas.height;
             // height(px) -> ?height/1" 
             // 22.5" = 1 step
             // 90" = 4 steps
             // 1920" = 
             const oneStep = canvas.height / 1920 * 22.5;
-            const hashDistance = oneStep * (28 / STEPS_TO_5_MAJOR);
+            const hashDistance = oneStep * 16;
             const startY = hashLocation - hashDistance;
             const endY = hashLocation + hashDistance;
             // console.log(hashes);
+            
+            for (var i = 1; i < majorHashes + 1; i++) {
+                const y = ((endY - startY) / (majorHashes + 1)) * i + startY;
+                const nextY = ((endY - startY) / (majorHashes + 1)) * (i + 1) + startY;
 
-            for (var i = 0; i < hashes / STEPS_TO_5_MAJOR; i++) {
-                const y = ((endY - startY) / (hashes / STEPS_TO_5_MAJOR)) * i + startY;
-                const nextY = ((endY - startY) / (hashes / STEPS_TO_5_MAJOR)) * (i + 1) + startY;
+                if (y > canvas.height) { break; }
 
-                drawHorizontalGirdLine(y, color, 1);
-                
-                
+                if (major) {
+                    drawHorizontalGirdLine(y, GRID_MAJOR_DIVISION_COLOR, 1);
+                }
                 // Draw all the minor division grid lines between the major divisions
-                for (var ii = 1; ii <= STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR; ii++) {
-                    const y2 = ((y - nextY) /  (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR)) * ii + y;
-
-                    if (y2 !== y) {
-                        drawHorizontalGirdLine(y2, GRID_MINOR_DIVISION_COLOR, 1);
+                else if (nextY <= endY) {
+                    for (var ii = 1; ii < (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR); ii++) {
+                        const y2 = ((nextY - y) /  (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR)) * ii + y;
+    
+                        if (y2 !== y && y2 !== nextY) {
+                            drawHorizontalGirdLine(y2, GRID_MINOR_DIVISION_COLOR, 1);
+                        }
+                    
                     }
-                
                 }
                 
             }
         }
 
+        // This draws the Grid Lines
+        const drawGridLines = () => {
+            drawHorizontalGrid(0, false);
+            drawHorizontalGrid(FRONT_HASH_RATIO, false);
+            drawHorizontalGrid(BACK_HASH_RATIO, false);
+            drawHorizontalGrid(1, false);
+
+            for (var x = 0; x < 21; x++) {
+                var val = x * (canvas.width / 20);
+                var nextVal = (x + 1) * (canvas.width / 20);
+
+                if (nextVal <= canvas.width) {
+                    drawVerticalGrid(val, nextVal, false);
+                }
+            }
+
+            drawHorizontalGrid(0, true);
+            drawHorizontalGrid(FRONT_HASH_RATIO, true);
+            drawHorizontalGrid(BACK_HASH_RATIO, true);
+            drawHorizontalGrid(1, true);
+
+            for (var x = 0; x < 21; x++) {
+                var val = x * (canvas.width / 20);
+                var nextVal = (x + 1) * (canvas.width / 20);
+
+                if (nextVal <= canvas.width) {
+                    drawVerticalGrid(val, nextVal, true);
+                }
+            }
+        }
+
+        // This draws the Yard Lines, hashes, and Grid Lines
         const drawGrid = () => {
+            // Draw Grid Lines
+            drawGridLines();
+
             // This draws the 5 yard lines up through the 50, from the left
             for (var x = 0; x < 21; x++) {
                 var val = x * (canvas.width / 20);
@@ -228,8 +283,6 @@ const Canvas = props => {
                 if (nextVal <= canvas.width) {
                     drawHash(val, nextVal, canvas.height * FRONT_HASH_RATIO);
                     drawHash(val, nextVal, canvas.height * BACK_HASH_RATIO);
-
-                    drawGridLines(val, nextVal, 0, canvas.height);
                 }
 
                 // Draw little lines on the hash marks | FRONT HASH
@@ -248,7 +301,7 @@ const Canvas = props => {
                     canvas.height * BACK_HASH_RATIO,
                     "black", 1
                 );
-
+                
                 context.beginPath();
                 context.font = canvas.height * 0.05 + 'px serif';
                 context.textBaseline = "middle";
@@ -262,19 +315,6 @@ const Canvas = props => {
             
                 context.closePath();
             }
-
-            // drawHorizontalGrid(0, (canvas.height * FRONT_HASH_RATIO));
-            drawHorizontalGrid(0, "rgb(0, 255, 0)");
-            drawHorizontalGrid(FRONT_HASH_RATIO, "rgb(0, 0, 255)");
-            drawHorizontalGrid(BACK_HASH_RATIO, "rgb(255, 0, 0)");
-            drawHorizontalGrid(1, "rgb(0, 255, 0)");
-            // drawHorizontalGrid((canvas.height * BACK_HASH_RATIO), canvas.height);
-
-            // Draw the front HS Hash
-            // drawHorizontalGirdLine(canvas.height * (1 / 3), "black", 1);
-            
-            // Draw the back HS Hash
-            // drawHorizontalGirdLine(canvas.height * (2 / 3), "black", 1);
         }
 
         const clear = () => {
@@ -294,8 +334,8 @@ const Canvas = props => {
                 canvasRef.current.style.width = "100%";
                 canvasRef.current.style.height = "100%";
 
-                const heightRatio = canvas.offsetWidth * 4 / 9;
-                const widthRatio = canvas.offsetHeight * 9 / 4;
+                const heightRatio = canvas.offsetWidth * 3 / 5;
+                const widthRatio = canvas.offsetHeight * 5 / 3;
 
                 if (heightRatio > canvas.offsetHeight && widthRatio ) {
                     canvas.width  = widthRatio;
@@ -350,6 +390,13 @@ const Canvas = props => {
                         setLastCameraOffset(cameraOffset);
                     }
                 }
+
+                const m2 = ctx.getTransform();
+                const translationX2 = m2.e;
+                const translationY2 = m2.f;
+                const xTranslation = translationX2;
+                const yTranslation = translationY2;
+                setTranslation({x: xTranslation, y: yTranslation, s: scale});
             }
 
             clear();
@@ -413,8 +460,11 @@ const Canvas = props => {
     }, [draw, hoverDot, cameraOffset, cameraZoom])
 
     const dotHover = (event) => {
-        var x = event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft),
-            y = event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
+
+        var x = (event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft) - translation.x) / translation.s,
+            y = (event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop) - translation.y) / translation.s;
+
+        // console.log(x / translation.s, y / translation.s, translation);
 
         const margin = canvasRef.current.height * 0.006;
 
