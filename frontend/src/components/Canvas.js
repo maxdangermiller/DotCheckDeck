@@ -105,9 +105,21 @@ const Canvas = props => {
 
             const dotI = dot["dot"]
             const dotStr = dotI["direction"] + " " + dotI["line"] + " on "+ dotI["side"] + "; " + 
-                    dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dotI["counts"] + " counts"
+                    dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dotI["set"]["counts"] + " counts"
 
-            context.fillText(dotStr, x + w * 0.5, y + h * 0.5);
+            if (dotI["steps"] !== 0) {
+                context.fillText(dotI["steps"] + " steps " + dotI["direction"] + " " + dotI["line"] + " side " + dotI["side"] + "; ", x + w * 0.5, y + h * 0.5, w * 0.9);
+            } else {
+                context.fillText("On " + dotI["line"] + ", on side " + dotI["side"] + "; ", x + w * 0.5, y + h * 0.5, w * 0.9);
+            }
+
+            if (dotI["fbSteps"] !== 0) {
+                const fbDirection = dotI["fbDirection"] === "Front" ? "in front of" : dotI["fbDirection"];
+                context.fillText(dotI["fbSteps"] + " steps " + fbDirection + " " + dotI["useHash"], x + w * 0.5, y + h * 0.65, w * 0.9);
+            } else {
+                context.fillText("On " + dotI["useHash"], x + w * 0.5, y + h * 0.65, w * 0.9);
+            }
+            context.fillText("for " + dotI["set"]["counts"] + " counts", x + w * 0.5, y + h * 0.8, w * 0.9);
             console.log(dot);
             context.closePath();
         }

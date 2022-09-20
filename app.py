@@ -122,19 +122,6 @@ class School(db.Model):
 db.create_all()
 
 
-
-class SetSchema(ma.Schema):
-	class Meta:
-		fields = ("id", "setNumb", "measure", "counts")
-		model = Set
-
-
-class UsersSchema(ma.Schema):
-	class Meta:
-		fields = ("id", "symbol", "label", "firstName", "lastName", "email")
-		model = Users
-
-
 # Serializers
 class DotSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
@@ -148,6 +135,18 @@ class DotSchema(ma.SQLAlchemyAutoSchema):
 		model = Dot
 		include_fk = True
 		load_instance = True
+
+
+class SetSchema(ma.Schema):
+	class Meta:
+		fields = ("id", "setNumb", "measure", "counts")
+		model = Set
+
+
+class UsersSchema(ma.Schema):
+	class Meta:
+		fields = ("id", "symbol", "label", "firstName", "lastName", "email")
+		model = Users
 
 
 dot_schema = DotSchema()
@@ -302,7 +301,7 @@ class CordListResource(Resource):
 		# print(userID)
 
 		# REQUIRE A SCHOOL CODE
-		if schoolCode == None:
+		if schoolCode is None:
 			return "Missing School Code", 404
 
 		# CHECK IF CODE IS VALID
@@ -338,13 +337,16 @@ class CordListResource(Resource):
 
 			person = Users.query.filter(Users.id == dot.userID, Users.schoolID == school.id).first()
 
+			dotData = dot_schema.dump(dot)
+			dotData["set"] = set_schema.dump(Set.query.filter(Set.id == dotData["setID"]).first())
+
 			output.append({
 				"x": x, "y": y,
 				"userLabel": person.label,
 				"userID": person.id,
 				"userName": f"{person.firstName} {person.lastName}",
 				"r": 0, "g": 0, "b": 255,
-				"dot": dot_schema.dump(dot)
+				"dot": dotData
 			})
 
 		return {"pts": output}
