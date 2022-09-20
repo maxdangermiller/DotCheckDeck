@@ -15,9 +15,22 @@ import convertHashToCords
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='client/build', static_url_path='')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+"""
+https://blog.miguelgrinberg.com/post/how-to-deploy-a-react--flask-project
+https://dashboard.heroku.com/apps/marching-band-app/settings
+https://stackoverflow.com/questions/65888631/how-do-i-use-heroku-postgres-with-my-flask-sqlalchemy-app
+https://towardsdatascience.com/deploy-a-micro-flask-application-into-heroku-with-postgresql-database-d95fd0c19408
+"""
+
+ENV = "dev"
+
+if ENV == 'dev':
+	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+else:
+	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
