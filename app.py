@@ -109,15 +109,6 @@ class School(db.Model):
 db.create_all()
 
 
-# Serializers
-class DotSchema(ma.Schema):
-	class Meta:
-		fields = (
-			"id", "setID", "userID", "direction", "line",
-			"steps", "side", "fbSteps", "fbDirectsion", "useHash"
-		)
-		model = Dot
-
 
 class SetSchema(ma.Schema):
 	class Meta:
@@ -129,6 +120,21 @@ class UsersSchema(ma.Schema):
 	class Meta:
 		fields = ("id", "symbol", "label", "firstName", "lastName", "email")
 		model = Users
+
+
+# Serializers
+class DotSchema(ma.SQLAlchemyAutoSchema):
+	class Meta:
+		"""
+		fields = (
+			"id", "set", "userID", "direction", "line",
+			"steps", "side", "fbSteps", "fbDirectsion", "useHash"
+		)
+		"""
+
+		model = Dot
+		include_fk = True
+		load_instance = True
 
 
 dot_schema = DotSchema()
@@ -324,7 +330,8 @@ class CordListResource(Resource):
 				"userLabel": person.label,
 				"userID": person.id,
 				"userName": f"{person.firstName} {person.lastName}",
-				"r": 0, "g": 0, "b": 255
+				"r": 0, "g": 0, "b": 255,
+				"dot": dot_schema.dump(dot)
 			})
 
 		return {"pts": output}

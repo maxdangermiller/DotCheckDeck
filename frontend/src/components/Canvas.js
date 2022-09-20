@@ -38,6 +38,8 @@ const Canvas = props => {
     const [initialPinchDistance, setInitialPinchDistance] = useState(null);
     const [lastZoom, setLastZoom] = useState(1);
 
+    const [translation, setTranslation] = useState({x: 0, y: 0})
+
     useEffect(() => {
 
         const canvas = canvasRef.current
@@ -58,6 +60,7 @@ const Canvas = props => {
             const r = x + w;
             const b = y + h;
 
+            // Draw rounded rectangle
             context.beginPath();
             context.strokeStyle="black";
             context.fillStyle="rgb(240, 240, 240)";
@@ -83,17 +86,30 @@ const Canvas = props => {
             context.fillText(dot["userLabel"], x + w * 0.2, y + h * 0.25);
 
             if (dot["userName"] !== "None None") {
-                context.font = canvas.height * 0.025 + 'px serif';
+                context.font = canvas.height * 0.015 + 'px serif';
 
-                context.fillText(dot["userName"], x + w * 0.5, y + h * 0.6);
+                context.fillText(dot["userName"], x + w * 0.65, y + h * 0.25);
                 context.closePath();
             } else {
-                context.font = canvas.height * 0.025 + 'px serif';
+                context.font = canvas.height * 0.015 + 'px serif';
                 context.fillStyle = "red";
 
-                context.fillText("Unactivated", x + w * 0.5, y + h * 0.6);
+                context.fillText("Unactivated", x + w * 0.65, y + h * 0.25);
                 context.closePath();
             }
+            
+            // {self.steps} {self.direction} {self.line} on {self.side}; {self.fbSteps} {self.fbDirection} {self.useHash}, for {self.counts} counts"
+            context.beginPath();
+            context.font = canvas.height * 0.015 + 'px serif';
+            context.fillStyle = "black";
+
+            const dotI = dot["dot"]
+            const dotStr = dotI["direction"] + " " + dotI["line"] + " on "+ dotI["side"] + "; " + 
+                    dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dotI["counts"] + " counts"
+
+            context.fillText(dotStr, x + w * 0.5, y + h * 0.5);
+            console.log(dot);
+            context.closePath();
         }
 
         const drawLine = (x0, y0, x1, y1, color, thickness) => {
@@ -109,7 +125,7 @@ const Canvas = props => {
             // const w = canvas.width;
             // const h = canvas.height;
         };
-
+        
         const drawPoint = (x, y, color, userLabel) => {
             context.beginPath();
             context.fillStyle = color;
@@ -125,6 +141,7 @@ const Canvas = props => {
             context.closePath();
         };
 
+        // This draws a vertical line across the screen
         const drawVerticalGirdLine = (x, color, thickness) => {
             context.beginPath();
             context.moveTo(x, 0);
@@ -135,6 +152,7 @@ const Canvas = props => {
             context.closePath();
         };
 
+        // This draws a horizontal line across the screen
         const drawHorizontalGirdLine = (y, color, thickness) => {
             context.beginPath();
             context.moveTo(0, y);
@@ -145,6 +163,7 @@ const Canvas = props => {
             context.closePath();
         };
 
+        // This draws the little hash marks
         const drawHash = (startX, endX, y) => {
             // Draw little lines for each yard | There are 5 yards between each major yard line 
             for (var i = 0; i < 5; i++) {
@@ -154,6 +173,7 @@ const Canvas = props => {
             }
         }
 
+        // This draw all the Vertical grid lines
         const drawVerticalGrid = (startX, endX, major) => {
             for (var i = 1; i < STEPS_TO_5_MAJOR; i++) {
                 const x = ((endX - startX) / STEPS_TO_5_MAJOR) * i + startX;
@@ -176,6 +196,7 @@ const Canvas = props => {
             
         }
 
+        // This draws all the Horizontal grid lines centered on the hashRatio var which is a ratio less than 1
         const drawHorizontalGrid = (hashRatio, major) => {
             const hashes = 28;
 
@@ -215,6 +236,7 @@ const Canvas = props => {
             }
         }
 
+        // This draws the Grid Lines
         const drawGridLines = () => {
             drawHorizontalGrid(0, false);
             drawHorizontalGrid(FRONT_HASH_RATIO, false);
@@ -245,6 +267,7 @@ const Canvas = props => {
             }
         }
 
+        // This draws the Yard Lines, hashes, and Grid Lines
         const drawGrid = () => {
             // Draw Grid Lines
             drawGridLines();
@@ -367,6 +390,13 @@ const Canvas = props => {
                         setLastCameraOffset(cameraOffset);
                     }
                 }
+
+                const m2 = ctx.getTransform();
+                const translationX2 = m2.e;
+                const translationY2 = m2.f;
+                const xTranslation = translationX2;
+                const yTranslation = translationY2;
+                setTranslation({x: xTranslation, y: yTranslation, s: scale});
             }
 
             clear();
@@ -430,8 +460,11 @@ const Canvas = props => {
     }, [draw, hoverDot, cameraOffset, cameraZoom])
 
     const dotHover = (event) => {
-        var x = event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft),
-            y = event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
+
+        var x = (event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft) - translation.x) / translation.s,
+            y = (event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop) - translation.y) / translation.s;
+
+        // console.log(x / translation.s, y / translation.s, translation);
 
         const margin = canvasRef.current.height * 0.006;
 
