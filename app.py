@@ -470,6 +470,62 @@ class EndAllBeAllResource(Resource):
 		else:
 			nextDots = None
 
+		allDots = list()
+
+		for dot in curDots:
+			curX, curY = convertHashToCords.convertHashToCords(
+				dot.direction, dot.line, dot.steps,
+				dot.side, dot.fbSteps, dot.fbDirection,
+				dot.useHash, width=width, height=height
+			)
+			lastX, lastY = 0, 0
+			nextX, nextY = 0, 0
+			lastDotData = None
+			nextDotData = None
+
+			userObj = Users.query.filter(Users.id == dot.userID, Users.schoolID == school.id).first()
+
+			if lastSetObj is not None:
+				lastDot = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == lastSetObj.id, Dot.userID == userObj.id).first()
+				if lastDot is not None:
+					lastX, lastY = convertHashToCords.convertHashToCords(
+						lastDot.direction, lastDot.line, lastDot.steps,
+						lastDot.side, lastDot.fbSteps, lastDot.fbDirection,
+						lastDot.useHash, width=width, height=height
+					)
+
+					lastDotData = dot_schema.dump(lastDot)
+					lastDotData["set"] = set_schema.dump(Set.query.filter(Set.id == lastDot.setID).first())
+
+			if nextSetObj is not None:
+				nextDot = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == nextSetObj.id, Dot.userID == userObj.id).first()
+				if nextDot is not None:
+					nextX, nextY = convertHashToCords.convertHashToCords(
+						nextDot.direction, nextDot.line, nextDot.steps,
+						nextDot.side, nextDot.fbSteps, nextDot.fbDirection,
+						nextDot.useHash, width=width, height=height
+					)
+
+					nextDotData = dot_schema.dump(nextDot)
+					nextDotData["set"] = set_schema.dump(Set.query.filter(Set.id == nextDot.setID).first())
+
+			curDotData = dot_schema.dump(dot)
+			curDotData["set"] = set_schema.dump(Set.query.filter(Set.id == curDotData.setID).first())
+
+			allDots.append({
+				"lastX": lastX, "lastY": lastY,
+				"curX": curX, "curY": curY,
+				"nextX": nextX, "nextY": nextY,
+				"userLabel": userObj.label, "userID": userObj.id,
+				"r": 0, "g": 0, "b": 0,
+				"userName": f"{userObj.firstName} {userObj.lastName}",
+				"lastDot": lastDotData,
+				"curDot": curDotData,
+				"nextDot": nextDotData
+			})
+		return allDots
+
+
 
 
 
