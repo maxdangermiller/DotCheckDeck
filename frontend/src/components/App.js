@@ -10,10 +10,13 @@ function App() {
 	const [curSet, setCurSet]  = useState(0);
 	const [sets, setSets] = useState([]);
 	const [dimensions, setDimensions]  = useState({"w": 0, "h": 0});
+	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
 		if (dimensions["w"] !== 0 && dimensions["h"] !== 0 && sets.length !== 0) {
 			console.log("Recalculating Points! " + dimensions["w"] + "x" + dimensions["h"]);
+
+			setLoading(true);
 
 			const url1 = "http://127.0.0.1:5000/cords?set_numb=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
 				"&width=" + dimensions["w"] + "&height=" + dimensions["h"];
@@ -29,6 +32,7 @@ function App() {
 					// exceptions from actual bugs in components.
 					(error) => {
 						console.log(error);
+						setLoading(false);
 					}
 				);
 			const url2 = "http://127.0.0.1:5000/paths?set_numb_1=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
@@ -39,12 +43,14 @@ function App() {
 					(result) => {
 						// console.log(result)
 						setPaths(result);
+						setLoading(false);
 					},
 					// Note: it's important to handle errors here
 					// instead of a catch() block so that we don't swallow
 					// exceptions from actual bugs in components.
 					(error) => {
 						console.log(error);
+						setLoading(false);
 					}
 			);
 		}
@@ -73,7 +79,7 @@ function App() {
 	}
 
 	const changeCurSet = (x) => {
-	  if (x >= 0 && x < sets.length) {
+	  if (x >= 0 && x < sets.length && !loading) {
 		  setCurSet(x);
 	  }
 	}
@@ -81,7 +87,7 @@ function App() {
 	return (
 		<div className="flex-row justify-content-center d-flex align-items-center fullScreen">
 			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass">
-				<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions}/>
+				<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions} curSet={curSet}/>
 			</div>
 			<div className="flex-column justify-content-center d-flex align-items-center sideBarClass">
 				HELLO?

@@ -1,6 +1,7 @@
 import React, {useRef, useEffect, useState} from 'react'
 
 const FUTURE_DOT_COLOR = "rgb(0, 100, 0)";
+const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
 
 const MAX_ZOOM = 3;
 const MIN_ZOOM = 1;
@@ -22,7 +23,7 @@ const GRID_MINOR_DIVISION_COLOR = "rgb(200, 200, 255)";
 
 const Canvas = props => {
 
-    const { draw, setDimensions, curDimensions, ...rest } = props
+    const { draw, setDimensions, curDimensions, curSet, ...rest } = props
     // const { draw, postdraw=_postdraw, ...rest } = props
     // const canvasRef = useCanvas(draw, {predraw, postdraw})
     const canvasRef = useRef(null)
@@ -39,6 +40,9 @@ const Canvas = props => {
     const [lastZoom, setLastZoom] = useState(1);
 
     const [translation, setTranslation] = useState({x: 0, y: 0})
+    const [isAnimation, setIsAnimation] = useState(false);
+    const [drawInfo, setDrawInfo] = useState({});
+    const [animationFrame, setAnimationFrame] = useState(0);
 
     useEffect(() => {
 
@@ -120,7 +124,7 @@ const Canvas = props => {
                 context.fillText("On " + dotI["useHash"], x + w * 0.5, y + h * 0.65, w * 0.9);
             }
             context.fillText("for " + dotI["set"]["counts"] + " counts", x + w * 0.5, y + h * 0.8, w * 0.9);
-            console.log(dot);
+            // console.log(dot);
             context.closePath();
         }
 
@@ -151,6 +155,18 @@ const Canvas = props => {
             context.textAlign = "center";
             context.fillText(userLabel, x, y + canvas.height * 0.02);
             context.closePath();
+        };
+
+        const drawPointAnimation = (x0, y0, x1, y1, counts, count) => {
+            // y = mx + b
+            const m = (y1 - y0) / (x1 - x0)
+            const b = y0 - (m * x0) 
+
+            const x = ((x1 - x0) / counts * count) + x0;
+            const y = m * x + b;
+            
+            drawPoint(x, y, "black", "")
+            
         };
 
         // This draws a vertical line across the screen
@@ -319,7 +335,7 @@ const Canvas = props => {
                 context.textBaseline = "middle";
                 context.textAlign = "center";
 
-                if (x > 11) {
+                if (x > 10) {
                     context.fillText((20 - x) * 5, val, canvas.height * 0.75);
                 } else {
                     context.fillText(x * 5, val, canvas.height * 0.75);
@@ -410,11 +426,13 @@ const Canvas = props => {
                 const yTranslation = translationY2;
                 setTranslation({x: xTranslation, y: yTranslation, s: scale});
             }
-
-            clear();
+            
+            // clear();
             
             // Calls a function provided in props that returns a dict of values
             var data = draw()
+
+            if (data["lines"] && data["pts"] || isAnimation)  { clear(); }
 
             /* 
             -- Draw Return Structure --
@@ -424,52 +442,94 @@ const Canvas = props => {
             }
             */
             // console.log(data)
-            if (data["lines"]) {
-                for (var x = 0; x < data["lines"].length; x++) {
-                    const line = data["lines"][x];
-                    const color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
-                    drawLine(line["startX"], line["startY"], line["endX"], line["endY"], color, 2);
-                    drawPoint(line["endX"], line["endY"], FUTURE_DOT_COLOR, "");
-                    // console.log(line);
-                }
-            }
+            if (!isAnimation) {
+                setDrawInfo(data);
 
-            if (data["pts"]) {
-                for (var x = 0; x < data["pts"].length; x++) {
-                    const dot = data["pts"][x];
-                    const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                    drawPoint(dot["x"], dot["y"], color, dot["userLabel"]);
-                    setDots(dots => [...dots, dot])
-                }
-            }
+                if (data["lines"]) {
+                    for (var x = 0; x < data["lines"].length; x++) {
+                        const line = data["lines"][x];
+                        const color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
+                        // drawLine(line["startX"], line["startY"], line["endX"], line["endY"], color, 1);
+                        // drawPoint(line["endX"], line["endY"], FUTURE_DOT_COLOR, "");
 
-            if (data["sets"] && data["curSet"] !== null) {
-                if (data["sets"][data["curSet"]] !== undefined) {
-                    context.beginPath();
-                    context.font = '36px serif';
-                    context.fillStyle = "black";
-                    context.textBaseline = "middle";
-                    context.textAlign = "center";
-                    context.fillText(data["sets"][data["curSet"]]["setNumb"], canvas.width * 0.025, canvas.height * 0.9);
-                    context.closePath();
-                }
-            }
+                        // console.log(line);
 
-            if (hoverDot["x"] !== undefined) {
-                drawUserDialogue(hoverDot["x"], hoverDot["y"], hoverDot);
+                        // drawPointAnimation(line["startX"], line["startY"], line["endX"], line["endY"], line["nextDot"]["set"]["counts"], 8);
+                    }
+                }
+
+                if (data["pts"]) {
+                    for (var x = 0; x < data["pts"].length; x++) {
+                        const dot = data["pts"][x];
+                        const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                        drawPoint(dot["x"], dot["y"], color, dot["userLabel"]);
+                        setDots(dots => [...dots, dot])
+                    }
+                } else if (drawInfo["lines"]) {
+                    for (var x = 0; x < drawInfo["lines"].length; x++) {
+                        const line = drawInfo["lines"][x];
+                        
+                        drawPoint(line["endX"], line["endY"], CURRENT_DOT_COLOR, line["nextDot"]["userLabel"]);
+                    }
+                }
+
+                if (data["sets"] && data["curSet"] !== null) {
+                    if (data["sets"][data["curSet"]] !== undefined) {
+                        context.beginPath();
+                        context.font = '36px serif';
+                        context.fillStyle = "black";
+                        context.textBaseline = "middle";
+                        context.textAlign = "center";
+                        context.fillText(data["sets"][data["curSet"]]["setNumb"], canvas.width * 0.025, canvas.height * 0.9);
+                        context.closePath();
+                    }
+                }
+
+                if (hoverDot["x"] !== undefined) {
+                    drawUserDialogue(hoverDot["x"], hoverDot["y"], hoverDot);
+                }
+            } else {
+                if (drawInfo["lines"]) {
+                    let curTime =  (frameCount / 2);
+                    if (animationFrame !== 0)   { curTime = ((animationFrame + frameCount) / 2); console.log("USED SAVE FRAME"); }
+
+                    const counts = drawInfo["lines"][0]["nextDot"]["set"]["counts"]
+
+                    for (var x = 0; x < drawInfo["lines"].length; x++) {
+                        const line = drawInfo["lines"][x];
+                        const color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
+
+                        // drawLine(line["startX"], line["startY"], line["endX"], line["endY"], color, 1);
+                        drawPoint(line["startX"], line["startY"], CURRENT_DOT_COLOR, "");
+                        drawPoint(line["endX"], line["endY"], FUTURE_DOT_COLOR, "");
+
+                        drawPointAnimation(line["startX"], line["startY"], line["endX"], line["endY"], counts, curTime);
+                        // console.log(line);
+                    }
+
+                    if (curTime + 1 > counts)   { setIsAnimation(false); setAnimationFrame(0);  }
+                    else                        { setAnimationFrame(frameCount);                }
+                    
+                    // console.log(curTime);
+                } else { setIsAnimation(false); setAnimationFrame(0); }
+                // console.log(frameCount)
+                // setIsAnimation(false);
             }
+            
             ctx.restore()
-
             frameCount++
             animationFrameId = requestAnimationFrame(() => render(ctx))
         }
         render(context)
 
-
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
-    }, [draw, hoverDot, cameraOffset, cameraZoom])
+    }, [draw, hoverDot, cameraOffset, cameraZoom, isAnimation])
+
+    useEffect(() => {
+        setIsAnimation(true);
+    }, [curSet]);
 
     const dotHover = (event) => {
 
@@ -491,7 +551,7 @@ const Canvas = props => {
             }
         });
 
-        if (!wasOnDot) {
+        if (!wasOnDot && hoverDot["x"]) {
             setHoverDot({});
         }
     }

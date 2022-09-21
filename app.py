@@ -412,17 +412,68 @@ class PathsListResource(Resource):
 					nextDot.useHash, width=width, height=height
 				)
 
+				dotData = dot_schema.dump(dot)
+				dotData["set"] = set_schema.dump(Set.query.filter(Set.id == dotData["setID"]).first())
+
+				dotData2 = dot_schema.dump(nextDot)
+				dotData2["set"] = set_schema.dump(Set.query.filter(Set.id == dotData2["setID"]).first())
+
 				# Test here for if it's a follow the leader or straight line path
 				lines.append({
 					"startX": x, "startY": y, "endX": x2, "endY": y2,
 					"userLabel": person.label, "userID": person.id,
-					"r": 0, "g": 0, "b": 0
+					"r": 0, "g": 0, "b": 0,
+					"userName": f"{person.firstName} {person.lastName}",
+					"dot": dotData,
+					"nextDot": dotData2
 				})
 			else:
 				x2 = 0
 				y2 = 0
 
 		return {"lines": lines, "paths": []}
+
+
+class EndAllBeAllResource(Resource):
+	def get(self):
+		curSetNumb = request.args.get('set_numb', "1")
+		userID = request.args.get('user_id', None)
+		schoolCode = request.args.get('school_code', None)
+		width = int(request.args.get('width', 1500))
+		height = int(request.args.get('height', 800))
+
+		# REQUIRE A SCHOOL CODE
+		if schoolCode is None:
+			return "Missing School Code", 404
+
+		# CHECK IF CODE IS VALID
+		school = School.query.filter(School.code == schoolCode).first()
+		if school is None:
+			return "INVALID SCHOOL CODE", 404
+
+		curSetObj = Set.query.filter(Set.schoolID == school.id, Set.setNumb == curSetNumb).first()
+		if curSetObj is None:
+			return "INVALID SET NUMB!", 404
+		
+		lastSetObj = Set.query.filter(Set.schoolID == school.id, Set.id == curSetObj.id - 1).first()
+		nextSetObj = Set.query.filter(Set.schoolID == school.id, Set.id == curSetObj.id + 1).first()
+
+		curDots = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == curSetObj.id).all()
+
+		if lastSetObj is not None:
+			lastDots = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == lastSetObj.id).all()
+		else:
+			lastDots = None
+		
+		if nextSetObj is not None:
+			nextDots = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == nextSetObj.id).all()
+		else:
+			nextDots = None
+
+
+
+
+
 
 
 api.add_resource(DotListResource, '/dots')
