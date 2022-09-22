@@ -6,7 +6,6 @@ const SCHOOL_CODE = "12345678";
 
 function App() {
 	const [dots, setDots] = useState([]);
-	const [paths, setPaths] = useState([]);
 	const [curSet, setCurSet]  = useState(0);
 	const [sets, setSets] = useState([]);
 	const [dimensions, setDimensions]  = useState({"w": 0, "h": 0});
@@ -18,7 +17,7 @@ function App() {
 
 			setLoading(true);
 
-			const url1 = "http://127.0.0.1:5000/cords?set_numb=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
+			const url1 = "http://127.0.0.1:5000/end-all-be-all?set_numb=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
 				"&width=" + dimensions["w"] + "&height=" + dimensions["h"];
 			fetch(url1)
 				.then(res => res.json())
@@ -26,6 +25,7 @@ function App() {
 					(result) => {
 						// console.log(result)
 						setDots(result);
+						setLoading(false);
 					},
 					// Note: it's important to handle errors here
 					// instead of a catch() block so that we don't swallow
@@ -35,24 +35,6 @@ function App() {
 						setLoading(false);
 					}
 				);
-			const url2 = "http://127.0.0.1:5000/paths?set_numb_1=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
-				"&width=" + dimensions["w"] + "&height=" + dimensions["h"];
-			fetch(url2)
-				.then(res => res.json())
-				.then(
-					(result) => {
-						// console.log(result)
-						setPaths(result);
-						setLoading(false);
-					},
-					// Note: it's important to handle errors here
-					// instead of a catch() block so that we don't swallow
-					// exceptions from actual bugs in components.
-					(error) => {
-						console.log(error);
-						setLoading(false);
-					}
-			);
 		}
 	}, [curSet, dimensions, sets])
 
@@ -75,19 +57,20 @@ function App() {
 
 	const draw = () => {
 		// console.log("DRAWING!")
-		return {"pts": dots["pts"], "lines": paths["lines"], "paths": paths["paths"], "sets": sets, "curSet": curSet};
+		return dots;
 	}
 
 	const changeCurSet = (x) => {
-	  if (x >= 0 && x < sets.length && !loading) {
-		  setCurSet(x);
-	  }
+		if (x >= 0 && x < sets.length && !loading) {
+			// console.log("Changing set");
+			setCurSet(x);
+		}
 	}
 
 	return (
 		<div className="flex-row justify-content-center d-flex align-items-center fullScreen">
 			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass">
-				<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions} curSet={curSet}/>
+				<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions} curSet={curSet} sets={sets}/>
 			</div>
 			<div className="flex-column justify-content-center d-flex align-items-center sideBarClass">
 				HELLO?

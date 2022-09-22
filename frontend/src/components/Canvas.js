@@ -23,7 +23,7 @@ const GRID_MINOR_DIVISION_COLOR = "rgb(200, 200, 255)";
 
 const Canvas = props => {
 
-    const { draw, setDimensions, curDimensions, curSet, ...rest } = props
+    const { draw, setDimensions, curDimensions, curSet, sets, ...rest } = props
     // const { draw, postdraw=_postdraw, ...rest } = props
     // const canvasRef = useCanvas(draw, {predraw, postdraw})
     const canvasRef = useRef(null)
@@ -58,8 +58,6 @@ const Canvas = props => {
             const x = dotX + canvas.height * 0.01;
             const y = dotY - h - canvas.height * 0.01;
             const radius = 5;
-
-
 
             const r = x + w;
             const b = y + h;
@@ -107,7 +105,7 @@ const Canvas = props => {
             context.font = canvas.height * 0.015 + 'px serif';
             context.fillStyle = "black";
 
-            const dotI = dot["dot"]
+            const dotI = dot["curDot"]
             const dotStr = dotI["direction"] + " " + dotI["line"] + " on "+ dotI["side"] + "; " + 
                     dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dotI["set"]["counts"] + " counts"
 
@@ -430,9 +428,9 @@ const Canvas = props => {
             // clear();
             
             // Calls a function provided in props that returns a dict of values
-            var data = draw()
+            let data = draw()
 
-            if (data["lines"] && data["pts"] || isAnimation)  { clear(); }
+            if (data.length !== 0 || isAnimation)  { clear(); }
 
             /* 
             -- Draw Return Structure --
@@ -445,7 +443,18 @@ const Canvas = props => {
             if (!isAnimation) {
                 setDrawInfo(data);
 
-                if (data["lines"]) {
+                for (let x = 0; x < data.length; x++) {
+                    if (data[x]["curDot"]) {
+                        const dot = data[x];
+                        const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                        drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
+                        // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
+                        setDots(dots => [...dots, dot])
+                    }
+                }
+
+                /*
+                if (data["curDot"]) {
                     for (var x = 0; x < data["lines"].length; x++) {
                         const line = data["lines"][x];
                         const color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
@@ -473,29 +482,56 @@ const Canvas = props => {
                     }
                 }
 
-                if (data["sets"] && data["curSet"] !== null) {
-                    if (data["sets"][data["curSet"]] !== undefined) {
-                        context.beginPath();
-                        context.font = '36px serif';
-                        context.fillStyle = "black";
-                        context.textBaseline = "middle";
-                        context.textAlign = "center";
-                        context.fillText(data["sets"][data["curSet"]]["setNumb"], canvas.width * 0.025, canvas.height * 0.9);
-                        context.closePath();
-                    }
+                 */
+
+                if (data[0]) {
+                    context.beginPath();
+                    context.font = '36px serif';
+                    context.fillStyle = "black";
+                    context.textBaseline = "middle";
+                    context.textAlign = "center";
+                    context.fillText(data[0]["curSetNumb"], canvas.width * 0.025, canvas.height * 0.9);
+                    context.closePath();
                 }
 
-                if (hoverDot["x"] !== undefined) {
-                    drawUserDialogue(hoverDot["x"], hoverDot["y"], hoverDot);
+                if (hoverDot["curX"] !== undefined) {
+                    drawUserDialogue(hoverDot["curX"], hoverDot["curY"], hoverDot);
                 }
-            } else {
-                if (drawInfo["lines"]) {
+            }
+            else {
+                if (drawInfo[0] && sets) {
                     let curTime =  (frameCount / 2);
                     if (animationFrame !== 0)   { curTime = ((animationFrame + frameCount) / 2); console.log("USED SAVE FRAME"); }
 
-                    const counts = drawInfo["lines"][0]["nextDot"]["set"]["counts"]
+                    let counts = 16;  // Random Default
 
-                    for (var x = 0; x < drawInfo["lines"].length; x++) {
+                    for (let x = 0; x < drawInfo.length; x++) {
+                        if (drawInfo[x]["curDot"]) {
+                            const dot = drawInfo[x];
+                            const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                            
+                            try {
+                                if (sets[curSet]["setNumb"] === dot["nextDot"]["set"]["setNumb"]) {
+                                    drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
+                                    drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
+
+                                    counts = drawInfo[x]["nextDot"]["set"]["counts"]
+                                    drawPointAnimation(dot["curX"], dot["curY"], dot["nextX"], dot["nextY"], counts, curTime);
+                                } else {
+                                    drawPoint(dot["lastX"], dot["lastY"], FUTURE_DOT_COLOR, "");
+                                    drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
+
+                                    counts = drawInfo[x]["lastDot"]["set"]["counts"]
+                                    drawPointAnimation(dot["curX"], dot["curY"], dot["lastX"], dot["lastY"], counts, curTime);
+                                }
+                            } catch (e) {
+                                
+                            } 
+
+                        }
+                    }
+                    /*
+                    for (let x = 0; x < drawInfo["lines"].length; x++) {
                         const line = drawInfo["lines"][x];
                         const color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
 
@@ -506,6 +542,7 @@ const Canvas = props => {
                         drawPointAnimation(line["startX"], line["startY"], line["endX"], line["endY"], counts, curTime);
                         // console.log(line);
                     }
+                    */
 
                     if (curTime + 1 > counts)   { setIsAnimation(false); setAnimationFrame(0);  }
                     else                        { setAnimationFrame(frameCount);                }
@@ -533,25 +570,25 @@ const Canvas = props => {
 
     const dotHover = (event) => {
 
-        var x = (event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft) - translation.x) / translation.s,
+        let x = (event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft) - translation.x) / translation.s,
             y = (event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop) - translation.y) / translation.s;
 
         // console.log(x / translation.s, y / translation.s, translation);
 
         const margin = canvasRef.current.height * 0.006;
 
-        var wasOnDot = false;
+        let wasOnDot = false;
 
         // Collision detection between clicked offset and element.
         dots.forEach(function(dot) {
-            if (y > dot["y"] - margin && y < dot["y"] + margin  && x > dot["x"] - margin && x < dot["x"] + margin) {
+            if (y > dot["curY"] - margin && y < dot["curY"] + margin  && x > dot["curX"] - margin && x < dot["curX"] + margin) {
                 // alert('This is: ' + dot["userLabel"]);
                 wasOnDot = true;
                 setHoverDot(dot);
             }
         });
 
-        if (!wasOnDot && hoverDot["x"]) {
+        if (!wasOnDot && hoverDot["curX"]) {
             setHoverDot({});
         }
     }

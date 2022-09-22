@@ -510,26 +510,21 @@ class EndAllBeAllResource(Resource):
 					nextDotData["set"] = set_schema.dump(Set.query.filter(Set.id == nextDot.setID).first())
 
 			curDotData = dot_schema.dump(dot)
-			curDotData["set"] = set_schema.dump(Set.query.filter(Set.id == curDotData.setID).first())
+			curDotData["set"] = set_schema.dump(Set.query.filter(Set.id == dot.setID).first())
 
 			allDots.append({
 				"lastX": lastX, "lastY": lastY,
 				"curX": curX, "curY": curY,
 				"nextX": nextX, "nextY": nextY,
 				"userLabel": userObj.label, "userID": userObj.id,
-				"r": 0, "g": 0, "b": 0,
+				"r": 0, "g": 0, "b": 255,
 				"userName": f"{userObj.firstName} {userObj.lastName}",
 				"lastDot": lastDotData,
 				"curDot": curDotData,
-				"nextDot": nextDotData
+				"nextDot": nextDotData,
+				"curSetNumb": curSetObj.setNumb,
 			})
 		return allDots
-
-
-
-
-
-
 
 
 api.add_resource(DotListResource, '/dots')
@@ -538,6 +533,7 @@ api.add_resource(UsersListResource, '/users')
 api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(CordListResource, '/cords')
 api.add_resource(PathsListResource, '/paths')
+api.add_resource(EndAllBeAllResource, '/end-all-be-all')
 
 
 # For use to build database
