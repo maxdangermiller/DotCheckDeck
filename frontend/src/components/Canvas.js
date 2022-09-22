@@ -13,6 +13,9 @@ const HEIGHT_DIVIDED_INTO_5_YARDS = (53 + 1/3) / 5;
 
 const FRONT_HASH_RATIO = 1/3;
 const BACK_HASH_RATIO = 2/3;
+const FRONT_COLLAGE_HASH_RATIO = 6/16;
+const BACK_COLLAGE_HASH_RATIO = 10/16;
+
 const DISTANCE_BETWEEN_HASHES_IN_YDS = (53 + 1/3) / 3;
 const HEIGHT_IN_YDS = 53 + 1/3;
 const RELATIVE_HASH_HEIGHT = 0.01;
@@ -20,6 +23,7 @@ const RELATIVE_HASH_WIDTH = 0.005;
 
 const GRID_MAJOR_DIVISION_COLOR = "rgb(100, 100, 255)";
 const GRID_MINOR_DIVISION_COLOR = "rgb(200, 200, 255)";
+const COLLAGE_HASH_COLOR = "rgb(100, 0, 0)";
 
 const Canvas = props => {
 
@@ -43,6 +47,7 @@ const Canvas = props => {
     const [isAnimation, setIsAnimation] = useState(false);
     const [drawInfo, setDrawInfo] = useState({});
     const [animationFrame, setAnimationFrame] = useState(0);
+    const [animationDirection, setAnimationDirection] = useState(0);  // This will be 0 until there's an animation and then it will be set to 1 for forward or 0 for backward
 
     useEffect(() => {
 
@@ -157,13 +162,20 @@ const Canvas = props => {
 
         const drawPointAnimation = (x0, y0, x1, y1, counts, count) => {
             // y = mx + b
-            const m = (y1 - y0) / (x1 - x0)
-            const b = y0 - (m * x0) 
+            if (x1 - x0 !== 0) {
+                const m = (y1 - y0) / (x1 - x0)
+                const b = y0 - (m * x0) 
+    
+                const x = ((x1 - x0) / counts * count) + x0;
+                const y = m * x + b;
 
-            const x = ((x1 - x0) / counts * count) + x0;
-            const y = m * x + b;
-            
-            drawPoint(x, y, "black", "")
+                drawPoint(x, y, "black", "")
+            } else {
+                const x = x0
+                const y = ((y1 - y0) / counts * count) + y0;
+
+                drawPoint(x, y, "black", "")
+            }
             
         };
 
@@ -190,12 +202,12 @@ const Canvas = props => {
         };
 
         // This draws the little hash marks
-        const drawHash = (startX, endX, y) => {
+        const drawHash = (startX, endX, y, color) => {
             // Draw little lines for each yard | There are 5 yards between each major yard line 
             for (var i = 0; i < 5; i++) {
                 const x = ((endX - startX) / 5) * i + startX;
 
-                drawLine(x, y - canvas.height * RELATIVE_HASH_HEIGHT, x, y + canvas.height * RELATIVE_HASH_HEIGHT, "black", 1)
+                drawLine(x, y - canvas.height * RELATIVE_HASH_HEIGHT, x, y + canvas.height * RELATIVE_HASH_HEIGHT, color, 1)
             }
         }
 
@@ -307,8 +319,10 @@ const Canvas = props => {
                 
                 
                 if (nextVal <= canvas.width) {
-                    drawHash(val, nextVal, canvas.height * FRONT_HASH_RATIO);
-                    drawHash(val, nextVal, canvas.height * BACK_HASH_RATIO);
+                    drawHash(val, nextVal, canvas.height * FRONT_HASH_RATIO, "black");
+                    drawHash(val, nextVal, canvas.height * BACK_HASH_RATIO, "black");
+                    drawHash(val, nextVal, canvas.height * FRONT_COLLAGE_HASH_RATIO, COLLAGE_HASH_COLOR);
+                    drawHash(val, nextVal, canvas.height * BACK_COLLAGE_HASH_RATIO, COLLAGE_HASH_COLOR);
                 }
 
                 // Draw little lines on the hash marks | FRONT HASH
@@ -326,6 +340,23 @@ const Canvas = props => {
                     val + canvas.width * RELATIVE_HASH_WIDTH, 
                     canvas.height * BACK_HASH_RATIO,
                     "black", 1
+                );
+
+                // Draw little lines on the hash marks | FRONT COLLAGE HASH
+                drawLine(
+                    val - canvas.width * RELATIVE_HASH_WIDTH, 
+                    canvas.height * FRONT_COLLAGE_HASH_RATIO, 
+                    val + canvas.width * RELATIVE_HASH_WIDTH, 
+                    canvas.height * FRONT_COLLAGE_HASH_RATIO,
+                    COLLAGE_HASH_COLOR, 1
+                );
+                // Draw little lines on the hash marks | BACK COLLAGE HASH
+                drawLine(
+                    val - canvas.width * RELATIVE_HASH_WIDTH, 
+                    canvas.height * BACK_COLLAGE_HASH_RATIO, 
+                    val + canvas.width * RELATIVE_HASH_WIDTH, 
+                    canvas.height * BACK_COLLAGE_HASH_RATIO,
+                    COLLAGE_HASH_COLOR, 1
                 );
                 
                 context.beginPath();
@@ -441,17 +472,45 @@ const Canvas = props => {
             */
             // console.log(data)
             if (!isAnimation) {
-                setDrawInfo(data);
+                
+                if (data !== drawInfo) {
+                    // console.log("NEW FRAME!")
+                    setDrawInfo(data);
+                    setAnimationDirection(0);
+                    for (let x = 0; x < data.length; x++) {
+                        if (data[x]["curDot"]) {
+                            const dot = data[x];
+                            const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                            drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
+                            // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
+                            setDots(dots => [...dots, dot])
+                        }
+                    }
+                } else {
+                    // console.log("Using backup: ", animationDirection)
+                    for (let x = 0; x < drawInfo.length; x++) {
+                        if (drawInfo[x]["curDot"]) {
+                            const dot = drawInfo[x];
+                            const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                            if (animationDirection === 1) {
+                                drawPoint(dot["nextX"], dot["nextY"], color, dot["userLabel"]);
+                            } else if (animationDirection === -1) {
+                                drawPoint(dot["lastX"], dot["lastY"], color, dot["userLabel"]);
+                            } else {
+                                drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
+                            }
+                            // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
+                            // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
+                            // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
+                            // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
 
-                for (let x = 0; x < data.length; x++) {
-                    if (data[x]["curDot"]) {
-                        const dot = data[x];
-                        const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                        drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
-                        // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
-                        setDots(dots => [...dots, dot])
+                            // drawPoint(dot["lastX"], dot["lastY"], color, dot["userLabel"]);
+                            // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
+                            setDots(dots => [...dots, dot])
+                        }
                     }
                 }
+                
 
                 /*
                 if (data["curDot"]) {
@@ -484,26 +543,18 @@ const Canvas = props => {
 
                  */
 
-                if (data[0]) {
-                    context.beginPath();
-                    context.font = '36px serif';
-                    context.fillStyle = "black";
-                    context.textBaseline = "middle";
-                    context.textAlign = "center";
-                    context.fillText(data[0]["curSetNumb"], canvas.width * 0.025, canvas.height * 0.9);
-                    context.closePath();
-                }
-
                 if (hoverDot["curX"] !== undefined) {
                     drawUserDialogue(hoverDot["curX"], hoverDot["curY"], hoverDot);
                 }
             }
             else {
                 if (drawInfo[0] && sets) {
-                    let curTime =  (frameCount / 2);
-                    if (animationFrame !== 0)   { curTime = ((animationFrame + frameCount) / 2); console.log("USED SAVE FRAME"); }
+                    let curTime =  (frameCount / 4);
+                    if (animationFrame !== 0)   { curTime = ((animationFrame + frameCount) / 4); }
 
                     let counts = 16;  // Random Default
+
+                    let direction = 0;
 
                     for (let x = 0; x < drawInfo.length; x++) {
                         if (drawInfo[x]["curDot"]) {
@@ -517,18 +568,24 @@ const Canvas = props => {
 
                                     counts = drawInfo[x]["nextDot"]["set"]["counts"]
                                     drawPointAnimation(dot["curX"], dot["curY"], dot["nextX"], dot["nextY"], counts, curTime);
+
+                                    direction = 1;
+                                    
                                 } else {
                                     drawPoint(dot["lastX"], dot["lastY"], FUTURE_DOT_COLOR, "");
                                     drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
 
                                     counts = drawInfo[x]["lastDot"]["set"]["counts"]
                                     drawPointAnimation(dot["curX"], dot["curY"], dot["lastX"], dot["lastY"], counts, curTime);
+
+                                    direction = -1;
                                 }
                             } catch (e) {
                                 
                             } 
 
                         }
+                        if (animationDirection !== direction) { setAnimationDirection(direction); }
                     }
                     /*
                     for (let x = 0; x < drawInfo["lines"].length; x++) {
@@ -633,12 +690,14 @@ const Canvas = props => {
     }
 
     const handleTouch = (e, singleTouchHandler) => {
+        // console.log("TOUCH!")
         if ( e.touches.length === 1 ) {
             singleTouchHandler(e)
         } else if (e.type === "touchmove" && e.touches.length === 2) {
             setIsDragging(false);
             handlePinch(e)
         }
+        dotHover(e);
     }
 
     const handlePinch = (e) => {

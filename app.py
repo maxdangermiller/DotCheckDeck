@@ -24,12 +24,12 @@ https://stackoverflow.com/questions/65888631/how-do-i-use-heroku-postgres-with-m
 https://towardsdatascience.com/deploy-a-micro-flask-application-into-heroku-with-postgresql-database-d95fd0c19408
 """
 
-ENV = "dev"
+ENV = "production"
 
 if ENV == 'dev':
 	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
 else:
-	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
+	app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://kjsknarefmtswq:067909a25be5d30e96fd2ecf47f2ef34cc869897895e6130d2ec0b2b5540b577@ec2-44-207-253-50.compute-1.amazonaws.com:5432/d6tgv8eb79479i"
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -578,9 +578,10 @@ def addAllDataFromPDF(file):
 
 
 if __name__ == "__main__":
-	# addAllDataFromPDF("Mvt-1and2.pdf")
-	# addAllDataFromPDF("Mvt-3.pdf")
-	# addAllDataFromPDF("Mvt-4.pdf")
+	if len(Dot.query.all()) == 0:
+		addAllDataFromPDF("Mvt-1and2.pdf")
+		addAllDataFromPDF("Mvt-3.pdf")
+		addAllDataFromPDF("Mvt-4.pdf")
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)

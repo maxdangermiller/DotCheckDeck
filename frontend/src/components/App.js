@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './App.css';
 import Canvas from './Canvas'
 
@@ -7,9 +7,13 @@ const SCHOOL_CODE = "12345678";
 function App() {
 	const [dots, setDots] = useState([]);
 	const [curSet, setCurSet]  = useState(0);
+	const [curSetNumb, setCurSetNumb]  = useState("1");
+	const [curSetInfo, setCurSetInfo]  = useState(null);
 	const [sets, setSets] = useState([]);
 	const [dimensions, setDimensions]  = useState({"w": 0, "h": 0});
 	const [loading, setLoading] = useState(false);
+
+	const setInput = useRef(null);
 
 	useEffect(() => {
 		if (dimensions["w"] !== 0 && dimensions["h"] !== 0 && sets.length !== 0) {
@@ -64,7 +68,24 @@ function App() {
 		if (x >= 0 && x < sets.length && !loading) {
 			// console.log("Changing set");
 			setCurSet(x);
+			setCurSetNumb(sets[x]["setNumb"]);
+			setCurSetInfo(sets[x]);
+			console.log(sets[x])
 		}
+	}
+
+	const changeCurSetNumb = (event) => {
+		if (event.key !== "Enter") { return; }
+		event.preventDefault();
+		for (let x = 0; x < sets.length; x++) {
+			if (sets[x]["setNumb"] === event.target.value) {
+				setCurSet(x);
+				// setCurSetNumb(numb);
+				return;
+			}
+		}
+		setCurSetNumb(sets[curSet]["setNumb"]);
+		setInput.current.blur();
 	}
 
 	return (
@@ -73,10 +94,46 @@ function App() {
 				<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions} curSet={curSet} sets={sets}/>
 			</div>
 			<div className="flex-column justify-content-center d-flex align-items-center sideBarClass">
-				HELLO?
+				<div className='mb-2' style={{height: "20vh"}}>
+					{
+						!loading ?
+						<input 
+							ref={setInput} 
+							value={curSetNumb} 
+							className="invisibleInput" 
+							onChange={(e) => setCurSetNumb(e.target.value)} 
+							onKeyDown={(e) => changeCurSetNumb(e)}>
+						</input> :
+						<div className="spinner-border" role="status">
+							<span className="visually-hidden">Loading...</span>
+					  	</div>
+					}
+					
+					{
+						!loading && curSetInfo !== null ?
+						<div>
+							<h1 className='centerText'><strong>Measure:</strong> {curSetInfo["measure"]}</h1>
+							<h1 className='centerText'><strong>Counts:</strong> {curSetInfo["counts"]}</h1>
+						</div>
+						: <div></div>
+					}
+					
+				</div>
+				<div className='mb-2'>
+					<button 
+						type="button" 
+						className="btn btn-warning" 
+						onClick={() => changeCurSet(curSet - 1)}
+						disabled={curSet > 0 ? false : true}
+					>&#8592;</button>
+					<button 
+						type="button" 
+						className="btn btn-success" 
+						onClick={() => changeCurSet(curSet + 1)}
+						disabled={curSet < sets.length - 1 ? false : true}
+					>&#8594;</button>
+				</div>
 			</div>
-			<button style={{position: 'absolute', bottom: '2vh', right: '7vh', width: '4vh', height: '4vh'}} onClick={() => changeCurSet(curSet - 1)}>&#8592;</button>
-			<button style={{position: 'absolute', bottom: '2vh', right: '2vh', width: '4vh', height: '4vh'}} onClick={() => changeCurSet(curSet + 1)}>&#8594;</button>
 		</div>
 	);
 }
