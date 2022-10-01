@@ -24,7 +24,7 @@ https://stackoverflow.com/questions/65888631/how-do-i-use-heroku-postgres-with-m
 https://towardsdatascience.com/deploy-a-micro-flask-application-into-heroku-with-postgresql-database-d95fd0c19408
 """
 
-ENV = "production"
+ENV = "dev"
 
 if ENV == 'dev':
 	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
@@ -145,7 +145,8 @@ class SetSchema(ma.Schema):
 
 class UsersSchema(ma.Schema):
 	class Meta:
-		fields = ("id", "symbol", "label", "firstName", "lastName", "email")
+		# fields = ("id", "symbol", "label", "firstName", "lastName", "email")
+		fields = ("id", "label")
 		model = Users
 
 
@@ -210,6 +211,24 @@ class UsersListResource(Resource):
 		users = Users.query.all()
 
 		return users_schema.dump(users)
+
+
+class SchoolCodeAuthResource(Resource):
+	def post(self):
+		if "school_code" not in request.json:
+			return "Missing School Code param", 404
+
+		# Attempt to load the School with that code
+		school = School.query.filter(School.code == request.json['school_code']).first()
+
+		# Check to see if we got a school obj
+		if school is None:
+			return "INVALID SCHOOL CODE", 404
+		
+		users = Users.query.filter(Users.schoolID == school.id, Users.email == None)
+
+		
+		return {"name": school.name, "users": users_schema.dump(users), "email": school.email}, 200
 
 
 # To allow a user to setup their credentials, as by default they cannot login
@@ -530,6 +549,7 @@ class EndAllBeAllResource(Resource):
 api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
 api.add_resource(UsersListResource, '/users')
+api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(CordListResource, '/cords')
 api.add_resource(PathsListResource, '/paths')
@@ -544,7 +564,7 @@ def addAllDataFromPDF(file):
 	stuff = pdfReader.pdfReader(file)
 
 	if len(School.query.all()) == 0:
-		school = School(name="U-High")
+		school = School(name="U-High", email="max@benmiller.com")
 		school.generateCode()
 		db.session.add(school)
 		db.session.commit()
@@ -553,12 +573,12 @@ def addAllDataFromPDF(file):
 
 	# print(stuff[34])
 	for dotSheet in stuff:
-		if Users.query.filter_by(symbol=dotSheet.symbol, label=dotSheet.label).first() is None:
-			user = Users(symbol=dotSheet.symbol, label=dotSheet.label, schoolID=school.id)
+		if Users.query.filter_by(label=dotSheet.label, schoolID=school.id).first() is None:
+			user = Users(label=dotSheet.label, schoolID=school.id, symbol=dotSheet.symbol)
 			db.session.add(user)
 			db.session.commit()
 		else:
-			user = Users.query.filter_by(symbol=dotSheet.symbol, label=dotSheet.label).first()
+			user = Users.query.filter_by(label=dotSheet.label, schoolID=school.id).first()
 
 		for dot in dotSheet.dots:
 			if Set.query.filter_by(setNumb=dot.setNumb, schoolID=school.id).first() is None:

@@ -575,7 +575,7 @@ const Canvas = props => {
                                     drawPoint(dot["lastX"], dot["lastY"], FUTURE_DOT_COLOR, "");
                                     drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
 
-                                    counts = drawInfo[x]["lastDot"]["set"]["counts"]
+                                    counts = drawInfo[x]["curDot"]["set"]["counts"]
                                     drawPointAnimation(dot["curX"], dot["curY"], dot["lastX"], dot["lastY"], counts, curTime);
 
                                     direction = -1;
