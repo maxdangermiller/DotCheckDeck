@@ -250,9 +250,12 @@ const Canvas = props => {
             const endY = hashLocation + hashDistance;
             // console.log(hashes);
             
-            for (var i = 1; i < majorHashes + 1; i++) {
-                const y = ((endY - startY) / (majorHashes + 1)) * i + startY;
-                const nextY = ((endY - startY) / (majorHashes + 1)) * (i + 1) + startY;
+            for (var i = 1; i < majorHashes; i++) {
+                // const y = ((endY - startY) / (majorHashes + 1)) * i + startY;
+                // const nextY = ((endY - startY) / (majorHashes + 1)) * (i + 1) + startY;
+                const y = startY + oneStep * i * 4;
+                const nextY = startY + oneStep * (i + 1) * 4;
+                // console.log(y, nextY, oneStep);
 
                 if (y > canvas.height) { break; }
 
@@ -391,8 +394,8 @@ const Canvas = props => {
                 canvasRef.current.style.width = "100%";
                 canvasRef.current.style.height = "100%";
 
-                const heightRatio = canvas.offsetWidth * 3 / 5;
-                const widthRatio = canvas.offsetHeight * 5 / 3;
+                const heightRatio = canvas.offsetWidth * 8 / 15;
+                const widthRatio = canvas.offsetHeight * 15 / 8;
 
                 if (heightRatio > canvas.offsetHeight && widthRatio ) {
                     canvas.width  = widthRatio;

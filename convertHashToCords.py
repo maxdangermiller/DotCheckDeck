@@ -30,11 +30,11 @@ def side2Convert(line) -> int:
 
 def hashConvert(useHash) -> float:
     if useHash == "Front side":
-        return 160
+        return 1
     if useHash == "Front Hash":
-        return 106 + 2/3
+        return 2/3
     if useHash == "Back Hash":
-        return 53 + 1/3
+        return 1/3
     return 0
 
 
@@ -69,7 +69,7 @@ def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHa
     ydsInStep = 0.625
 
     relX = int(line) + (dModifier * sModifier * steps * ydsInStep)
-    x = round(relX * (width / 100))
+    x = round(relX * (width / 100), 2)
 
     if fbDirection == "Behind":
         fbdModifier = -1
@@ -85,16 +85,19 @@ def convertHashToCords(direction, line, steps, side, fbSteps, fbDirection, useHa
     if debug:
         print(f"{hashY} + {(fbdModifier * fbSteps * ftInStep)} = {hashY + (fbdModifier * fbSteps * ftInStep)}")
     
-    relY = hashY + (fbdModifier * fbSteps * ftInStep)
+    # oneStep = canvas.height / 1920 * 22.5;
+    # height / 1920 * 22.5
+    oneStep = height / 1920 * 22.5
+    relY = (fbdModifier * fbSteps * oneStep)
     """
      relY       ?
     ------ = --------
      160      height
     """
-    y = round((relY * height) / 160)
+    y = round(height * hashY + relY, 2)
 
     if debug:
-        print(f"rel: ({relX}yd, {relY}ft) -> ({x}, {y})")
+        print(f"rel: ({relX}yd, {relY}px) -> ({x}, {y})")
     
     return x, y
 

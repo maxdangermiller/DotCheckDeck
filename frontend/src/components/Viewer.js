@@ -96,7 +96,17 @@ function Viewer() {
 			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass">
 				<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions} curSet={curSet} sets={sets}/>
 			</div>
-			<ViewerSideBar curSetInfo={curSetInfo} curSetNumb={curSetNumb} setInput={setInput} curSet={curSet} sets={sets} changeCurSet={changeCurSet}/>
+			<ViewerSideBar 
+				curSetInfo={curSetInfo} 
+				curSetNumb={curSetNumb} 
+				setInput={setInput} 
+				curSet={curSet} 
+				sets={sets} 
+				changeCurSet={changeCurSet}
+				loading={loading}
+				setCurSetNumb={setCurSetNumb}
+				changeCurSetNumb={changeCurSetNumb}
+			/>
 		</div>
 	);
 }
