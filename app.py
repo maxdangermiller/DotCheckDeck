@@ -573,20 +573,20 @@ def addAllDataFromPDF(file):
 
 	# print(stuff[34])
 	for dotSheet in stuff:
-		if Users.query.filter_by(label=dotSheet.label, schoolID=school.id).first() is None:
+		if Users.query.filter(Users.label==dotSheet.label, Users.schoolID==school.id).first() is None:
 			user = Users(label=dotSheet.label, schoolID=school.id, symbol=dotSheet.symbol)
 			db.session.add(user)
 			db.session.commit()
 		else:
-			user = Users.query.filter_by(label=dotSheet.label, schoolID=school.id).first()
+			user = Users.query.filter(Users.label==dotSheet.label, Users.schoolID==school.id).first()
 
 		for dot in dotSheet.dots:
-			if Set.query.filter_by(setNumb=dot.setNumb, schoolID=school.id).first() is None:
+			if Set.query.filter(Set.setNumb==dot.setNumb, Set.schoolID==school.id).first() is None:
 				_set = Set(setNumb=dot.setNumb, measure=dot.measure, counts=dot.counts, schoolID=school.id)
 				db.session.add(_set)
 				db.session.commit()
 			else:
-				_set = Set.query.filter_by(setNumb=dot.setNumb, schoolID=school.id).first()
+				_set = Set.query.filter(Set.setNumb==dot.setNumb, Set.schoolID==school.id).first()
 			print(f"Adding dot: '{dot}' to DATABASE [SET {_set.setNumb}]")
 			_dot = Dot(
 				setID=_set.id, userID=user.id, direction=str(dot.direction),

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { Autocomplete, TextField } from '@mui/material';
 
 const OptionsDropDown = (props) => {
 
     const [dropDownOpen, setDropDownOpen] = useState(false);
+
+    const { userOptions, setUserOptions, dots, ...rest } = props
 
     /*
     Multi-set Check box
@@ -11,8 +14,54 @@ const OptionsDropDown = (props) => {
     Highlight User Dropdown
     */
 
+    const setMultiSelect = (value) => {
+        setUserOptions({...userOptions,  "multiSelect": value});
+    }
+
+    const setDrawPaths = (value) => {
+        setUserOptions({...userOptions,  "drawPath": value});
+    }
+
+    const setShowMovementBrackets = (value) => {
+        setUserOptions({...userOptions,  "showMovementBrackets": value});
+    }
+
+    const setHighlightUser = (value) => {
+        setUserOptions({...userOptions,  "highlightUser": value});
+    }
+
+    const getUserOptions = (value) => {
+        let output = [];
+
+        for (let x = 0; x < value.length; x++) {
+            output.push({
+                id: value[x]["userID"], 
+                label: value[x]["userLabel"], 
+            });
+            
+        }
+
+        return output.sort(function(a, b) {
+            let keyA = a["label"].match(/(\d+)/);
+            let keyB = b["label"].match(/(\d+)/);
+            let keyAPrefix = a["label"].replace(/[0-9]/g, '');
+            let keyBPrefix = b["label"].replace(/[0-9]/g, '');
+
+            // Compare the letter "prefixes" first
+            if (keyAPrefix < keyBPrefix) return -1;
+            if (keyAPrefix > keyBPrefix) return 1;
+
+            // Compare the numbers
+            if (parseInt(keyA) < parseInt(keyB)) return -1;
+            if (parseInt(keyA) > parseInt(keyB)) return 1;
+
+            return 0;
+        });
+          
+    }
+
     return (
-        <div className="accordion" id="accordionPanelsStayOpenExample">
+        <div className="accordion" style={{width: '90%'}}>
             <div className="accordion-item">
                 <h2 className="accordion-header">
                     <button 
@@ -27,7 +76,34 @@ const OptionsDropDown = (props) => {
                     dropDownOpen ?
                     <div className="accordion-collapse collapse show">
                         <div className="accordion-body">
-                            Test 12345
+                            <div className="form-check">
+                                <input className="form-check-input" type="checkbox" value="" onChange={() => setMultiSelect(!userOptions.multiSelect)} checked={userOptions.multiSelect} />
+                                <label className="form-check-label">
+                                    Enable Multi-Select
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input className="form-check-input" type="checkbox" value="" onChange={() => setDrawPaths(!userOptions.drawPath)} checked={userOptions.drawPath} />
+                                <label className="form-check-label">
+                                    Draw Paths
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input className="form-check-input" type="checkbox" value="" onChange={() => setShowMovementBrackets(!userOptions.showMovementBrackets)} checked={userOptions.showMovementBrackets} />
+                                <label className="form-check-label">
+                                    Show Movement Brackets
+                                </label>
+                            </div>
+                            <Autocomplete
+                                disablePortal
+                                options={getUserOptions(dots)}
+                                sx={{ width: "100%" }}
+                                renderInput={(params) => <TextField {...params} label="Select Your Label" />}
+                                onChange={(event, newValue) => setHighlightUser(newValue)}
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                value={userOptions.highlightUser}
+
+                            />
                         </div>
                     </div>
                     : null

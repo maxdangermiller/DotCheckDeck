@@ -16,6 +16,13 @@ function Viewer() {
 	const [dimensions, setDimensions]  = useState({"w": 0, "h": 0});
 	const [loading, setLoading] = useState(false);
 
+	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
+	const [userOptions, setUserOptions] = useState({
+		"multiSelect": false, "drawPath": false,
+		"showMovementBrackets": false, "highlightUser": null,
+		"moveSpeed": 10,
+	});
+
 	const setInput = useRef(null);
 
 	useEffect(() => {
@@ -44,6 +51,8 @@ function Viewer() {
 				);
 		}
 	}, [curSet, dimensions, sets])
+
+	// useEffect(() => { setLoading(false); }, [dots])
 
 	useEffect(() => {
 		fetch("http://127.0.0.1:5000/sets?school_code=" + SCHOOL_CODE)
@@ -106,6 +115,9 @@ function Viewer() {
 				loading={loading}
 				setCurSetNumb={setCurSetNumb}
 				changeCurSetNumb={changeCurSetNumb}
+				userOptions={userOptions}
+				setUserOptions={setUserOptions}
+				dots={dots}
 			/>
 		</div>
 	);

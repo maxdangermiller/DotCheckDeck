@@ -5,7 +5,12 @@ import OptionsDropDown from './ViewerSideBarComponents/OptionsDropDown';
 // STILL WORKING ON THIS! NOT TESTED YET!
 
 const ViewerSideBar = (props) => {
-    const { curSetInfo, curSetNumb, setInput, curSet, sets, changeCurSet, loading, setCurSetNumb, changeCurSetNumb, ...rest } = props
+    const { 
+        curSetInfo, curSetNumb, setInput, 
+        curSet, sets, changeCurSet, 
+        loading, setCurSetNumb, changeCurSetNumb, 
+        userOptions, setUserOptions, dots, ...rest 
+    } = props;
 
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
@@ -42,7 +47,7 @@ const ViewerSideBar = (props) => {
                 }
                 
             </div>
-            <OptionsDropDown />
+            <OptionsDropDown userOptions={userOptions} setUserOptions={setUserOptions} dots={dots}/>
             <div className='mb-2 buttonDiv flex-row justify-content-between d-flex align-items-center'>
                 <button 
                     type="button" 
