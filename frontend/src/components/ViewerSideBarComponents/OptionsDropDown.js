@@ -83,13 +83,26 @@ const OptionsDropDown = (props) => {
                                 </label>
                             </div>
                             <div className="form-check">
-                                <input className="form-check-input" type="checkbox" value="" onChange={() => setDrawPaths(!userOptions.drawPath)} checked={userOptions.drawPath} />
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    onChange={() => setDrawPaths(!userOptions.drawPath)} 
+                                    checked={userOptions.drawPath} 
+                                />
                                 <label className="form-check-label">
                                     Draw Paths
                                 </label>
                             </div>
                             <div className="form-check">
-                                <input className="form-check-input" type="checkbox" value="" onChange={() => setShowMovementBrackets(!userOptions.showMovementBrackets)} checked={userOptions.showMovementBrackets} />
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    onChange={() => setShowMovementBrackets(!userOptions.showMovementBrackets)} 
+                                    checked={userOptions.showMovementBrackets} 
+                                    disabled={userOptions.highlightUser === null}
+                                />
                                 <label className="form-check-label">
                                     Show Movement Brackets
                                 </label>
@@ -97,7 +110,7 @@ const OptionsDropDown = (props) => {
                             <Autocomplete
                                 disablePortal
                                 options={getUserOptions(dots)}
-                                sx={{ width: "100%" }}
+                                sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
                                 renderInput={(params) => <TextField {...params} label="Select Your Label" />}
                                 onChange={(event, newValue) => setHighlightUser(newValue)}
                                 isOptionEqualToValue={(option, value) => option.id === value.id}

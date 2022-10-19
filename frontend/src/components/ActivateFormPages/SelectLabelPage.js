@@ -26,10 +26,12 @@ const SelectLabelPage = (props) => {
         <div>
             <Autocomplete
                 disablePortal
-                id="combo-box-demo"
                 options={sortLabels(props.options)}
                 sx={{ width: "100%" }}
                 renderInput={(params) => <TextField {...params} label="Select Your Label" />}
+                onChange={(event, newValue) => props.setUserData(newValue)}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                value={props.userData}
             />
             <p>Don't see your label? Contact {props.email}</p>
         </div>

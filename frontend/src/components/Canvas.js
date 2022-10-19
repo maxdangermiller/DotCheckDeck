@@ -4,17 +4,18 @@ const FUTURE_DOT_COLOR = "rgb(0, 100, 0)";
 const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
 
 const MAX_ZOOM = 3;
-const MIN_ZOOM = 1;
+const MIN_ZOOM = 0.9;
 const SCROLL_SENSITIVITY = 0.0005;
 
 const STEPS_TO_5_MAJOR = 2;
 const STEPS_TO_5_MINOR = 8;
 const HEIGHT_DIVIDED_INTO_5_YARDS = (53 + 1/3) / 5;
 
-const FRONT_HASH_RATIO = 1/3;
-const BACK_HASH_RATIO = 2/3;
-const FRONT_COLLAGE_HASH_RATIO = 6/16;
-const BACK_COLLAGE_HASH_RATIO = 10/16;
+// Reversed because it draws top to bottom
+const FRONT_HASH_RATIO = 2/3;
+const BACK_HASH_RATIO = 1/3;
+const FRONT_COLLAGE_HASH_RATIO = 10/16;
+const BACK_COLLAGE_HASH_RATIO = 6/16;
 
 const DISTANCE_BETWEEN_HASHES_IN_YDS = (53 + 1/3) / 3;
 const HEIGHT_IN_YDS = 53 + 1/3;
@@ -55,6 +56,69 @@ const Canvas = props => {
         const context = canvas.getContext('2d')
         let frameCount = 0
         let animationFrameId
+
+        // Takes the side and line and give the percentage out of 100
+        const sideLineRatioConvert = (side, line) => {
+            if (side == 1) { return parseInt(line) / 100; }
+            switch (line) {
+                case 50:
+                    return 0.5;
+                case 45:
+                    return 0.55;
+                case 40:
+                    return 0.6;
+                case 35:
+                    return 0.65;
+                case 30:
+                    return 0.7;
+                case 25:
+                    return 0.75;
+                case 20:
+                    return 0.8;
+                case 15:
+                    return 0.85;
+                case 10:
+                    return 0.9;
+                case 5:
+                    return 0.95;
+                case 0:
+                    return 1;
+            
+                default:
+                    return -1;
+            }
+        };
+
+        // Takes the string of the hash and converts it to a precentage
+        const hashRatioConvert = (hash) => {
+            if (hash == "Front side") { return 1; }
+            if (hash == "Front Hash") { return FRONT_HASH_RATIO; }
+            if (hash == "Back Hash") { return BACK_HASH_RATIO; }
+
+            return 0;
+        }
+
+        const drawMovementBrackets = (x, y, dot) => {
+            // Find the cords of the closest line and hash
+            const lineX = sideLineRatioConvert( dot["curDot"]["line"] ) * canvas.width;
+            const hashY = hashRatioConvert(dot["curDot"]["useHash"]) * canvas.height;
+
+            console.log("Drawing Brackets: " + lineX + " : " + hashY)
+
+            context.beginPath();
+            context.strokeStyle="black";
+            context.fillStyle="rgb(240, 240, 240)";
+            context.lineWidth="4";
+
+            context.moveTo(lineX, y);
+            context.lineTo(x, y);
+
+            context.moveTo(x, hashY);
+            context.lineTo(x, y);
+
+            context.stroke();
+            context.closePath();
+        }
 
         const drawUserDialogue = (dotX, dotY, dot) => {
             // console.log("drawing dialogue: " + dot["userLabel"])
@@ -236,8 +300,6 @@ const Canvas = props => {
 
         // This draws all the Horizontal grid lines centered on the hashRatio var which is a ratio less than 1
         const drawHorizontalGrid = (hashRatio, major) => {
-            const hashes = 28;
-
             const majorHashes = 8;
             const hashLocation = hashRatio * canvas.height;
             // height(px) -> ?height/1" 
@@ -258,12 +320,12 @@ const Canvas = props => {
                 // console.log(y, nextY, oneStep);
 
                 if (y > canvas.height) { break; }
-
-                if (major) {
+                
+                if (major && y > 0 && y < canvas.height) {
                     drawHorizontalGirdLine(y, GRID_MAJOR_DIVISION_COLOR, 1);
                 }
                 // Draw all the minor division grid lines between the major divisions
-                else if (nextY <= endY) {
+                else if (nextY <= endY && y > 0 && y < canvas.height) {
                     for (var ii = 1; ii < (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR); ii++) {
                         const y2 = ((nextY - y) /  (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR)) * ii + y;
     
@@ -375,12 +437,22 @@ const Canvas = props => {
             
                 context.closePath();
             }
+
+            // Draw top and bottom borders
+            drawHorizontalGirdLine(0, "black", 2);
+            drawHorizontalGirdLine(canvas.height, "black", 2);
         }
 
         const clear = () => {
             setDots([]);
+            const outScale = MIN_ZOOM - 1; // Default will be 0
             // Clear everything
-            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.clearRect(
+                canvas.width * outScale, 
+                canvas.height * outScale, 
+                canvas.width + canvas.width * MIN_ZOOM, 
+                canvas.height + canvas.height * MIN_ZOOM
+            );
             
             drawGrid();
         };
@@ -433,14 +505,21 @@ const Canvas = props => {
                 const translationY = m.f;
                 const scale = Math.hypot(m.a, m.b);
 
-                const xInBound = -translationX / scale >= 0 && -translationX + canvas.width <= canvas.width * scale;
-                const yInBound = -translationY / scale >= 0 && -translationY + canvas.height <= canvas.height * scale;
+                const xMin = canvas.width * (MIN_ZOOM - 1);
+                const yMin = canvas.height * (MIN_ZOOM - 1);
+                const xMax = canvas.width * (MIN_ZOOM + 1);
+                const yMax = canvas.height * (MIN_ZOOM + 1);
+
+                const xInBound = -translationX / scale >= xMin && (-translationX + canvas.width) / scale <= xMax;
+                const yInBound = -translationY / scale >= yMin && (-translationY + canvas.height) / scale <= yMax;
                 // console.log(translationX, translationY, scale)
                 ctx.translate(-cameraOffset.x, -cameraOffset.y);
 
                 if (!xInBound || !yInBound) {
                     if (!isDragging) {
-                        setCameraOffset({x: lastCameraOffset.x, y: lastCameraOffset.y});
+                        if (cameraOffset.x !== lastCameraOffset.x || cameraOffset.y !== lastCameraOffset.y) {
+                            setCameraOffset({x: lastCameraOffset.x, y: lastCameraOffset.y});
+                        }
                     } else {
                         ctx.translate(lastCameraOffset.x, lastCameraOffset.y);
                     }
@@ -456,13 +535,18 @@ const Canvas = props => {
                 const translationY2 = m2.f;
                 const xTranslation = translationX2;
                 const yTranslation = translationY2;
-                setTranslation({x: xTranslation, y: yTranslation, s: scale});
+
+                if (translation.x !== xTranslation || translation.y !== yTranslation || translation.s !== scale) {
+                    setTranslation({x: xTranslation, y: yTranslation, s: scale});
+                }
             }
             
             // clear();
             
             // Calls a function provided in props that returns a dict of values
-            let data = draw()
+            let _draw = draw();
+            let data = _draw.dots;
+            let userOptions = _draw.userOptions;
 
             if (data.length !== 0 || isAnimation)  { clear(); }
 
@@ -480,15 +564,28 @@ const Canvas = props => {
                     // console.log("NEW FRAME!")
                     setDrawInfo(data);
                     setAnimationDirection(0);
+
+                    // let newDots = [];
+
                     for (let x = 0; x < data.length; x++) {
                         if (data[x]["curDot"]) {
                             const dot = data[x];
                             const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
                             drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
                             // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
+                            // newDots.push(dot);
+
+                            if (userOptions.highlightUser === dot["userLabel"] && userOptions.showMovementBrackets) {
+                                drawMovementBrackets(dot["curX"], dot["curY"], dot);
+                            }
+
                             setDots(dots => [...dots, dot])
+
+
                         }
                     }
+
+                    // setDots(newDots);
                 } else {
                     // console.log("Using backup: ", animationDirection)
                     for (let x = 0; x < drawInfo.length; x++) {
@@ -507,6 +604,10 @@ const Canvas = props => {
                             // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
                             // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
 
+                            if (userOptions.highlightUser === dot["userLabel"] && userOptions.showMovementBrackets) {
+                                drawMovementBrackets(dot["curX"], dot["curY"], dot);
+                            }
+
                             // drawPoint(dot["lastX"], dot["lastY"], color, dot["userLabel"]);
                             // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
                             setDots(dots => [...dots, dot])
@@ -514,38 +615,6 @@ const Canvas = props => {
                     }
                 }
                 
-
-                /*
-                if (data["curDot"]) {
-                    for (var x = 0; x < data["lines"].length; x++) {
-                        const line = data["lines"][x];
-                        const color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
-                        // drawLine(line["startX"], line["startY"], line["endX"], line["endY"], color, 1);
-                        // drawPoint(line["endX"], line["endY"], FUTURE_DOT_COLOR, "");
-
-                        // console.log(line);
-
-                        // drawPointAnimation(line["startX"], line["startY"], line["endX"], line["endY"], line["nextDot"]["set"]["counts"], 8);
-                    }
-                }
-
-                if (data["pts"]) {
-                    for (var x = 0; x < data["pts"].length; x++) {
-                        const dot = data["pts"][x];
-                        const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                        drawPoint(dot["x"], dot["y"], color, dot["userLabel"]);
-                        setDots(dots => [...dots, dot])
-                    }
-                } else if (drawInfo["lines"]) {
-                    for (var x = 0; x < drawInfo["lines"].length; x++) {
-                        const line = drawInfo["lines"][x];
-                        
-                        drawPoint(line["endX"], line["endY"], CURRENT_DOT_COLOR, line["nextDot"]["userLabel"]);
-                    }
-                }
-
-                 */
-
                 if (hoverDot["curX"] !== undefined) {
                     drawUserDialogue(hoverDot["curX"], hoverDot["curY"], hoverDot);
                 }
@@ -590,19 +659,6 @@ const Canvas = props => {
                         }
                         if (animationDirection !== direction) { setAnimationDirection(direction); }
                     }
-                    /*
-                    for (let x = 0; x < drawInfo["lines"].length; x++) {
-                        const line = drawInfo["lines"][x];
-                        const color = "rgb(" + line["r"] + ", " + line["g"] + ", " + line["b"] + ")";
-
-                        // drawLine(line["startX"], line["startY"], line["endX"], line["endY"], color, 1);
-                        drawPoint(line["startX"], line["startY"], CURRENT_DOT_COLOR, "");
-                        drawPoint(line["endX"], line["endY"], FUTURE_DOT_COLOR, "");
-
-                        drawPointAnimation(line["startX"], line["startY"], line["endX"], line["endY"], counts, curTime);
-                        // console.log(line);
-                    }
-                    */
 
                     if (curTime + 1 > counts)   { setIsAnimation(false); setAnimationFrame(0);  }
                     else                        { setAnimationFrame(frameCount);                }
@@ -732,7 +788,7 @@ const Canvas = props => {
             tempCameraZoom = Math.min(tempCameraZoom, MAX_ZOOM);
             setCameraZoom(Math.max(tempCameraZoom, MIN_ZOOM));
 
-            // console.log(zoomAmount)
+            // console.log(Math.max(tempCameraZoom, MIN_ZOOM))
         }
     }
 

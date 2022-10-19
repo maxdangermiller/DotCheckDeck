@@ -10,6 +10,7 @@ import string
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
+import sys
 
 import convertHashToCords
 
@@ -42,7 +43,7 @@ CORS(app)
 class Dot(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	setID = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
-	userID = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+	userID = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 
 	direction = db.Column(db.String(16))
@@ -72,7 +73,7 @@ class Set(db.Model):
 		return f"<Set {self.setNumb}>"
 
 
-class Users(db.Model):
+class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 	symbol = db.Column(db.String(16))
@@ -81,6 +82,8 @@ class Users(db.Model):
 	password_hash = db.Column(db.String(128))
 	firstName = db.Column(db.String(64))
 	lastName = db.Column(db.String(64))
+
+	# permissions = db.Column(db.Integer, db.ForeignKey('permissions.id'), nullable=False)
 
 	activated_date = db.Column(db.DateTime, default=None, nullable=True)
 	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
@@ -98,12 +101,27 @@ class Users(db.Model):
 	def __repr__(self) -> str:
 		return f"<User {self.firstName} {self.lastName} > {self.symbol} {self.label}>"
 
+"""
+class Permissions(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+
+	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	userID = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+	is_admin = db.Column(db.Boolean, default=False)
+	is_section_leader = db.Column(db.Boolean, default=False)
+"""
 
 class School(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	code = db.Column(db.String(8), unique=True)
 	name = db.Column(db.String(256))
 	email = db.Column(db.String(128))
+
+	# permissions = db.relationship('Permissions', backref='school')
+	users = db.relationship('User', backref='school')
+	sets = db.relationship('Set', backref='school')
+	dots = db.relationship('Dot', backref='school')
 
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
@@ -116,10 +134,6 @@ class School(db.Model):
 
 	def __repr__(self) -> str:
 		return f"<School {self.name}>"
-
-
-# Uncomment when resetting the database
-db.create_all()
 
 
 # Serializers
@@ -143,19 +157,19 @@ class SetSchema(ma.Schema):
 		model = Set
 
 
-class UsersSchema(ma.Schema):
+class UserSchema(ma.Schema):
 	class Meta:
 		# fields = ("id", "symbol", "label", "firstName", "lastName", "email")
 		fields = ("id", "label")
-		model = Users
+		model = User
 
 
 dot_schema = DotSchema()
 dots_schema = DotSchema(many=True)
 set_schema = SetSchema()
 sets_schema = SetSchema(many=True)
-user_schema = UsersSchema()
-users_schema = UsersSchema(many=True)
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
 
 
 # API
@@ -205,10 +219,10 @@ class SetListResource(Resource):
 		return sets_schema.dump(sets)
 
 
-class UsersListResource(Resource):
+class UserListResource(Resource):
 	# Dynamic Option: https://blog.mindee.com/flask-sqlalchemy/
 	def get(self):
-		users = Users.query.all()
+		users = User.query.all()
 
 		return users_schema.dump(users)
 
@@ -225,7 +239,7 @@ class SchoolCodeAuthResource(Resource):
 		if school is None:
 			return "INVALID SCHOOL CODE", 404
 		
-		users = Users.query.filter(Users.schoolID == school.id, Users.email == None)
+		users = User.query.filter(User.schoolID == school.id, User.email == None)
 
 		
 		return {"name": school.name, "users": users_schema.dump(users), "email": school.email}, 200
@@ -259,18 +273,18 @@ class SetUpUserResource(Resource):
     """
 
 	def post(self):
-		if "school_code" not in request.json:
-			return "Missing School Code param", 404
-		if "label" not in request.json:
-			return "Missing Label param", 404
-		if "email" not in request.json:
-			return "Missing Email param", 404
-		if "password" not in request.json:
-			return "Missing Password param", 404
-		if "first_name" not in request.json:
-			return "Missing First Name param", 404
-		if "last_name" not in request.json:
-			return "Missing Last Name param", 404
+		if "school_code" not in request.json or request.json['school_code'] == "":
+			return "Missing School Code", 404
+		if "label" not in request.json or request.json['label'] == "":
+			return "Missing Label", 404
+		if "email" not in request.json or request.json['email'] == "":
+			return "Missing Email", 404
+		if "password" not in request.json or request.json['password'] == "":
+			return "Missing Password", 404
+		if "first_name" not in request.json or request.json['first_name'] == "":
+			return "Missing First Name", 404
+		if "last_name" not in request.json or request.json['last_name'] == "":
+			return "Missing Last Name", 404
 
 		# Attempt to load the School with that code
 		school = School.query.filter(School.code == request.json['school_code']).first()
@@ -281,9 +295,9 @@ class SetUpUserResource(Resource):
 
 		# Find users that fit the params,
 		# it's possible for multiple users to have the same label so we have to do this for now.
-		users = Users.query.filter(
-			Users.schoolID == school.id,
-			Users.label == request.json['label']
+		users = User.query.filter(
+			User.schoolID == school.id,
+			User.label == request.json['label']
 		).all()
 		print(users)
 
@@ -354,7 +368,7 @@ class CordListResource(Resource):
 				dot.useHash, width=width, height=height
 			)
 
-			person = Users.query.filter(Users.id == dot.userID, Users.schoolID == school.id).first()
+			person = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
 
 			dotData = dot_schema.dump(dot)
 			dotData["set"] = set_schema.dump(Set.query.filter(Set.id == dotData["setID"]).first())
@@ -419,7 +433,7 @@ class PathsListResource(Resource):
 				dot.useHash, width=width, height=height
 			)
 
-			person = Users.query.filter(Users.id == dot.userID, Users.schoolID == school.id).first()
+			person = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
 
 			setObj = Set.query.filter(Set.setNumb == setNumb2, Set.schoolID == school.id).first()
 			nextDot = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == person.id, Dot.schoolID == school.id).first()
@@ -502,7 +516,7 @@ class EndAllBeAllResource(Resource):
 			lastDotData = None
 			nextDotData = None
 
-			userObj = Users.query.filter(Users.id == dot.userID, Users.schoolID == school.id).first()
+			userObj = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
 
 			if lastSetObj is not None:
 				lastDot = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == lastSetObj.id, Dot.userID == userObj.id).first()
@@ -548,7 +562,7 @@ class EndAllBeAllResource(Resource):
 
 api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
-api.add_resource(UsersListResource, '/users')
+api.add_resource(UserListResource, '/users')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(CordListResource, '/cords')
@@ -573,12 +587,12 @@ def addAllDataFromPDF(file):
 
 	# print(stuff[34])
 	for dotSheet in stuff:
-		if Users.query.filter(Users.label==dotSheet.label, Users.schoolID==school.id).first() is None:
-			user = Users(label=dotSheet.label, schoolID=school.id, symbol=dotSheet.symbol)
+		if User.query.filter(User.label==dotSheet.label, User.schoolID==school.id).first() is None:
+			user = User(label=dotSheet.label, schoolID=school.id, symbol=dotSheet.symbol)
 			db.session.add(user)
 			db.session.commit()
 		else:
-			user = Users.query.filter(Users.label==dotSheet.label, Users.schoolID==school.id).first()
+			user = User.query.filter(User.label==dotSheet.label, User.schoolID==school.id).first()
 
 		for dot in dotSheet.dots:
 			if Set.query.filter(Set.setNumb==dot.setNumb, Set.schoolID==school.id).first() is None:
@@ -598,12 +612,31 @@ def addAllDataFromPDF(file):
 
 
 if __name__ == "__main__":
-	if len(Dot.query.all()) == 0:
-		addAllDataFromPDF("Mvt-1and2.pdf")
-		addAllDataFromPDF("Mvt-3.pdf")
-		addAllDataFromPDF("Mvt-4.pdf")
+	rebuild = False
+
+	for i, arg in enumerate(sys.argv):
+		if arg == "rebuild":
+			rebuild = True
+
+			if (input("Are you sure want to rebuild (y/n)?:  ") == "y"):
+				print("REBUILDING!\r\n")
+
+				# Delete the database
+				db.drop_all()
+				db.create_all()
+
+				# Read these dot sheets
+				addAllDataFromPDF("Mvt-1and2.pdf")
+				addAllDataFromPDF("Mvt-3.pdf")
+				addAllDataFromPDF("Mvt-4.pdf")
+
+				print("\r\nDONE.")
+
+			break
+
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)
 
-	app.run(debug=True)
+	if not rebuild:
+		app.run(debug=True)

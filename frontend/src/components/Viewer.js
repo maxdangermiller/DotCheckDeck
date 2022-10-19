@@ -73,7 +73,7 @@ function Viewer() {
 
 	const draw = () => {
 		// console.log("DRAWING!")
-		return dots;
+		return {dots: dots, userOptions: userOptions};
 	}
 
 	const changeCurSet = (x) => {
