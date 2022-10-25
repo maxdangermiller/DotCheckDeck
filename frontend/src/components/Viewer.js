@@ -7,7 +7,7 @@ const SCHOOL_CODE = "12345678";
 
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
 
-function Viewer() {
+const Viewer = (props) => {
     const [dots, setDots] = useState([]);
 	const [curSet, setCurSet]  = useState(0);
 	const [curSetNumb, setCurSetNumb]  = useState("1");
@@ -32,7 +32,7 @@ function Viewer() {
 			setLoading(true);
 
 			const url1 = "http://127.0.0.1:5000/end-all-be-all?set_numb=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
-				"&width=" + dimensions["w"] + "&height=" + dimensions["h"];
+				"&width=" + dimensions["w"] + "&height=" + dimensions["h"] + "&token=" + props.token;
 			fetch(url1)
 				.then(res => res.json())
 				.then(
@@ -55,7 +55,7 @@ function Viewer() {
 	// useEffect(() => { setLoading(false); }, [dots])
 
 	useEffect(() => {
-		fetch("http://127.0.0.1:5000/sets?school_code=" + SCHOOL_CODE)
+		fetch("http://127.0.0.1:5000/sets?school_code=" + SCHOOL_CODE + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
 				(result) => {

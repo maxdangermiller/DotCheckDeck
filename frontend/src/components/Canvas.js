@@ -2,6 +2,7 @@ import React, {useRef, useEffect, useState} from 'react'
 
 const FUTURE_DOT_COLOR = "rgb(0, 100, 0)";
 const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
+const HIGHLIGHT_USER_COLOR = "rgb(255, 0, 0)";
 
 const MAX_ZOOM = 3;
 const MIN_ZOOM = 0.9;
@@ -34,8 +35,8 @@ const Canvas = props => {
     const canvasRef = useRef(null)
     const [dots, setDots] = useState([]);
     const [hoverDot, setHoverDot] = useState({});
-    const [cameraOffset, setCameraOffset] = useState(null);
-    const [lastCameraOffset, setLastCameraOffset] = useState(null);
+    const [cameraOffset, setCameraOffset] = useState({x: 0, y: 0});
+    const [lastCameraOffset, setLastCameraOffset] = useState({x: 0, y: 0});
     // const [totalMovement, setTotalMovement] = useState({x: 0, y: 0})
     const [cameraZoom, setCameraZoom] = useState(1);
 
@@ -48,7 +49,8 @@ const Canvas = props => {
     const [isAnimation, setIsAnimation] = useState(false);
     const [drawInfo, setDrawInfo] = useState({});
     const [animationFrame, setAnimationFrame] = useState(0);
-    const [animationDirection, setAnimationDirection] = useState(0);  // This will be 0 until there's an animation and then it will be set to 1 for forward or 0 for backward
+    const [animationDirection, setAnimationDirection] = useState(0);  
+    // This will be 0 until there's an animation and then it will be set to 1 for forward or 0 for backward
 
     useEffect(() => {
 
@@ -60,28 +62,29 @@ const Canvas = props => {
         // Takes the side and line and give the percentage out of 100
         const sideLineRatioConvert = (side, line) => {
             if (side == 1) { return parseInt(line) / 100; }
+
             switch (line) {
-                case 50:
+                case "50":
                     return 0.5;
-                case 45:
+                case "45":
                     return 0.55;
-                case 40:
+                case "40":
                     return 0.6;
-                case 35:
+                case "35":
                     return 0.65;
-                case 30:
+                case "30":
                     return 0.7;
-                case 25:
+                case "25":
                     return 0.75;
-                case 20:
+                case "20":
                     return 0.8;
-                case 15:
+                case "15":
                     return 0.85;
-                case 10:
+                case "10":
                     return 0.9;
-                case 5:
+                case "5":
                     return 0.95;
-                case 0:
+                case "0":
                     return 1;
             
                 default:
@@ -89,7 +92,7 @@ const Canvas = props => {
             }
         };
 
-        // Takes the string of the hash and converts it to a precentage
+        // Takes the string of the hash and converts it to a percentage
         const hashRatioConvert = (hash) => {
             if (hash == "Front side") { return 1; }
             if (hash == "Front Hash") { return FRONT_HASH_RATIO; }
@@ -98,23 +101,112 @@ const Canvas = props => {
             return 0;
         }
 
-        const drawMovementBrackets = (x, y, dot) => {
-            // Find the cords of the closest line and hash
-            const lineX = sideLineRatioConvert( dot["curDot"]["line"] ) * canvas.width;
-            const hashY = hashRatioConvert(dot["curDot"]["useHash"]) * canvas.height;
+        const drawTextBetween = (x, y, maxWidth, maxHeight, text, color) => {
 
-            console.log("Drawing Brackets: " + lineX + " : " + hashY)
+            const MAX_SIZE = 100;
+            const MIN_SIZE = 8;
+            const DECREASE_INTERVAL = 2; 
+
+            context.fillStyle = color;
+            context.textBaseline = "middle";
+            context.textAlign = "center";
+
+            for (let x = MAX_SIZE; x >= MIN_SIZE; x -= DECREASE_INTERVAL) {
+                context.font = x + 'px Arial';
+
+                const width = context.measureText(text).width;
+                
+                if ((width <= maxWidth || maxWidth == -1) && (x <= maxHeight || maxHeight == -1) && !(maxWidth == -1 && maxHeight == -1)) {
+                    break;
+                }
+                
+            }
+
+
+            context.fillText(text, x, y);
+        }
+
+        const drawMovementBrackets = (x, y, dot) => {
+            if (dot === null) { return; }
+            // Find the cords of the closest line and hash
+            const lineRatio = sideLineRatioConvert( dot["side"], dot["line"] );
+            const hashRatio = hashRatioConvert(dot["useHash"]);
+            const lineX = lineRatio * canvas.width;
+            const hashY = hashRatio * canvas.height;
+
+            // console.log("Drawing Brackets: " + lineRatio + " : " + lineX)
+
+            const DASH_LENGTH = 5;
+            const BRACKET_SEPARATION = 10;
+            const TEXT_OFFSET = Math.min(canvas.width, canvas.height) * 0.02;         // Equivalent to max width/height
+        
 
             context.beginPath();
-            context.strokeStyle="black";
-            context.fillStyle="rgb(240, 240, 240)";
-            context.lineWidth="4";
+            context.strokeStyle=HIGHLIGHT_USER_COLOR;
+            context.lineWidth="2";
+            
+            if (x !== lineX) {
+                const distanceFromHash = Math.abs(y - hashY) + BRACKET_SEPARATION;
+                let useY = 0;
+                let textY = 0;
 
-            context.moveTo(lineX, y);
-            context.lineTo(x, y);
+                if (y - hashY <= 0) {
+                    useY = hashY - distanceFromHash
+                    textY = useY - TEXT_OFFSET;
+                } else {
+                    useY = hashY + distanceFromHash
+                    textY = useY + TEXT_OFFSET;
+                }
 
-            context.moveTo(x, hashY);
-            context.lineTo(x, y);
+                // Draw the actual line to the line
+                context.moveTo(lineX, useY); 
+                context.lineTo(x, useY);
+
+                // Draw Little dashes on the ends
+                context.moveTo(lineX, useY - DASH_LENGTH);
+                context.lineTo(lineX, useY + DASH_LENGTH);
+
+                context.moveTo(x, useY - DASH_LENGTH);
+                context.lineTo(x, useY + DASH_LENGTH);
+
+                // Draw text
+                const maxWidth = Math.abs(lineX - x);
+                const centerX = (lineX - x) / 2 + x;
+                drawTextBetween(centerX, textY, maxWidth, TEXT_OFFSET * 2, dot["steps"], HIGHLIGHT_USER_COLOR);
+            }
+
+            if (y !== hashY) {
+                const distanceFromHash = Math.abs(x - lineX) + BRACKET_SEPARATION;
+                let useX = 0;
+                let textX = 0;
+                let textXEnd = 0;
+
+                if (x - lineX <= 0) {
+                    useX = lineX - distanceFromHash;
+                    textX = useX - TEXT_OFFSET;
+                } else {
+                    useX = lineX + distanceFromHash;
+                    textX = useX + TEXT_OFFSET;
+                }
+
+                // Draw the actual line to the hash
+                context.moveTo(useX, hashY);
+                context.lineTo(useX, y);
+
+                // Draw Little dashes on the ends
+                context.moveTo(useX + DASH_LENGTH, hashY);
+                context.lineTo(useX - DASH_LENGTH, hashY);
+
+                context.moveTo(useX + DASH_LENGTH, y);
+                context.lineTo(useX - DASH_LENGTH, y);
+
+                // Draw text
+                // drawTextBetween(textXStart, textXEnd, (y - hashY) + hashY, dot["fbSteps"], HIGHLIGHT_USER_COLOR, 4);
+                const maxHeight = Math.abs(hashY - y) * 0.5;
+                const textY = (hashY - y) / 2 + y;
+
+                drawTextBetween(textX, textY, TEXT_OFFSET * 2, maxHeight, dot["fbSteps"], HIGHLIGHT_USER_COLOR);
+            }
 
             context.stroke();
             context.closePath();
@@ -224,7 +316,7 @@ const Canvas = props => {
             context.closePath();
         };
 
-        const drawPointAnimation = (x0, y0, x1, y1, counts, count) => {
+        const drawPointAnimation = (x0, y0, x1, y1, counts, count, color) => {
             // y = mx + b
             if (x1 - x0 !== 0) {
                 const m = (y1 - y0) / (x1 - x0)
@@ -233,12 +325,12 @@ const Canvas = props => {
                 const x = ((x1 - x0) / counts * count) + x0;
                 const y = m * x + b;
 
-                drawPoint(x, y, "black", "")
+                drawPoint(x, y, color, "")
             } else {
                 const x = x0
                 const y = ((y1 - y0) / counts * count) + y0;
 
-                drawPoint(x, y, "black", "")
+                drawPoint(x, y, color, "")
             }
             
         };
@@ -318,18 +410,16 @@ const Canvas = props => {
                 const y = startY + oneStep * i * 4;
                 const nextY = startY + oneStep * (i + 1) * 4;
                 // console.log(y, nextY, oneStep);
-
-                if (y > canvas.height) { break; }
                 
                 if (major && y > 0 && y < canvas.height) {
                     drawHorizontalGirdLine(y, GRID_MAJOR_DIVISION_COLOR, 1);
                 }
                 // Draw all the minor division grid lines between the major divisions
-                else if (nextY <= endY && y > 0 && y < canvas.height) {
+                else if (nextY <= endY) {
                     for (var ii = 1; ii < (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR); ii++) {
                         const y2 = ((nextY - y) /  (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR)) * ii + y;
     
-                        if (y2 !== y && y2 !== nextY) {
+                        if (y2 !== y && y2 !== nextY && y2 > 0 && y2 < canvas.height) {
                             drawHorizontalGirdLine(y2, GRID_MINOR_DIVISION_COLOR, 1);
                         }
                     
@@ -429,9 +519,9 @@ const Canvas = props => {
                 context.textBaseline = "middle";
                 context.textAlign = "center";
 
-                if (x > 10) {
+                if (x > 10 && x != 20) {
                     context.fillText((20 - x) * 5, val, canvas.height * 0.75);
-                } else {
+                } else if (x != 0 && x != 20) {
                     context.fillText(x * 5, val, canvas.height * 0.75);
                 }
             
@@ -456,6 +546,49 @@ const Canvas = props => {
             
             drawGrid();
         };
+
+        const findBounds = (ctx, transX, transY) => {
+            ctx.translate(transX, transY);
+            const m = ctx.getTransform();
+            const translationX = m.e;
+            const translationY = m.f;
+            const scale = Math.hypot(m.a, m.b);
+
+            ctx.translate(-transX, -transY);
+
+            const xMin = -canvas.width * (1 - MIN_ZOOM);
+            const yMin = -canvas.height * (1 - MIN_ZOOM);
+            const xMax = canvas.width * (1 - MIN_ZOOM + 1);
+            const yMax = canvas.height * (1 - MIN_ZOOM + 1);
+
+            // const xInBound = -translationX / scale >= xMin && (-translationX + canvas.width) / scale <= xMax;
+            // const yInBound = -translationY / scale >= yMin && (-translationY + canvas.height) / scale <= yMax;
+
+            let xInBound = true;
+            let yInBound = true;
+            let xOutBounds = 0;
+            let yOutBounds = 0;
+
+            if (-translationX / scale < xMin) {
+                xInBound = false;
+                xOutBounds = -translationX / scale - xMin;
+            }
+            else if ((-translationX + canvas.width) / scale > xMax) {
+                xInBound = false; 
+                xOutBounds = (-translationX + canvas.width) / scale - xMax;
+            }
+
+            if (-translationY / scale < yMin) {
+                yInBound = false;
+                yOutBounds = -translationY / scale - yMin;
+            }
+            else if ((-translationY + canvas.height) / scale > yMax) {
+                yInBound = false; 
+                yOutBounds = (-translationY + canvas.height) / scale - yMax;
+            }
+
+            return {xInBound: xInBound, yInBound: yInBound, xOutBounds: xOutBounds, yOutBounds: yOutBounds};
+        }
 
         const render = ctx => {
             ctx.save();
@@ -494,47 +627,37 @@ const Canvas = props => {
                 setCameraOffset({x: 0, y: 0})
             }
 
+            // Pan and zoom
             if (cameraOffset !== null) {
                 ctx.translate( canvas.width / 2, canvas.height / 2 )        // Translate to center for zoom
                 ctx.scale(cameraZoom, cameraZoom)                           // Zoom
                 ctx.translate( -canvas.width / 2, -canvas.height / 2 )      // Go back
 
-                ctx.translate(cameraOffset.x, cameraOffset.y);
-                const m = ctx.getTransform();
-                const translationX = m.e;
-                const translationY = m.f;
-                const scale = Math.hypot(m.a, m.b);
-
-                const xMin = canvas.width * (MIN_ZOOM - 1);
-                const yMin = canvas.height * (MIN_ZOOM - 1);
-                const xMax = canvas.width * (MIN_ZOOM + 1);
-                const yMax = canvas.height * (MIN_ZOOM + 1);
-
-                const xInBound = -translationX / scale >= xMin && (-translationX + canvas.width) / scale <= xMax;
-                const yInBound = -translationY / scale >= yMin && (-translationY + canvas.height) / scale <= yMax;
-                // console.log(translationX, translationY, scale)
-                ctx.translate(-cameraOffset.x, -cameraOffset.y);
+                const boundCalc = findBounds(ctx, cameraOffset.x, cameraOffset.y);
+                
+                const xInBound = boundCalc.xInBound;
+                const yInBound = boundCalc.yInBound;
 
                 if (!xInBound || !yInBound) {
+                    const correctedX = cameraOffset.x + boundCalc.xOutBounds;
+                    const correctedY = cameraOffset.y + boundCalc.yOutBounds;
+                    
                     if (!isDragging) {
-                        if (cameraOffset.x !== lastCameraOffset.x || cameraOffset.y !== lastCameraOffset.y) {
-                            setCameraOffset({x: lastCameraOffset.x, y: lastCameraOffset.y});
-                        }
+                        // console.log("SETTING CAMERA OFFSET! (" + correctedX + ", " + correctedY + ")")
+                        setCameraOffset({x: correctedX, y: correctedY});
                     } else {
-                        ctx.translate(lastCameraOffset.x, lastCameraOffset.y);
+                        // console.log("CORRECTING CAMERA OFFSET! (" + correctedX + ", " + correctedY + ") " + isDragging)
+                        ctx.translate(correctedX, correctedY);
                     }
                 } else {
+                    // console.log("USING NORMAL CAMERA OFFSET! (" + cameraOffset.x + ", " + cameraOffset.y + ")")
                     ctx.translate(cameraOffset.x, cameraOffset.y);
-                    if (lastCameraOffset !== cameraOffset) {
-                        setLastCameraOffset(cameraOffset);
-                    }
                 }
 
-                const m2 = ctx.getTransform();
-                const translationX2 = m2.e;
-                const translationY2 = m2.f;
-                const xTranslation = translationX2;
-                const yTranslation = translationY2;
+                const m = ctx.getTransform();
+                const xTranslation = m.e;
+                const yTranslation = m.f;
+                const scale = Math.hypot(m.a, m.b);
 
                 if (translation.x !== xTranslation || translation.y !== yTranslation || translation.s !== scale) {
                     setTranslation({x: xTranslation, y: yTranslation, s: scale});
@@ -565,53 +688,101 @@ const Canvas = props => {
                     setDrawInfo(data);
                     setAnimationDirection(0);
 
-                    // let newDots = [];
+                    let newDots = [];
+                    let drawBracket = {useX:null, useY:null, dot:null};
 
                     for (let x = 0; x < data.length; x++) {
                         if (data[x]["curDot"]) {
                             const dot = data[x];
                             const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                            drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
+                            // drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
                             // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
-                            // newDots.push(dot);
+                            newDots.push(dot);
 
-                            if (userOptions.highlightUser === dot["userLabel"] && userOptions.showMovementBrackets) {
-                                drawMovementBrackets(dot["curX"], dot["curY"], dot);
+                            
+                            let useX = dot["curX"];
+                            let useY = dot["curY"];
+
+                            if (_draw.userOptions.highlightUser !== null) {
+                                if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                                    if (_draw.userOptions.showMovementBrackets) {
+                                        // drawMovementBrackets(useX, useY, dot["curDot"]);
+                                        drawBracket = {useX:useX, useY:useY, dot:dot["curDot"]};
+                                    }
+                                    drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot["userLabel"]);
+                                } else {
+                                    drawPoint(useX, useY, color, dot["userLabel"]);
+                                }
+                            } else {
+                                drawPoint(useX, useY, color, dot["userLabel"]);
                             }
-
-                            setDots(dots => [...dots, dot])
-
-
+                            // setDots(dots => [...dots, dot])
                         }
                     }
+                    setDots(newDots)
 
-                    // setDots(newDots);
+                    if (drawBracket.useX !== null) {
+                        drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot);
+                    }
+
                 } else {
                     // console.log("Using backup: ", animationDirection)
+
+                    let newDots = [];
+                    let drawBracket = {useX:null, useY:null, dot:null};
+
                     for (let x = 0; x < drawInfo.length; x++) {
                         if (drawInfo[x]["curDot"]) {
                             const dot = drawInfo[x];
                             const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                            if (animationDirection === 1) {
-                                drawPoint(dot["nextX"], dot["nextY"], color, dot["userLabel"]);
-                            } else if (animationDirection === -1) {
-                                drawPoint(dot["lastX"], dot["lastY"], color, dot["userLabel"]);
+
+                            let useX = 0;
+                            let useY = 0;
+                            let dotVal = null;
+
+                            if (animationDirection === 1  && dot["nextDot"] != null ) {
+                                useX = dot["nextX"];
+                                useY = dot["nextY"];
+                                dotVal = dot["nextDot"];
+                            } else if (animationDirection === -1 && dot["lastDot"] != null) {
+                                useX = dot["lastX"];
+                                useY = dot["lastY"];
+                                dotVal = dot["lastDot"];
                             } else {
-                                drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
+                                useX = dot["curX"];
+                                useY = dot["curY"];
+                                dotVal = dot["curDot"];
                             }
                             // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
                             // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
                             // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
                             // ONLY ALLOWS NEXT DOT PRE DRAWING!!! FIX THIS!
 
-                            if (userOptions.highlightUser === dot["userLabel"] && userOptions.showMovementBrackets) {
-                                drawMovementBrackets(dot["curX"], dot["curY"], dot);
+                            if (_draw.userOptions.highlightUser !== null) {
+                                if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                                    if (_draw.userOptions.showMovementBrackets) {
+                                        // drawMovementBrackets(useX, useY, dotVal);
+                                        drawBracket = {useX:useX, useY:useY, dot:dotVal};
+                                    }
+                                    drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot["userLabel"]);
+                                } else {
+                                    drawPoint(useX, useY, color, dot["userLabel"]);
+                                }
+                            } else {
+                                drawPoint(useX, useY, color, dot["userLabel"]);
                             }
+
+                            newDots.push(dot);
 
                             // drawPoint(dot["lastX"], dot["lastY"], color, dot["userLabel"]);
                             // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
-                            setDots(dots => [...dots, dot])
+                            // setDots(dots => [...dots, dot])
                         }
+                    }
+                    setDots(newDots)
+
+                    if (drawBracket.useX !== null) {
+                        drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot);
                     }
                 }
                 
@@ -639,7 +810,15 @@ const Canvas = props => {
                                     drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
 
                                     counts = drawInfo[x]["nextDot"]["set"]["counts"]
-                                    drawPointAnimation(dot["curX"], dot["curY"], dot["nextX"], dot["nextY"], counts, curTime);
+                                    if (_draw.userOptions.highlightUser !== null) {
+                                        if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                                            drawPointAnimation(dot["curX"], dot["curY"], dot["nextX"], dot["nextY"], counts, curTime, HIGHLIGHT_USER_COLOR);
+                                        } else {
+                                            drawPointAnimation(dot["curX"], dot["curY"], dot["nextX"], dot["nextY"], counts, curTime, "black");
+                                        }
+                                    } else {
+                                        drawPointAnimation(dot["curX"], dot["curY"], dot["nextX"], dot["nextY"], counts, curTime, "black");
+                                    }
 
                                     direction = 1;
                                     
@@ -648,7 +827,16 @@ const Canvas = props => {
                                     drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
 
                                     counts = drawInfo[x]["curDot"]["set"]["counts"]
-                                    drawPointAnimation(dot["curX"], dot["curY"], dot["lastX"], dot["lastY"], counts, curTime);
+                                    
+                                    if (_draw.userOptions.highlightUser !== null) {
+                                        if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                                            drawPointAnimation(dot["curX"], dot["curY"], dot["lastX"], dot["lastY"], counts, curTime, HIGHLIGHT_USER_COLOR);
+                                        } else {
+                                            drawPointAnimation(dot["curX"], dot["curY"], dot["lastX"], dot["lastY"], counts, curTime, "black");
+                                        }
+                                    } else {
+                                        drawPointAnimation(dot["curX"], dot["curY"], dot["lastX"], dot["lastY"], counts, curTime, "black");
+                                    }
 
                                     direction = -1;
                                 }
@@ -678,7 +866,7 @@ const Canvas = props => {
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
-    }, [draw, hoverDot, cameraOffset, cameraZoom, isAnimation])
+    }, [draw, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging])
 
     useEffect(() => {
         setIsAnimation(true);
@@ -712,14 +900,14 @@ const Canvas = props => {
     // PAN TILT SECTION
     const getEventLocation = (e) => {
         if (e.touches && e.touches.length === 1) {
-            const x = e.touches[0].pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft),
-            y = e.touches[0].pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
+            const x = e.touches[0].pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft);
+            const y = e.touches[0].pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
 
             return { x: x, y: y }
         }
         else if (e.clientX && e.clientY) {
-            const x = e.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft),
-            y = e.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
+            const x = e.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft);
+            const y = e.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop);
 
             // console.log(x, y)
             return { x: x, y: y }
@@ -735,6 +923,7 @@ const Canvas = props => {
     }
 
     const onPointerUp = (e) => {
+        // console.log("POINTER UP!")
         setIsDragging(false);
         setInitialPinchDistance(null);
         setLastZoom(cameraZoom);

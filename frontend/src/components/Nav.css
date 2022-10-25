@@ -1,0 +1,14 @@
+.customNavbar {
+    height: 6vh;
+    width: 100vw;
+    margin-top: 0 !important;
+}
+
+.customULNav {
+    margin-top: 1vh !important;
+    margin-bottom: 1vh !important;
+}
+
+.logo {
+    height: 4vh;
+}

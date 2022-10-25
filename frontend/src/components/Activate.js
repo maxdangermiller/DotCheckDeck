@@ -57,8 +57,9 @@ const Activate = (props) => {
                 .then(res => res.json())
                 .then(
                     (result) => {
-                        console.log("Result: " + result)
-                        setCurPage(4);
+                        // console.log("Result: " + result)
+                        // setCurPage(4);
+                        window.location.href = "/login";
                     },
                     // Note: it's important to handle errors here
                     // instead of a catch() block so that we don't swallow

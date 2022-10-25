@@ -1,9 +1,12 @@
 from email.policy import default
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
 from flask_cors import CORS, cross_origin
+from datetime import datetime, timedelta, timezone
+from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, unset_jwt_cookies, jwt_required, \
+	JWTManager, create_refresh_token
 import datetime
 import random
 import string
@@ -11,6 +14,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
 import sys
+import jwt
 
 import convertHashToCords
 
@@ -34,9 +38,17 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+app.config['SECRET_KEY'] = 'your secret key'
+app.config['JWT_TOKEN_LOCATION'] = ["headers", "query_string"]
+app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+app.config["JWT_QUERY_STRING_NAME"] = "token"
+
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 api = Api(app)
+jwt = JWTManager(app)
 CORS(app)
 
 
@@ -61,6 +73,7 @@ class Dot(db.Model):
 
 class Set(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
+	# showIndex = db.Column(db.Integer, nullable=False, default=-1)
 	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 	setNumb = db.Column(db.String(8), nullable=False)
 	measure = db.Column(db.String(16))
@@ -174,7 +187,58 @@ users_schema = UserSchema(many=True)
 
 # API
 
+@app.route('/token', methods=["POST"])
+def create_token():
+	email = request.json.get("email", None)
+	password = request.json.get("password", None)
+
+	user = User.query.filter_by(email=email).first()
+
+	if not user:
+		# user = User(email=email, password=password, name="Max Miller")
+		# db.session.add(user)
+		# db.session.commit()
+		return {"msg": "Wrong email or password"}, 401
+
+	if not user.check_password(password):
+		return {"msg": "Wrong email or password"}, 401
+
+	access_token = create_access_token(identity=email)
+	refresh_token = create_refresh_token(identity=email)
+	response = {"access_token": access_token, "refresh_token": refresh_token}
+	return response
+
+
+@app.route('/refresh-token', methods=["POST"])
+@jwt_required(refresh=True)
+def refresh_expiring_jwts():
+	identity = get_jwt_identity()
+	access_token = create_access_token(identity=identity)
+	return jsonify(access_token=access_token)
+
+
+@app.route('/get-token', methods=["POST"])
+@jwt_required(refresh=True)
+def get_jwt():
+	try:
+		access_token = create_access_token(identity=get_jwt_identity())
+		response = {"access_token": access_token}
+		print(response)
+		return response, 202
+	except (RuntimeError, KeyError):
+		# Case where there is not a valid JWT. Just return the original respone
+		return "", 401
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+	response = jsonify({"msg": "logout successful"})
+	unset_jwt_cookies(response)
+	return response
+
+
 class DotListResource(Resource):
+	@jwt_required(refresh=True)
 	def get(self):
 		setNumb = request.args.get('set_numb', None)
 		userID = request.args.get('user_id', None)
@@ -193,6 +257,7 @@ class DotListResource(Resource):
 
 
 class SetListResource(Resource):
+	@jwt_required()
 	def get(self):
 		setNumb = request.args.get('set_id', None)
 		measure = request.args.get('measure', None)
@@ -221,6 +286,7 @@ class SetListResource(Resource):
 
 class UserListResource(Resource):
 	# Dynamic Option: https://blog.mindee.com/flask-sqlalchemy/
+	@jwt_required()
 	def get(self):
 		users = User.query.all()
 
@@ -271,7 +337,6 @@ class SetUpUserResource(Resource):
         .then(res => res.json())
         .then(console.log)
     """
-
 	def post(self):
 		if "school_code" not in request.json or request.json['school_code'] == "":
 			return "Missing School Code", 404
@@ -325,6 +390,7 @@ class SetUpUserResource(Resource):
 
 
 class CordListResource(Resource):
+	@jwt_required()
 	def get(self):
 		setNumb = request.args.get('set_numb', None)
 		userID = request.args.get('user_id', None)
@@ -386,6 +452,7 @@ class CordListResource(Resource):
 
 
 class PathsListResource(Resource):
+	@jwt_required()
 	def get(self):
 		setNumb1 = request.args.get('set_numb_1', "1")
 		setNumb2 = request.args.get('set_numb_2', None)
@@ -468,6 +535,7 @@ class PathsListResource(Resource):
 
 
 class EndAllBeAllResource(Resource):
+	@jwt_required()
 	def get(self):
 		curSetNumb = request.args.get('set_numb', "1")
 		userID = request.args.get('user_id', None)
@@ -560,6 +628,63 @@ class EndAllBeAllResource(Resource):
 		return allDots
 
 
+# Like EndAllBeAllResource, except it sends EVERYTHING
+class GetAllResource(Resource):
+	@jwt_required()
+	def get(self):
+		schoolCode = request.args.get('school_code', None)
+		width = int(request.args.get('width', 1500))
+		height = int(request.args.get('height', 800))
+
+		# REQUIRE A SCHOOL CODE
+		if schoolCode is None:
+			return "Missing School Code", 404
+
+		# CHECK IF CODE IS VALID
+		school = School.query.filter(School.code == schoolCode).first()
+		if school is None:
+			return "INVALID SCHOOL CODE", 404
+
+		sets = Set.query.filter(Set.schoolID == school.id).all()
+
+		# TODO: GET ORDER HERE
+
+		# var to store all of the sets
+		output = []
+
+		for set in sets:
+			dots = Dot.query.filter(Dot.setID == set.id)
+
+			dotCords = []
+
+			for dot in dots:
+				x, y = convertHashToCords.convertHashToCords(
+					dot.direction, dot.line, dot.steps,
+					dot.side, dot.fbSteps, dot.fbDirection,
+					dot.useHash, width=width, height=height
+				)
+
+				userObj = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
+
+				dotCords.append({
+					'x': x, 'y': y, 'dot': dot_schema.dump(dot),
+					
+					"r": 0, "g": 0, "b": 255,
+					
+					"userLabel": userObj.label, "userID": userObj.id,
+					"userName": f"{userObj.firstName} {userObj.lastName}",
+				})
+			output.append({
+				'setID': set.id,
+				'setNumb': set.setNumb,
+				'dots': dotCords
+			})
+		
+		return output
+
+
+
+
 api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
 api.add_resource(UserListResource, '/users')
@@ -568,6 +693,7 @@ api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(CordListResource, '/cords')
 api.add_resource(PathsListResource, '/paths')
 api.add_resource(EndAllBeAllResource, '/end-all-be-all')
+api.add_resource(GetAllResource, '/get-all')
 
 
 # For use to build database
