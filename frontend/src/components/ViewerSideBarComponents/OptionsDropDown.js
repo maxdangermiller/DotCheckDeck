@@ -5,7 +5,7 @@ const OptionsDropDown = (props) => {
 
     const [dropDownOpen, setDropDownOpen] = useState(false);
 
-    const { userOptions, setUserOptions, dots, ...rest } = props
+    const { userOptions, setUserOptions, data, curSet, ...rest } = props
 
     /*
     Multi-set Check box
@@ -22,6 +22,10 @@ const OptionsDropDown = (props) => {
         setUserOptions({...userOptions,  "drawPath": value});
     }
 
+    const seUseSectionColors = (value) => {
+        setUserOptions({...userOptions,  "useSectionColors": value});
+    }
+
     const setShowMovementBrackets = (value) => {
         setUserOptions({...userOptions,  "showMovementBrackets": value});
     }
@@ -30,13 +34,18 @@ const OptionsDropDown = (props) => {
         setUserOptions({...userOptions,  "highlightUser": value});
     }
 
-    const getUserOptions = (value) => {
+    const getUserOptions = (value, set_numb) => {
+
+        if (value[set_numb] === undefined) { return []; }
+
         let output = [];
 
-        for (let x = 0; x < value.length; x++) {
+        let dots = value[set_numb]["dots"];
+
+        for (let x = 0; x < dots.length; x++) {
             output.push({
-                id: value[x]["userID"], 
-                label: value[x]["userLabel"], 
+                id: dots[x]["userID"], 
+                label: dots[x]["userLabel"], 
             });
             
         }
@@ -99,6 +108,18 @@ const OptionsDropDown = (props) => {
                                     className="form-check-input" 
                                     type="checkbox" 
                                     value="" 
+                                    onChange={() => seUseSectionColors(!userOptions.useSectionColors)} 
+                                    checked={userOptions.useSectionColors} 
+                                />
+                                <label className="form-check-label">
+                                    Use Section Colors
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
                                     onChange={() => setShowMovementBrackets(!userOptions.showMovementBrackets)} 
                                     checked={userOptions.showMovementBrackets} 
                                     disabled={userOptions.highlightUser === null}
@@ -109,7 +130,7 @@ const OptionsDropDown = (props) => {
                             </div>
                             <Autocomplete
                                 disablePortal
-                                options={getUserOptions(dots)}
+                                options={getUserOptions(data, curSet)}
                                 sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
                                 renderInput={(params) => <TextField {...params} label="Select Your Label" />}
                                 onChange={(event, newValue) => setHighlightUser(newValue)}

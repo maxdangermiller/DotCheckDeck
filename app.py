@@ -2,9 +2,12 @@ from email.policy import default
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_cors import CORS, cross_origin
 from datetime import datetime, timedelta, timezone
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, unset_jwt_cookies, jwt_required, \
 	JWTManager, create_refresh_token
 import datetime
@@ -46,10 +49,16 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_QUERY_STRING_NAME"] = "token"
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 ma = Marshmallow(app)
 api = Api(app)
 jwt = JWTManager(app)
+admin = Admin(app, name='Dot Check Deck', template_mode='bootstrap3')
+
 CORS(app)
+
+# flask db migrate -m "message"
+# flask db upgrade
 
 
 class Dot(db.Model):
@@ -71,19 +80,42 @@ class Dot(db.Model):
 		return f"Dot({self.setID})"
 
 
+class SetName(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	setID = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
+	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	sectionID = db.Column(db.Integer, db.ForeignKey('band_section.id'), nullable=False)
+
+	name = db.Column(db.String(32), default="default")
+
+	def __str__(self) -> str:
+		return f"Set Name - {self.name} | SetID:{self.setID}"
+
+	def __repr__(self) -> str:
+		return f"Set Name - {self.name} | SetID:{self.setID}"
+
+
 class Set(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	# showIndex = db.Column(db.Integer, nullable=False, default=-1)
 	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+
 	setNumb = db.Column(db.String(8), nullable=False)
 	measure = db.Column(db.String(16))
 	counts = db.Column(db.Integer, nullable=False)
 
+	setNames = db.relationship('SetName', backref='set')
+	dots = db.relationship('Dot', backref='set')
+
+	start_time_code = db.Column(db.Time, default=datetime.time(hour=0, minute=0, second=0))
+	end_time_code = db.Column(db.Time, default=datetime.time(hour=0, minute=0, second=0))
+	
+
 	def __str__(self):
-		return f"<Set {self.setNumb}>"
+		return f"Set {self.setNumb}"
 
 	def __repr__(self):
-		return f"<Set {self.setNumb}>"
+		return f"Set {self.setNumb}"
 
 
 class User(db.Model):
@@ -96,7 +128,12 @@ class User(db.Model):
 	firstName = db.Column(db.String(64))
 	lastName = db.Column(db.String(64))
 
-	# permissions = db.Column(db.Integer, db.ForeignKey('permissions.id'), nullable=False)
+	is_admin = db.Column(db.Boolean, default=False)
+	is_section_leader = db.Column(db.Boolean, default=False)
+	
+	section = db.Column(db.Integer, db.ForeignKey('band_section.id'))
+
+	dots = db.relationship('Dot', backref='user')
 
 	activated_date = db.Column(db.DateTime, default=None, nullable=True)
 	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
@@ -109,21 +146,30 @@ class User(db.Model):
 		return check_password_hash(self.password_hash, password)
 
 	def __str__(self) -> str:
-		return f"<User {self.firstName} {self.lastName} > {self.symbol} {self.label}>"
+		return f"User {self.firstName} {self.lastName} | {self.symbol} | {self.label}"
 
 	def __repr__(self) -> str:
-		return f"<User {self.firstName} {self.lastName} > {self.symbol} {self.label}>"
+		return f"User {self.firstName} {self.lastName} | {self.symbol} | {self.label}"
 
-"""
-class Permissions(db.Model):
+
+class BandSection(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-
 	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	userID = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+	users = db.relationship('User', backref='bandSection')
+	setNames = db.relationship('SetName', backref='bandSection')
+	
 
-	is_admin = db.Column(db.Boolean, default=False)
-	is_section_leader = db.Column(db.Boolean, default=False)
-"""
+	name = db.Column(db.String(32), default="default")
+	colorR = db.Column(db.Integer)
+	colorG = db.Column(db.Integer)
+	colorB = db.Column(db.Integer)
+
+	def __str__(self) -> str:
+		return f"Band Section - {self.name}"
+
+	def __repr__(self) -> str:
+		return f"Band Section - {self.name}"
+
 
 class School(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -135,6 +181,8 @@ class School(db.Model):
 	users = db.relationship('User', backref='school')
 	sets = db.relationship('Set', backref='school')
 	dots = db.relationship('Dot', backref='school')
+	bandSections = db.relationship('BandSection', backref='school')
+	setNames = db.relationship('SetName', backref='school')
 
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
@@ -143,10 +191,10 @@ class School(db.Model):
 		return self.code
 
 	def __str__(self) -> str:
-		return f"<School {self.name}>"
+		return f"{self.name} School"
 
 	def __repr__(self) -> str:
-		return f"<School {self.name}>"
+		return f"{self.name} School"
 
 
 # Serializers
@@ -164,10 +212,19 @@ class DotSchema(ma.SQLAlchemyAutoSchema):
 		load_instance = True
 
 
+class SetNameSchema(ma.Schema):
+	class Meta:
+		fields = ("id", "name", "setID", "schoolID", "sectionID")
+		model = SetName
+
+
 class SetSchema(ma.Schema):
 	class Meta:
-		fields = ("id", "setNumb", "measure", "counts")
+		fields = ("id", "setNumb", "measure", "counts", "setNames")
 		model = Set
+	
+	setNames = ma.Nested(SetNameSchema)
+
 
 
 class UserSchema(ma.Schema):
@@ -183,6 +240,14 @@ set_schema = SetSchema()
 sets_schema = SetSchema(many=True)
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
+
+
+admin.add_view(ModelView(Dot, db.session))
+admin.add_view(ModelView(SetName, db.session))
+admin.add_view(ModelView(Set, db.session))
+admin.add_view(ModelView(User, db.session))
+admin.add_view(ModelView(BandSection, db.session))
+admin.add_view(ModelView(School, db.session))
 
 
 # API
@@ -683,6 +748,107 @@ class GetAllResource(Resource):
 		return output
 
 
+def getSetIndex(sets, middleSet) -> int:
+	for x in range(len(sets)):
+		if sets[x].setNumb == middleSet:
+			return x
+	return -1
+
+
+def getSectionColor(userObj) -> list:
+	userSection = BandSection.query.filter(BandSection.id == userObj.section).first()
+
+	if userSection is None:
+		return 0, 0, 0
+	
+	return userSection.colorR, userSection.colorG, userSection.colorB
+
+
+class GetDotsWithBufferResource(Resource):
+	@jwt_required()
+	def get(self):
+		schoolCode = request.args.get('school_code', None)
+		width = int(request.args.get('width', 1500))
+		height = int(request.args.get('height', 800))
+		middleSet = request.args.get('set', "1")
+		bufferSize = int(request.args.get('buffer', 4))
+
+		# REQUIRE A SCHOOL CODE
+		if schoolCode is None:
+			return "Missing School Code", 404
+
+		# CHECK IF CODE IS VALID
+		school = School.query.filter(School.code == schoolCode).first()
+		if school is None:
+			return "INVALID SCHOOL CODE", 404
+
+		sets = Set.query.filter(Set.schoolID == school.id).all()
+
+		# TODO: GET ORDER HERE
+
+		searchSetIndex = getSetIndex(sets, middleSet)
+
+		if searchSetIndex == -1:
+			return "INVALID MIDDLE SET PARM", 404
+
+		startIndex = 0
+		endIndex = len(sets) - 1
+		if searchSetIndex - bufferSize > 0:
+			startIndex  = searchSetIndex - bufferSize
+		if searchSetIndex + bufferSize < len(sets):
+			endIndex  = searchSetIndex + bufferSize
+
+		# var to store all of the sets
+		output = []
+
+		identity = get_jwt_identity()
+		loggedInUser = User.query.filter(User.email == identity).first()
+		loggedInUserSection = BandSection.query.filter(BandSection.id == loggedInUser.section).first()
+
+		for i in range(startIndex, endIndex + 1):
+
+			set = sets[i]
+			dots = Dot.query.filter(Dot.setID == set.id)
+			
+			setNameObj = SetName.query.filter(SetName.sectionID == loggedInUserSection.id, SetName.setID == set.id).first()
+
+			setName = ""
+			if setNameObj is not None:
+				setName = setNameObj.name
+
+			dotCords = []
+
+			for dot in dots:
+				x, y = convertHashToCords.convertHashToCords(
+					dot.direction, dot.line, dot.steps,
+					dot.side, dot.fbSteps, dot.fbDirection,
+					dot.useHash, width=width, height=height
+				)
+
+				userObj = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
+				r, g, b = getSectionColor(userObj)
+
+				dotCords.append({
+					'x': x, 'y': y, 'dot': dot_schema.dump(dot),
+
+					'counts': set.counts,
+					
+					"r": r, "g": g, "b": b,
+					
+					"userLabel": userObj.label, "userID": userObj.id,
+					"userName": f"{userObj.firstName} {userObj.lastName}",
+				})
+			
+			output.append({
+				'setID': set.id,
+				'setNumb': set.setNumb,
+				'setName': setName,
+				'counts': set.counts,
+				'index': i,
+				'dots': dotCords
+			})
+		
+		return output
 
 
 api.add_resource(DotListResource, '/dots')
@@ -694,6 +860,7 @@ api.add_resource(CordListResource, '/cords')
 api.add_resource(PathsListResource, '/paths')
 api.add_resource(EndAllBeAllResource, '/end-all-be-all')
 api.add_resource(GetAllResource, '/get-all')
+api.add_resource(GetDotsWithBufferResource, '/get-dots')
 
 
 # For use to build database

@@ -11,12 +11,18 @@
     width: 80%;
     text-align: center;
     border: none;
+    height: 10vh;
+}
+
+.spinnerSuspender {
+    height: 10vh;
+    width:80%;
 }
 
 .viewerSideBarHeader {
     font-size: 4vh;
     font-weight: bold;
-    width: 90%;
+    width: 100%;
     text-align: center;
     border: none;
     margin-bottom: 0;
@@ -27,6 +33,7 @@
     font-size: 3vh;
     width: 100%;
     margin-bottom: 0;
+    overflow: hidden;
 }
 
 .buttonDiv {
