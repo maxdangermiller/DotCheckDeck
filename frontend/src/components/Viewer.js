@@ -9,7 +9,6 @@ const SCHOOL_CODE = "12345678";
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
 
 const Viewer = (props) => {
-    const [dots, setDots] = useState([]);
 	const [data, setData] = useState([]);
 	const [curSet, setCurSet]  = useState(0);
 	const [curSetNumb, setCurSetNumb]  = useState("1");
@@ -17,6 +16,7 @@ const Viewer = (props) => {
 	const [sets, setSets] = useState([]);
 	const [dimensions, setDimensions]  = useState({"w": 0, "h": 0});
 	const [loading, setLoading] = useState(false);
+	const [sentRequest, setSentRequest] = useState(false);
 
 	let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
 
@@ -49,13 +49,57 @@ const Viewer = (props) => {
 		return true;
 	}
 
-	useEffect(() => {
-		if (dimensions["w"] !== 0 && dimensions["h"] !== 0 && sets.length !== 0 && !alreadyBuffered(data, curSet)) {
+	const findFirstBufferHole = (_data, _sets) => {
+		const BUFFER_SIZE = 4;
+		
+		for (let i = 0; i < _sets.length; i++) {
+			if (_data[i] === undefined) {
+				let value = i + BUFFER_SIZE;
+				return value < _sets.length ? value : -1;
+			}
+		}
+
+		return -1;
+	}
+
+	const convertIndicesListToRangeString = (_data, _sets) => {
+		let curStartRange = 0;
+		let string = "";
+
+		for (let i = 0; i < _sets.length; i++) {
+			if (curStartRange === 0 && _data[i] !== undefined) {
+				curStartRange = i;
+			}
+			else if (curStartRange !== 0 && _data[i] === undefined) {
+				if (string === "") {
+					string = curStartRange + "-" (i -1);
+				} else {
+					string = string + ", " + curStartRange + "-" (i -1);
+				}
+				curStartRange = 0;
+			}
+		} 
+
+		return string;
+	}
+
+	const retrievePoints = (useBuffer) => {
+
+		let useSetIndex = findFirstBufferHole(data, sets);
+		let curSetBuffered = alreadyBuffered(data, curSet);
+
+		// console.log(useSetIndex, curSetBuffered);
+
+		if (sentRequest && curSetBuffered || (useSetIndex - 4 >= curSet && useSetIndex + 4 <= curSet)) { return; }
+
+		if (dimensions["w"] !== 0 && dimensions["h"] !== 0 && sets.length !== 0 && (useBuffer || useSetIndex !== -1 || !curSetBuffered)) {
 			console.log("Recalculating Points! " + dimensions["w"] + "x" + dimensions["h"]);
 
-			setLoading(true);
+			setSentRequest(true);
 
-			const url1 = "http://127.0.0.1:5000/get-dots?school_code=" + SCHOOL_CODE + "&set=" + sets[curSet]["setNumb"] + 
+			if (!curSetBuffered) { useSetIndex = curSet; setLoading(true); }
+
+			const url1 = "http://127.0.0.1:5000/get-dots?school_code=" + props.schoolCode + "&set=" + sets[useSetIndex]["setNumb"] + 
 				"&width=" + dimensions["w"] + "&height=" + dimensions["h"] + "&token=" + props.token;
 
 			axios({
@@ -64,17 +108,23 @@ const Viewer = (props) => {
 			}).then((response) => {
 				let dataBackup = data;
 
+				if (!useBuffer) {
+					dataBackup = [];
+				}
+
 				for (let i = 0; i < response.data.length; i++) {
 					const setNumb = response.data[i]["index"];
 
 					dataBackup[setNumb] = response.data[i];
 				}
 
-				console.log(dataBackup);
+				//console.log(data, dataBackup);
+				console.log("Just Loaded These Sets: " + convertIndicesListToRangeString(dataBackup, sets))
 
 				setData(dataBackup);
 
-				setLoading(false);
+				setSentRequest(false);
+				if (!curSetBuffered) { setLoading(false); }
 			}).catch((error) => {
 				if (error.response && error.response.status === 401) {
 					// console.log(error.response)
@@ -85,10 +135,18 @@ const Viewer = (props) => {
 				}
 			})
 		}
-	}, [curSet, dimensions, sets])
+	} 
 
 	useEffect(() => {
-		fetch("http://127.0.0.1:5000/sets?school_code=" + SCHOOL_CODE + "&token=" + props.token)
+		retrievePoints(true);
+	}, [curSet, sets])
+
+	useEffect(() => {
+		retrievePoints(false);
+	}, [dimensions])
+
+	useEffect(() => {
+		fetch("http://127.0.0.1:5000/sets?school_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
 				(result) => {
@@ -153,7 +211,15 @@ const Viewer = (props) => {
 	return (
 		<div className="flex-row justify-content-center d-flex align-items-center fullScreen">
 			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass">
-				<Canvas draw={draw} setDimensions={setDimensions} curDimensions={dimensions} curSet={curSet} sets={sets} loading={loading} timeCode={audio.getStartDate}/>
+				<Canvas 
+					draw={draw} 
+					setDimensions={setDimensions} 
+					curDimensions={dimensions} 
+					curSet={curSet} 
+					sets={sets} 
+					loading={loading} 
+					timeCode={audio.getStartDate}
+				/>
 			</div>
 			<ViewerSideBar 
 				curSetInfo={curSetInfo} 

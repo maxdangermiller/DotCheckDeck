@@ -1,13 +1,13 @@
 .fullScreen {
-    width: 100vw;
-    height: 94vh;
-    overflow: hidden!important;
+  width: 100vw;
+  height: 94vh;
+  overflow: hidden!important;
   
-  }
+}
   
-  .canvasDivClass {
-    width: 80vw;
-    height: 98vh;
-    border-style: solid;
-    border-width: 5px;
-  }
+.canvasDivClass {
+  width: 80vw;
+  height: 98vh;
+  border-style: solid;
+  border-width: 5px;
+}

@@ -6,6 +6,7 @@ import Activate from './Activate';
 import useToken from './useToken';
 import Login from './Login';
 import Nav from './Nav';
+import Admin from './Admin';
 
 import axios from "axios";
 
@@ -13,11 +14,13 @@ import axios from "axios";
 function App() {
 
 	const { token, refToken, setRefToken, removeToken, setToken } = useToken();
+	const [ userData, setUserData ] = useState({});
+	const [ schoolCode, setSchoolCode ] = useState("");
 
 	useEffect(() => {
 		if (token == null) {
-			console.log("Token: " + token);
-			console.log("Ref Token: " + refToken);
+			// console.log("Token: " + token);
+			// console.log("Ref Token: " + refToken);
 			if (refToken != null) {
 				axios({
 					method: "POST",
@@ -26,10 +29,10 @@ function App() {
 						Authorization: `Bearer ${refToken}`,
 					}
 				}).then((response) => {
-					// console.log(response)
 					if (response.status === 202) {
-						setToken(response.data.access_token)
-						// console.log("received Token: " + response.data.access_token)
+						setToken(response.data.access_token);
+						setUserData(response.data.user);
+						setSchoolCode(response.data.school_code);
 					}
 
 				}).catch((error) => {
@@ -60,6 +63,13 @@ function App() {
 		});
 	}
 
+	const isAdminAuthorized = () => {
+		if (userData !== undefined && userData["is_admin"] !== undefined) {
+			return userData["is_admin"] || userData["is_section_leader"];
+		}
+		return false;
+	}
+
 	if (token == null) {
 		return (
 			<div className="d-flex align-items-center justify-content-center flex-column fullScreen">
@@ -76,7 +86,7 @@ function App() {
 					<Route path="/" exact element={
 						token === ""
 						? <Navigate to="/login" />
-						: <Viewer token={token}/>
+						: <Viewer token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/activate" exact element={
 						token !== "" && token !== undefined
@@ -87,6 +97,11 @@ function App() {
 						token !== "" && token !== undefined
 						? <Navigate to="/" />
 						: <Login setToken={setToken} setRefToken={setRefToken}/>
+					} />
+					<Route path="/admin" exact element={
+						token !== "" && token !== undefined && !isAdminAuthorized()
+						? <Navigate to="/" />
+						: <Admin token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="*" element={<h1>404, you've been dumb</h1>} />
 				</Routes>

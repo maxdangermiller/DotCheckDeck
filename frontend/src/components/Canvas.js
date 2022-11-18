@@ -50,7 +50,7 @@ const Canvas = props => {
     const [translation, setTranslation] = useState({x: 0, y: 0})
     const [isAnimation, setIsAnimation] = useState(false);
     const [drawInfo, setDrawInfo] = useState({});
-    const [animationInfo, setAnimationInfo] = useState({frame: 0, startTime: 0});
+    const [animationStartTime, setAnimationStartTime] = useState(0);
     const [animationDirection, setAnimationDirection] = useState(-1);  
     const [lastSetID, setLastSetID] = useState(-1);
     // This will be 0 until there's an animation and then it will be set to 1 for forward or 0 for backward
@@ -296,43 +296,47 @@ const Canvas = props => {
             context.closePath();
 
             context.beginPath();
-            context.font = canvas.height * 0.03 + 'px serif';
+            context.font = canvas.height * 0.03 + 'px Arial Black';
             context.fillStyle = "black";
             context.textBaseline = "middle";
             context.textAlign = "center";
             context.fillText(dot["userLabel"], x + w * 0.2, y + h * 0.25);
 
             if (dot["userName"] !== "None None") {
-                context.font = canvas.height * 0.015 + 'px serif';
+                context.font = canvas.height * 0.015 + 'px Arial Black';
 
                 context.fillText(dot["userName"], x + w * 0.65, y + h * 0.25);
                 context.closePath();
             } else {
-                context.font = canvas.height * 0.015 + 'px serif';
+                context.font = canvas.height * 0.0125 + 'px Arial Black';
                 context.fillStyle = "red";
 
-                context.fillText("Unactivated", x + w * 0.65, y + h * 0.25);
+                context.fillText("Inactivated", x + w * 0.65, y + h * 0.25);
                 context.closePath();
             }
             
             // {self.steps} {self.direction} {self.line} on {self.side}; {self.fbSteps} {self.fbDirection} {self.useHash}, for {self.counts} counts"
             context.beginPath();
-            context.font = canvas.height * 0.015 + 'px serif';
+            context.font = canvas.height * 0.0125 + 'px Arial Black';
             context.fillStyle = "black";
 
             const dotI = dot["dot"]
-            const dotStr = dotI["direction"] + " " + dotI["line"] + " on "+ dotI["side"] + "; " + 
-                    dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dot["counts"] + " counts"
+            // const dotStr = dotI["direction"] + " " + dotI["line"] + " on "+ dotI["side"] + "; " + 
+            //         dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dot["counts"] + " counts"
 
             if (dotI["steps"] !== 0) {
-                context.fillText(dotI["steps"] + " steps " + dotI["direction"] + " " + dotI["line"] + " side " + dotI["side"] + "; ", x + w * 0.5, y + h * 0.5, w * 0.9);
+                const textStr = dotI["steps"] + " steps " + dotI["direction"] + " " + dotI["line"] + " side " + dotI["side"] + "; ";
+                context.fillText(textStr, x + w * 0.5, y + h * 0.5, w * 0.9);
             } else {
-                context.fillText("On " + dotI["line"] + ", on side " + dotI["side"] + "; ", x + w * 0.5, y + h * 0.5, w * 0.9);
+                const textStr = "On " + dotI["line"] + ", on side " + dotI["side"] + "; "
+                context.fillText(textStr, x + w * 0.5, y + h * 0.5, w * 0.9);
             }
 
             if (dotI["fbSteps"] !== 0) {
                 const fbDirection = dotI["fbDirection"] === "Front" ? "in front of" : dotI["fbDirection"];
-                context.fillText(dotI["fbSteps"] + " steps " + fbDirection + " " + dotI["useHash"], x + w * 0.5, y + h * 0.65, w * 0.9);
+                const textStr = dotI["fbSteps"] + " steps " + fbDirection + " " + dotI["useHash"];
+
+                context.fillText(textStr, x + w * 0.5, y + h * 0.65, w * 0.9);
             } else {
                 context.fillText("On " + dotI["useHash"], x + w * 0.5, y + h * 0.65, w * 0.9);
             }
@@ -644,10 +648,7 @@ const Canvas = props => {
             return {xInBound: xInBound, yInBound: yInBound, xOutBounds: xOutBounds, yOutBounds: yOutBounds};
         }
 
-        const render = ctx => {
-            ctx.save();
-
-            // Dynamic resizing!
+        const dynamicResize = () => {
             if (canvas.width !== canvas.offsetWidth || canvas.height !== canvas.offsetHeight) {
                 // 15x8
                 canvasRef.current.style.width = "100%";
@@ -672,16 +673,9 @@ const Canvas = props => {
                     canvasRef.current.style.height = "";
                 }
             }
+        }
 
-            if (curDimensions["w"] !== canvas.width || curDimensions["h" !== canvas.height]) {
-                setDimensions({"w": canvas.width, "h": canvas.height});
-            }
-            if (cameraOffset === null) {
-                // setCameraOffset({x: canvas.width / 2, y: canvas.height / 2});
-                setCameraOffset({x: 0, y: 0})
-            }
-
-            // Pan and zoom
+        const doPanAndZoom = (ctx) => {
             if (cameraOffset !== null) {
                 ctx.translate( canvas.width / 2, canvas.height / 2 )        // Translate to center for zoom
                 ctx.scale(cameraZoom, cameraZoom)                           // Zoom
@@ -717,6 +711,116 @@ const Canvas = props => {
                     setTranslation({x: xTranslation, y: yTranslation, s: scale});
                 }
             }
+        }
+
+        // Takes data from API and draws them, used to condense the render method
+        const drawDots = (_draw, curSetData) => {
+            let newDots = [];
+            let drawBracket = {useX:null, useY:null, dot:null};
+
+            for (let x = 0; x < curSetData.length; x++) {
+                const dot = curSetData[x];
+                let color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+
+                newDots.push(dot);
+
+                if (!_draw.userOptions.useSectionColors) {
+                    color = CURRENT_DOT_COLOR;
+                }
+
+                
+                let useX = dot["x"];
+                let useY = dot["y"];
+
+                if (_draw.userOptions.highlightUser !== null && _draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                    if (_draw.userOptions.showMovementBrackets) {
+                        drawBracket = {useX:useX, useY:useY, dot:dot["dot"]};
+                    }
+                    drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot["userLabel"]);
+                } else {
+                    drawPoint(useX, useY, color, dot["userLabel"]);
+                }
+            }
+
+            if (drawBracket.useX !== null) {
+                drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot);
+            }
+
+            return newDots;
+        }
+
+        // Takes data from API, and draws the animation
+        const drawAnimation = (_draw) => {
+            if (drawInfo.length !== 0 && curSet !== lastSetID && drawInfo[curSet] !== undefined) {
+                let startTime = animationStartTime;
+                if (startTime === 0) { startTime = Date.now(); setAnimationStartTime(startTime); }
+
+                let curActualTime = Date.now();
+                let durationInSecs = 2;
+
+                let counts = drawInfo[curSet]["counts"];
+
+                // 2000 / 2000
+                let curTime = (curActualTime - startTime) / ((1000 * durationInSecs / counts))
+
+                // console.log((curActualTime - startTime) + " : " + curTime);
+
+                let direction = 0;
+
+                let curSetData = drawInfo[curSet]["dots"];
+                let lastSetData = drawInfo[lastSetID]["dots"];
+
+                if (curSet > lastSetID) { direction = 1;  }
+                else                    { direction = -1; }
+
+                if (animationDirection !== direction) { setAnimationDirection(direction); }
+
+                // console.log(curSet, lastSetID, curTime + 1 > counts);
+                
+                for (let x = 0; x < Math.min(curSetData.length, lastSetData.length); x++) {
+                    const dot = curSetData[x];
+                    const lastDot = lastSetData[x];
+
+                    const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                    // drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
+                    // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
+                    
+                    if (dot["userLabel"] !== lastDot["userLabel"]) { console.log("FAIL"); }
+                    
+
+                    if (_draw.userOptions.highlightUser !== null) {
+                        if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                            drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, HIGHLIGHT_USER_COLOR);
+                        } else {
+                            drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, color);
+                        }
+                    } else {
+                        drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, color);
+                    }
+                }
+
+                if (curTime + 0.1 >= counts)   { setIsAnimation(false); setAnimationStartTime(0);  }
+                
+                // console.log(curTime);
+            } else { setIsAnimation(false); setAnimationStartTime(0); }
+        }
+
+        const render = ctx => {
+            ctx.save();
+
+            // Dynamic resizing!
+            dynamicResize();
+
+            if (curDimensions["w"] !== canvas.width || curDimensions["h" !== canvas.height]) {
+                setDimensions({"w": canvas.width, "h": canvas.height});
+            }
+            if (cameraOffset === null) {
+                // setCameraOffset({x: canvas.width / 2, y: canvas.height / 2});
+                setCameraOffset({x: 0, y: 0})
+            }
+
+            // Pan and zoom
+            doPanAndZoom(ctx);
             
             // clear();
             
@@ -727,165 +831,38 @@ const Canvas = props => {
             let userOptions = _draw.userOptions;
 
             if (data.length !== 0 || isAnimation)  { clear(); }
+            
+            // If it is an animation, draw the animation
+            if (isAnimation) { drawAnimation(_draw); }
 
-            /* 
-            -- Draw Return Structure --
-            {
-                "lines": [ {"startX": 0, "startY": 0, "endX": 100, "endY": 100} ],
-                "pts": [ { "x": 0, "y": 0, "r": 255, "g": 255, "b": 255 } ]
-            }
-            */
-            if (!isAnimation) {
-                // console.log(lastSetID !== curSet, data.length !== drawInfo.length, data.length !== 0)
-                if (lastSetID !== curSet && animationDirection !== 0 && !loading && data.length !== 0) {  // data !== drawInfo && data.length > curSet
-                    // console.log("NEW FRAME!")
-                    setDrawInfo(data);
-                    setLastSetID(curSet);
-                    setAnimationDirection(0);
+            // Check to see if we have a new frame (right after an animation)
+            else if (lastSetID !== curSet && animationDirection !== 0 && !loading && data.length !== 0) {
+                setDrawInfo(data);
+                setLastSetID(curSet);
+                setAnimationDirection(0);
 
-                    let newDots = [];
-                    let drawBracket = {useX:null, useY:null, dot:null};
+                let curSetData = data[curSet]["dots"];
 
-                    let curSetData = data[curSet]["dots"];
+                let newDots = drawDots(_draw, curSetData);
+                setDots(newDots)
 
-
-                    for (let x = 0; x < curSetData.length; x++) {
-                        const dot = curSetData[x];
-                        let color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                        // drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
-                        // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
-                        newDots.push(dot);
-
-                        if (!_draw.userOptions.useSectionColors) {
-                            color = CURRENT_DOT_COLOR;
-                        }
-
-                        
-                        let useX = dot["x"];
-                        let useY = dot["y"];
-
-                        if (_draw.userOptions.highlightUser !== null && _draw.userOptions.highlightUser.label === dot["userLabel"]) {
-                            if (_draw.userOptions.showMovementBrackets) {
-                                // drawMovementBrackets(useX, useY, dot["curDot"]);
-                                drawBracket = {useX:useX, useY:useY, dot:dot["dot"]};
-                            }
-                            drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot["userLabel"]);
-                        } else {
-                            drawPoint(useX, useY, color, dot["userLabel"]);
-                        }
-                        // setDots(dots => [...dots, dot])
-                    }
-                    setDots(newDots)
-
-                    if (drawBracket.useX !== null) {
-                        drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot);
-                    }
-
-                } 
-                // Use save
-                else if (drawInfo.length > curSet && drawInfo[curSet] !== undefined) {
-                    // console.log("Using backup: ", animationDirection)
-
-                    let newDots = [];
-                    let drawBracket = {useX:null, useY:null, dot:null};
-                    
-                    let curSetData = drawInfo[curSet]["dots"];
-
-                    for (let x = 0; x < curSetData.length; x++) {
-                        const dot = curSetData[x];
-                        let color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                        // drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
-                        // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
-                        newDots.push(dot);
-
-                        if (!_draw.userOptions.useSectionColors) {
-                            color = CURRENT_DOT_COLOR;
-                        }
-                        
-                        let useX = dot["x"];
-                        let useY = dot["y"];
-
-                        if (_draw.userOptions.highlightUser !== null && _draw.userOptions.highlightUser.label === dot["userLabel"]) {
-                            if (_draw.userOptions.showMovementBrackets) {
-                                // drawMovementBrackets(useX, useY, dot["curDot"]);
-                                drawBracket = {useX:useX, useY:useY, dot:dot["dot"]};
-                            }
-                            drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot["userLabel"]);
-                        } else {
-                            drawPoint(useX, useY, color, dot["userLabel"]);
-                        }
-                        // setDots(dots => [...dots, dot])
-                    }
-                    setDots(newDots)
-
-                    if (drawBracket.useX !== null) {
-                        drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot);
-                    }
-                }
-                
                 if (hoverDot["x"] !== undefined) {
                     drawUserDialogue(hoverDot["x"], hoverDot["y"], hoverDot);
                 }
             }
-            // Is animation
-            else {
-                if (drawInfo.length !== 0 && curSet !== lastSetID && drawInfo[curSet] !== undefined) {
-                    let startTime = animationInfo.startTime;
-                    if (startTime === 0) { startTime = Date.now(); }
 
-                    let curActualTime = Date.now();
-                    let durationInSecs = 2;
+            // If it isn't a new frame, used a buffered frame. This is so we don't set vars and overwrite things.
+            else if (drawInfo.length > curSet && drawInfo[curSet] !== undefined)  {
+                let curSetData = drawInfo[curSet]["dots"];
 
-                    let counts = drawInfo[curSet]["counts"];
+                let newDots = drawDots(_draw, curSetData);
+                setDots(newDots)
 
-                    // 2000 / 2000
-                    let curTime = (curActualTime - startTime) / ((1000 * durationInSecs / counts))
-
-                    // console.log((curActualTime - startTime) + " : " + curTime);
-
-                    let direction = 0;
-
-                    let curSetData = drawInfo[curSet]["dots"];
-                    let lastSetData = drawInfo[lastSetID]["dots"];
-
-                    if (curSet > lastSetID) { direction = 1;  }
-                    else                    { direction = -1; }
-
-                    if (animationDirection !== direction) { setAnimationDirection(direction); }
-
-                    // console.log(curSet, lastSetID, curTime + 1 > counts);
-                    
-                    for (let x = 0; x < Math.min(curSetData.length, lastSetData.length); x++) {
-                        const dot = curSetData[x];
-                        const lastDot = lastSetData[x];
-
-                        const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                        // drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
-                        // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
-                        
-                        if (dot["userLabel"] !== lastDot["userLabel"]) { console.log("FAIL"); }
-                        
-
-                        if (_draw.userOptions.highlightUser !== null) {
-                            if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
-                                drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, HIGHLIGHT_USER_COLOR);
-                            } else {
-                                drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, color);
-                            }
-                        } else {
-                            drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, color);
-                        }
-                    }
-
-                    if (curTime + 0.1 >= counts)   { setIsAnimation(false); setAnimationInfo({frame: 0, startTime: 0});  }
-                    else                        { setAnimationInfo({frame: frameCount, startTime: startTime});                }
-                    
-                    // console.log(curTime);
-                } else { setIsAnimation(false); setAnimationInfo({frame: 0, startTime: 0}); }
-                // console.log(frameCount)
-                // setIsAnimation(false);
+                if (hoverDot["x"] !== undefined) {
+                    drawUserDialogue(hoverDot["x"], hoverDot["y"], hoverDot);
+                }
             }
-            
+
             ctx.restore()
             frameCount++
             animationFrameId = requestAnimationFrame(() => render(ctx))

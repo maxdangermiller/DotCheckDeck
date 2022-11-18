@@ -229,8 +229,12 @@ class SetSchema(ma.Schema):
 
 class UserSchema(ma.Schema):
 	class Meta:
-		# fields = ("id", "symbol", "label", "firstName", "lastName", "email")
-		fields = ("id", "label")
+		fields = (
+			"id", "symbol", "label", 
+			"firstName", "lastName", "email", 
+			"is_admin", "is_section_leader", "section"
+			"activated_date", "created_date", "last_updated"
+		)
 		model = User
 
 
@@ -270,7 +274,18 @@ def create_token():
 
 	access_token = create_access_token(identity=email)
 	refresh_token = create_refresh_token(identity=email)
-	response = {"access_token": access_token, "refresh_token": refresh_token}
+
+	userSchool = School.query.filter(School.id == user.schoolID).first()
+	schoolCode = ""
+	if userSchool is not None:
+		schoolCode = userSchool.code
+
+	response = {
+		"access_token": access_token, 
+		"refresh_token": refresh_token, 
+		"user": user_schema.dump(user),
+		"school_code": schoolCode
+	}
 	return response
 
 
@@ -286,9 +301,21 @@ def refresh_expiring_jwts():
 @jwt_required(refresh=True)
 def get_jwt():
 	try:
+		identity = get_jwt_identity()
 		access_token = create_access_token(identity=get_jwt_identity())
-		response = {"access_token": access_token}
-		print(response)
+		user = User.query.filter_by(email=identity).first()
+
+		userString = ""
+		schoolCode = ""
+		if user is not None:
+			userString = user_schema.dump(user)
+
+			userSchool = School.query.filter(School.id == user.schoolID).first()
+			if userSchool is not None:
+				schoolCode = userSchool.code
+
+		response = {"access_token": access_token, "user": userString, "school_code": schoolCode}
+		# print(response)
 		return response, 202
 	except (RuntimeError, KeyError):
 		# Case where there is not a valid JWT. Just return the original respone
@@ -346,7 +373,25 @@ class SetListResource(Resource):
 		else:
 			sets = Set.query.filter(Set.schoolID == school.id).all()
 
-		return sets_schema.dump(sets)
+		identity = get_jwt_identity()
+		loggedInUser = User.query.filter(User.email == identity).first()
+		loggedInUserSection = BandSection.query.filter(BandSection.id == loggedInUser.section).first()
+
+		setsOutput = list()
+
+		for set in sets:
+			setNameObj = SetName.query.filter(SetName.sectionID == loggedInUserSection.id, SetName.setID == set.id).first()
+
+			setName = "Undefined"
+			if setNameObj is not None:
+				setName = setNameObj.name
+
+			schema = set_schema.dump(set)
+			schema["setName"] = setName
+			
+			setsOutput.append(schema)
+
+		return setsOutput
 
 
 class UserListResource(Resource):
@@ -851,15 +896,15 @@ class GetDotsWithBufferResource(Resource):
 		return output
 
 
-api.add_resource(DotListResource, '/dots')
+# api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
-api.add_resource(UserListResource, '/users')
+# api.add_resource(UserListResource, '/users')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
-api.add_resource(CordListResource, '/cords')
-api.add_resource(PathsListResource, '/paths')
-api.add_resource(EndAllBeAllResource, '/end-all-be-all')
-api.add_resource(GetAllResource, '/get-all')
+# api.add_resource(CordListResource, '/cords')
+# api.add_resource(PathsListResource, '/paths')
+# api.add_resource(EndAllBeAllResource, '/end-all-be-all')
+# api.add_resource(GetAllResource, '/get-all')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
 
 
