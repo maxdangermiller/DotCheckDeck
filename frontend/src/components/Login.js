@@ -14,6 +14,7 @@ const Login = (props) => {
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [showAlert, setShowAlert] = useState(false);
 
 	const btnClick = (e) => {
 		axios({
@@ -33,6 +34,7 @@ const Login = (props) => {
 				console.log(error.response)
 				console.log(error.response.status)
 				console.log(error.response.headers)
+				setShowAlert(true);
 			}
 		})
 
@@ -82,6 +84,14 @@ const Login = (props) => {
 					</div>
 				</div>
 			</div>
+			{
+				showAlert ?
+				<div className="alert alert-danger alert-dismissible customAlert" role="alert">
+					<div>Something went wrong! We guess it's possible that we did something wrong, but it's probably on you.</div>
+					<button className="btn-close" onClick={(e) => setShowAlert(false)}></button>
+				</div>
+				: null
+			}
 		</section></ThemeProvider>
 	);
 }

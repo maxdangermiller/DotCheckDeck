@@ -27,7 +27,9 @@
 
 .customAlert {
     position: absolute;
-    bottom: 0;
+    bottom: 2vh;
+    right: 10vw;
+    left: 10vw;
 }
 
 .customInput {

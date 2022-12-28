@@ -78,6 +78,7 @@ const Viewer = (props) => {
 				}
 				curStartRange = 0;
 			}
+			console.log(string, _data[i]);
 		} 
 
 		return string;
@@ -118,13 +119,13 @@ const Viewer = (props) => {
 					dataBackup[setNumb] = response.data[i];
 				}
 
-				//console.log(data, dataBackup);
+				console.log(data, dataBackup);
 				console.log("Just Loaded These Sets: " + convertIndicesListToRangeString(dataBackup, sets))
 
 				setData(dataBackup);
 
 				setSentRequest(false);
-				if (!curSetBuffered) { setLoading(false); }
+				if (!curSetBuffered || loading) { setLoading(false); }
 			}).catch((error) => {
 				if (error.response && error.response.status === 401) {
 					// console.log(error.response)

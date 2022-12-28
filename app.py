@@ -11,8 +11,6 @@ from flask_admin.contrib.sqla import ModelView
 from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, unset_jwt_cookies, jwt_required, \
 	JWTManager, create_refresh_token
 import datetime
-import random
-import string
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
@@ -329,25 +327,6 @@ def logout():
 	return response
 
 
-class DotListResource(Resource):
-	@jwt_required(refresh=True)
-	def get(self):
-		setNumb = request.args.get('set_numb', None)
-		userID = request.args.get('user_id', None)
-		print(userID)
-
-		if setNumb is not None and userID is not None:
-			dots = Dot.query.filter(Dot.setID == setNumb, Dot.userID == userID).all()
-		elif setNumb is not None:
-			dots = Dot.query.filter(Dot.setID == setNumb).all()
-		elif userID is not None:
-			dots = Dot.query.filter(Dot.userID == userID).all()
-		else:
-			dots = Dot.query.all()
-
-		return dots_schema.dump(dots)
-
-
 class SetListResource(Resource):
 	@jwt_required()
 	def get(self):
@@ -392,15 +371,6 @@ class SetListResource(Resource):
 			setsOutput.append(schema)
 
 		return setsOutput
-
-
-class UserListResource(Resource):
-	# Dynamic Option: https://blog.mindee.com/flask-sqlalchemy/
-	@jwt_required()
-	def get(self):
-		users = User.query.all()
-
-		return users_schema.dump(users)
 
 
 class SchoolCodeAuthResource(Resource):
@@ -497,300 +467,6 @@ class SetUpUserResource(Resource):
 		db.session.commit()
 
 		return "Successfully activated user", 201
-
-
-class CordListResource(Resource):
-	@jwt_required()
-	def get(self):
-		setNumb = request.args.get('set_numb', None)
-		userID = request.args.get('user_id', None)
-		schoolCode = request.args.get('school_code', None)
-		width = int(request.args.get('width', 1500))
-		height = int(request.args.get('height', 800))
-		# print(userID)
-
-		# REQUIRE A SCHOOL CODE
-		if schoolCode is None:
-			return "Missing School Code", 404
-
-		# CHECK IF CODE IS VALID
-		school = School.query.filter(School.code == schoolCode).first()
-		if school is None:
-			return "INVALID SCHOOL CODE", 404
-
-		if setNumb is not None and userID is not None:
-			setObj = Set.query.filter(Set.setNumb == setNumb, Set.schoolID == school.id).first()
-			if setObj is None:
-				return "INVALID SET ID", 404
-
-			dots = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == userID, Dot.schoolID == school.id).all()
-		elif setNumb is not None:
-			setObj = Set.query.filter(Set.setNumb == setNumb, Set.schoolID == school.id).first()
-			if setObj is None:
-				return "INVALID SET ID", 404
-
-			dots = Dot.query.filter(Dot.setID == setObj.id, Dot.schoolID == school.id).all()
-		elif userID is not None:
-			dots = Dot.query.filter(Dot.userID == userID, Dot.schoolID == school.id).all()
-		else:
-			dots = Dot.query.filter(Dot.schoolID == school.id).all()
-
-		output = list()
-
-		for dot in dots:
-			x, y = convertHashToCords.convertHashToCords(
-				dot.direction, dot.line, dot.steps,
-				dot.side, dot.fbSteps, dot.fbDirection,
-				dot.useHash, width=width, height=height
-			)
-
-			person = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
-
-			dotData = dot_schema.dump(dot)
-			dotData["set"] = set_schema.dump(Set.query.filter(Set.id == dotData["setID"]).first())
-
-			output.append({
-				"x": x, "y": y,
-				"userLabel": person.label,
-				"userID": person.id,
-				"userName": f"{person.firstName} {person.lastName}",
-				"r": 0, "g": 0, "b": 255,
-				"dot": dotData
-			})
-
-		return {"pts": output}
-
-
-class PathsListResource(Resource):
-	@jwt_required()
-	def get(self):
-		setNumb1 = request.args.get('set_numb_1', "1")
-		setNumb2 = request.args.get('set_numb_2', None)
-		userID = request.args.get('user_id', None)
-		schoolCode = request.args.get('school_code', None)
-		width = int(request.args.get('width', 1500))
-		height = int(request.args.get('height', 800))
-		# print(userID)
-
-		# REQUIRE A SCHOOL CODE
-		if schoolCode is None:
-			return "Missing School Code", 404
-
-		# CHECK IF CODE IS VALID
-		school = School.query.filter(School.code == schoolCode).first()
-		if school is None:
-			return "INVALID SCHOOL CODE", 404
-
-		if setNumb2 is None:
-			tempSet1 = Set.query.filter(Set.setNumb == setNumb1, Set.schoolID == school.id).first()
-			if tempSet1 is None:
-				return "INVALID SET NUMB!", 404
-			nextSet = Set.query.filter(Set.id == tempSet1.id + 1, Set.schoolID == school.id).first()
-			print(nextSet)
-			if nextSet is None:
-				return "NO MORE SETS AFTER THIS!"
-			setNumb2 = nextSet.setNumb
-		# print(School.query.filter(School.id == tempSet1.schoolID).first().code)
-
-		if setNumb1 is not None and userID is not None:
-			setObj = Set.query.filter(Set.setNumb == setNumb1, Set.schoolID == school.id).first()
-			dots1 = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == userID, Dot.schoolID == school.id).all()
-		elif setNumb1 is not None:
-			setObj = Set.query.filter(Set.setNumb == setNumb1, Set.schoolID == school.id).first()
-			dots1 = Dot.query.filter(Dot.setID == setObj.id, Dot.schoolID == school.id).all()
-		else:
-			dots1 = Dot.query.filter(Dot.schoolID == school.id).all()
-
-		lines = list()
-
-		for dot in dots1:
-			x, y = convertHashToCords.convertHashToCords(
-				dot.direction, dot.line, dot.steps,
-				dot.side, dot.fbSteps, dot.fbDirection,
-				dot.useHash, width=width, height=height
-			)
-
-			person = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
-
-			setObj = Set.query.filter(Set.setNumb == setNumb2, Set.schoolID == school.id).first()
-			nextDot = Dot.query.filter(Dot.setID == setObj.id, Dot.userID == person.id, Dot.schoolID == school.id).first()
-			# print(nextDot)
-			if nextDot is not None:
-				x2, y2 = convertHashToCords.convertHashToCords(
-					nextDot.direction, nextDot.line, nextDot.steps,
-					nextDot.side, nextDot.fbSteps, nextDot.fbDirection,
-					nextDot.useHash, width=width, height=height
-				)
-
-				dotData = dot_schema.dump(dot)
-				dotData["set"] = set_schema.dump(Set.query.filter(Set.id == dotData["setID"]).first())
-
-				dotData2 = dot_schema.dump(nextDot)
-				dotData2["set"] = set_schema.dump(Set.query.filter(Set.id == dotData2["setID"]).first())
-
-				# Test here for if it's a follow the leader or straight line path
-				lines.append({
-					"startX": x, "startY": y, "endX": x2, "endY": y2,
-					"userLabel": person.label, "userID": person.id,
-					"r": 0, "g": 0, "b": 0,
-					"userName": f"{person.firstName} {person.lastName}",
-					"dot": dotData,
-					"nextDot": dotData2
-				})
-			else:
-				x2 = 0
-				y2 = 0
-
-		return {"lines": lines, "paths": []}
-
-
-class EndAllBeAllResource(Resource):
-	@jwt_required()
-	def get(self):
-		curSetNumb = request.args.get('set_numb', "1")
-		userID = request.args.get('user_id', None)
-		schoolCode = request.args.get('school_code', None)
-		width = int(request.args.get('width', 1500))
-		height = int(request.args.get('height', 800))
-
-		# REQUIRE A SCHOOL CODE
-		if schoolCode is None:
-			return "Missing School Code", 404
-
-		# CHECK IF CODE IS VALID
-		school = School.query.filter(School.code == schoolCode).first()
-		if school is None:
-			return "INVALID SCHOOL CODE", 404
-
-		curSetObj = Set.query.filter(Set.schoolID == school.id, Set.setNumb == curSetNumb).first()
-		if curSetObj is None:
-			return "INVALID SET NUMB!", 404
-		
-		lastSetObj = Set.query.filter(Set.schoolID == school.id, Set.id == curSetObj.id - 1).first()
-		nextSetObj = Set.query.filter(Set.schoolID == school.id, Set.id == curSetObj.id + 1).first()
-
-		curDots = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == curSetObj.id).all()
-
-		if lastSetObj is not None:
-			lastDots = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == lastSetObj.id).all()
-		else:
-			lastDots = None
-		
-		if nextSetObj is not None:
-			nextDots = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == nextSetObj.id).all()
-		else:
-			nextDots = None
-
-		allDots = list()
-
-		for dot in curDots:
-			curX, curY = convertHashToCords.convertHashToCords(
-				dot.direction, dot.line, dot.steps,
-				dot.side, dot.fbSteps, dot.fbDirection,
-				dot.useHash, width=width, height=height
-			)
-			lastX, lastY = 0, 0
-			nextX, nextY = 0, 0
-			lastDotData = None
-			nextDotData = None
-
-			userObj = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
-
-			if lastSetObj is not None:
-				lastDot = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == lastSetObj.id, Dot.userID == userObj.id).first()
-				if lastDot is not None:
-					lastX, lastY = convertHashToCords.convertHashToCords(
-						lastDot.direction, lastDot.line, lastDot.steps,
-						lastDot.side, lastDot.fbSteps, lastDot.fbDirection,
-						lastDot.useHash, width=width, height=height
-					)
-
-					lastDotData = dot_schema.dump(lastDot)
-					lastDotData["set"] = set_schema.dump(Set.query.filter(Set.id == lastDot.setID).first())
-
-			if nextSetObj is not None:
-				nextDot = Dot.query.filter(Dot.schoolID == school.id, Dot.setID == nextSetObj.id, Dot.userID == userObj.id).first()
-				if nextDot is not None:
-					nextX, nextY = convertHashToCords.convertHashToCords(
-						nextDot.direction, nextDot.line, nextDot.steps,
-						nextDot.side, nextDot.fbSteps, nextDot.fbDirection,
-						nextDot.useHash, width=width, height=height
-					)
-
-					nextDotData = dot_schema.dump(nextDot)
-					nextDotData["set"] = set_schema.dump(Set.query.filter(Set.id == nextDot.setID).first())
-
-			curDotData = dot_schema.dump(dot)
-			curDotData["set"] = set_schema.dump(Set.query.filter(Set.id == dot.setID).first())
-
-			allDots.append({
-				"lastX": lastX, "lastY": lastY,
-				"curX": curX, "curY": curY,
-				"nextX": nextX, "nextY": nextY,
-				"userLabel": userObj.label, "userID": userObj.id,
-				"r": 0, "g": 0, "b": 255,
-				"userName": f"{userObj.firstName} {userObj.lastName}",
-				"lastDot": lastDotData,
-				"curDot": curDotData,
-				"nextDot": nextDotData,
-				"curSetNumb": curSetObj.setNumb,
-			})
-		return allDots
-
-
-# Like EndAllBeAllResource, except it sends EVERYTHING
-class GetAllResource(Resource):
-	@jwt_required()
-	def get(self):
-		schoolCode = request.args.get('school_code', None)
-		width = int(request.args.get('width', 1500))
-		height = int(request.args.get('height', 800))
-
-		# REQUIRE A SCHOOL CODE
-		if schoolCode is None:
-			return "Missing School Code", 404
-
-		# CHECK IF CODE IS VALID
-		school = School.query.filter(School.code == schoolCode).first()
-		if school is None:
-			return "INVALID SCHOOL CODE", 404
-
-		sets = Set.query.filter(Set.schoolID == school.id).all()
-
-		# TODO: GET ORDER HERE
-
-		# var to store all of the sets
-		output = []
-
-		for set in sets:
-			dots = Dot.query.filter(Dot.setID == set.id)
-
-			dotCords = []
-
-			for dot in dots:
-				x, y = convertHashToCords.convertHashToCords(
-					dot.direction, dot.line, dot.steps,
-					dot.side, dot.fbSteps, dot.fbDirection,
-					dot.useHash, width=width, height=height
-				)
-
-				userObj = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
-
-				dotCords.append({
-					'x': x, 'y': y, 'dot': dot_schema.dump(dot),
-					
-					"r": 0, "g": 0, "b": 255,
-					
-					"userLabel": userObj.label, "userID": userObj.id,
-					"userName": f"{userObj.firstName} {userObj.lastName}",
-				})
-			output.append({
-				'setID': set.id,
-				'setNumb': set.setNumb,
-				'dots': dotCords
-			})
-		
-		return output
 
 
 def getSetIndex(sets, middleSet) -> int:
@@ -896,15 +572,9 @@ class GetDotsWithBufferResource(Resource):
 		return output
 
 
-# api.add_resource(DotListResource, '/dots')
 api.add_resource(SetListResource, '/sets')
-# api.add_resource(UserListResource, '/users')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
-# api.add_resource(CordListResource, '/cords')
-# api.add_resource(PathsListResource, '/paths')
-# api.add_resource(EndAllBeAllResource, '/end-all-be-all')
-# api.add_resource(GetAllResource, '/get-all')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
 
 
