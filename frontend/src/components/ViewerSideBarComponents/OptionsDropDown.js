@@ -40,12 +40,12 @@ const OptionsDropDown = (props) => {
 
         let output = [];
 
-        let dots = value[set_numb]["dots"];
+        let dots = value[set_numb].dots;
 
         for (let x = 0; x < dots.length; x++) {
             output.push({
-                id: dots[x]["userID"], 
-                label: dots[x]["userLabel"], 
+                id: dots[x].userID, 
+                label: dots[x].userLabel, 
             });
             
         }
@@ -71,6 +71,7 @@ const OptionsDropDown = (props) => {
 
     return (
         <div className="accordion" style={{width: '90%'}}>
+            <div className="overflow-auto" style={{height: '40vh'}}>
             <div className="accordion-item">
                 <h2 className="accordion-header">
                     <button 
@@ -87,7 +88,7 @@ const OptionsDropDown = (props) => {
                         <div className="accordion-body">
                             <div className="form-check">
                                 <input className="form-check-input" type="checkbox" value="" onChange={() => setMultiSelect(!userOptions.multiSelect)} checked={userOptions.multiSelect} />
-                                <label className="form-check-label">
+                                <label className="form-check-label ">
                                     Enable Multi-Select
                                 </label>
                             </div>
@@ -111,7 +112,7 @@ const OptionsDropDown = (props) => {
                                     onChange={() => seUseSectionColors(!userOptions.useSectionColors)} 
                                     checked={userOptions.useSectionColors} 
                                 />
-                                <label className="form-check-label">
+                                <label className="form-check-label ">
                                     Use Section Colors
                                 </label>
                             </div>
@@ -124,24 +125,27 @@ const OptionsDropDown = (props) => {
                                     checked={userOptions.showMovementBrackets} 
                                     disabled={userOptions.highlightUser === null}
                                 />
-                                <label className="form-check-label">
+                                <label className="form-check-label ">
                                     Show Movement Brackets
                                 </label>
                             </div>
                             <Autocomplete
-                                disablePortal
+                                
                                 options={getUserOptions(data, curSet)}
                                 sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
                                 renderInput={(params) => <TextField {...params} label="Select Your Label" />}
                                 onChange={(event, newValue) => setHighlightUser(newValue)}
                                 isOptionEqualToValue={(option, value) => option.id === value.id}
                                 value={userOptions.highlightUser}
+                                size="small"
+                                
 
                             />
                         </div>
                     </div>
                     : null
                 }
+            </div>
             </div>
         </div>
     );

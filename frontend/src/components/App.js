@@ -11,6 +11,8 @@ import Admin from './Admin';
 import axios from "axios";
 
 
+const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+
 function App() {
 
 	const { token, refToken, setRefToken, removeToken, setToken } = useToken();
@@ -24,12 +26,13 @@ function App() {
 			if (refToken != null) {
 				axios({
 					method: "POST",
-					url: "http://127.0.0.1:5000/get-token",
+					url: WINDOW_LOCATION + "/get-token",
 					headers: {
 						Authorization: `Bearer ${refToken}`,
 					}
 				}).then((response) => {
 					if (response.status === 202) {
+						console.log(response.data)
 						setToken(response.data.access_token);
 						setUserData(response.data.user);
 						setSchoolCode(response.data.school_code);
@@ -50,7 +53,7 @@ function App() {
 	const logout = () => {
 		axios({
 			method: "POST",
-			url:"http://127.0.0.1:5000/logout",
+			url: WINDOW_LOCATION + "/logout",
 		}).then((response) => {
 			removeToken();
 			window.location.href = "/login"
@@ -84,7 +87,7 @@ function App() {
 				<Nav token={token} loggedIn={token !== "" && token !== undefined} logout={logout}/>
 				<Routes>
 					<Route path="/" exact element={
-						token === ""
+						token === "" || schoolCode === ""
 						? <Navigate to="/login" />
 						: <Viewer token={token} schoolCode={schoolCode}/>
 					} />
@@ -94,9 +97,9 @@ function App() {
 						: <Activate setToken={setToken} setRefToken={setRefToken}/>
 					} />
 					<Route path="/login" exact element={
-						token !== "" && token !== undefined
+						token !== "" && token !== undefined && schoolCode !== ""
 						? <Navigate to="/" />
-						: <Login setToken={setToken} setRefToken={setRefToken}/>
+						: <Login setToken={setToken} setRefToken={setRefToken} setSchoolCode={setSchoolCode}/>
 					} />
 					<Route path="/admin" exact element={
 						token !== "" && token !== undefined && !isAdminAuthorized()

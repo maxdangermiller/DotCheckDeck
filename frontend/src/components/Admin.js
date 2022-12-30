@@ -8,8 +8,10 @@ const Admin = (props) => {
 
     const { schoolCode, token, ...rest } = props
 
+    const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+
     useEffect(() => {
-		fetch("http://127.0.0.1:5000/sets?school_code=" + schoolCode + "&token=" + token)
+		fetch(WINDOW_LOCATION + "/sets?school_code=" + schoolCode + "&token=" + token)
 			.then(res => res.json())
 			.then(
 				(result) => {

@@ -3,10 +3,12 @@ import './Viewer.css';
 import Canvas from './Canvas'
 import ViewerSideBar from './ViewerSideBar';
 import axios from "axios";
+import { APISetWithDots, DotCordData, DotData } from "./utils/APIClasses";
 
 const SCHOOL_CODE = "12345678";
 
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
+const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 
 const Viewer = (props) => {
 	const [data, setData] = useState([]);
@@ -30,6 +32,12 @@ const Viewer = (props) => {
 
 	const setInput = useRef(null);
 
+	/**
+	 * Determines if the set is buffered and the sets around it are also buffered
+	 * @param {array} _data 
+	 * @param {str} _curSet 
+	 * @returns boolean
+	 */
 	const alreadyBuffered = (_data, _curSet) => {
 		const BUFFER_SIZE = 2; // While the buffer is actually 4, I don't want to require all of them to be buffered
 
@@ -49,6 +57,12 @@ const Viewer = (props) => {
 		return true;
 	}
 
+	/**
+	 * Finds the first hole in the buffered sets
+	 * @param {array} _data 
+	 * @param {array} _sets 
+	 * @returns int
+	 */
 	const findFirstBufferHole = (_data, _sets) => {
 		const BUFFER_SIZE = 4;
 		
@@ -62,28 +76,39 @@ const Viewer = (props) => {
 		return -1;
 	}
 
+	/**
+	 * This takes all of the buffered sets and makes a formatted list for debug
+	 * @param {array} _data 
+	 * @param {array} _sets 
+	 * @returns void
+	 */
 	const convertIndicesListToRangeString = (_data, _sets) => {
-		let curStartRange = 0;
+		let curStartRange = -1;
 		let string = "";
 
 		for (let i = 0; i < _sets.length; i++) {
-			if (curStartRange === 0 && _data[i] !== undefined) {
+			if (curStartRange === -1 && _data[i] !== undefined) {
 				curStartRange = i;
 			}
-			else if (curStartRange !== 0 && _data[i] === undefined) {
+			else if (curStartRange !== -1 && _data[i] === undefined) {
 				if (string === "") {
-					string = curStartRange + "-" (i -1);
+					string = _data[curStartRange].setNumb + "-" + _data[i - 1].setNumb;
 				} else {
-					string = string + ", " + curStartRange + "-" (i -1);
+					string = string + ", " + _data[curStartRange].setNumb + "-" + _data[i - 1].setNumb;
 				}
-				curStartRange = 0;
+				curStartRange = -1;
 			}
-			console.log(string, _data[i]);
+			// console.log(string, _data[i]);
 		} 
 
 		return string;
 	}
 
+	/**
+	 * Calls the API and gets a section of data
+	 * @param {boolean} useBuffer Whether or not to use or throw out the buffer
+	 * @returns void
+	 */
 	const retrievePoints = (useBuffer) => {
 
 		let useSetIndex = findFirstBufferHole(data, sets);
@@ -91,16 +116,30 @@ const Viewer = (props) => {
 
 		// console.log(useSetIndex, curSetBuffered);
 
-		if (sentRequest && curSetBuffered || (useSetIndex - 4 >= curSet && useSetIndex + 4 <= curSet)) { return; }
+		// Don't do it again if we've already sent out a request and it's not pressing because it's already buffered
+		// "|| (useSetIndex - 4 >= curSet && useSetIndex + 4 <= curSet)" NOT SURE WHY THIS WAS HERE
+		if (sentRequest && curSetBuffered && useBuffer) { return; }  
 
-		if (dimensions["w"] !== 0 && dimensions["h"] !== 0 && sets.length !== 0 && (useBuffer || useSetIndex !== -1 || !curSetBuffered)) {
+		// If we're buffered then don't worry about calling the API
+		if (useBuffer && useSetIndex === -1) { return; }
+
+		let areDimensionsValid = dimensions["w"] !== 0 && dimensions["h"] !== 0;
+
+		// English: Are we using the buffer OR have we buffered the sets that should be buffered OR is there anything left to buffer 
+		let macroDeterminate = !useBuffer || !curSetBuffered || useSetIndex !== -1;
+
+		if (areDimensionsValid && sets.length !== 0 && macroDeterminate) {
 			console.log("Recalculating Points! " + dimensions["w"] + "x" + dimensions["h"]);
 
 			setSentRequest(true);
 
 			if (!curSetBuffered) { useSetIndex = curSet; setLoading(true); }
 
-			const url1 = "http://127.0.0.1:5000/get-dots?school_code=" + props.schoolCode + "&set=" + sets[useSetIndex]["setNumb"] + 
+			if (!useBuffer) { useSetIndex = curSet; }
+
+			// console.log(sets)
+			const url1 = WINDOW_LOCATION + "/get-dots?school_code=" + props.schoolCode 
+				+ "&set=" + sets[useSetIndex]["setNumb"] + 
 				"&width=" + dimensions["w"] + "&height=" + dimensions["h"] + "&token=" + props.token;
 
 			axios({
@@ -116,11 +155,13 @@ const Viewer = (props) => {
 				for (let i = 0; i < response.data.length; i++) {
 					const setNumb = response.data[i]["index"];
 
+					// dataBackup[setNumb] = new APISetWithDots.createFromJson(response.data[i]);
+
 					dataBackup[setNumb] = response.data[i];
 				}
 
-				console.log(data, dataBackup);
-				console.log("Just Loaded These Sets: " + convertIndicesListToRangeString(dataBackup, sets))
+				console.log(dataBackup);
+				console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
 
 				setData(dataBackup);
 
@@ -146,8 +187,9 @@ const Viewer = (props) => {
 		retrievePoints(false);
 	}, [dimensions])
 
+	// On initial open, call the API and get all of the sets
 	useEffect(() => {
-		fetch("http://127.0.0.1:5000/sets?school_code=" + props.schoolCode + "&token=" + props.token)
+		fetch(WINDOW_LOCATION + "/sets?school_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
 				(result) => {
@@ -164,6 +206,7 @@ const Viewer = (props) => {
 		);
 	}, [])
 
+	// This is passed to the Canvas and is called to get the data for drawing
 	const draw = () => {
 		// console.log("DRAWING!")
 		// return {dots: dots, userOptions: userOptions};
@@ -196,18 +239,6 @@ const Viewer = (props) => {
 	const playMusic = () => {
 		audio.play();
 	}
-
-	/*
-	if (data.length === 0) {
-		return(
-			<div className="flex-row justify-content-center d-flex align-items-center fullScreen">
-				<div className="spinner-border" role="status">
-					<span className="visually-hidden">Loading...</span>
-				</div>
-			</div>
-		);
-	}
-	*/
 
 	return (
 		<div className="flex-row justify-content-center d-flex align-items-center fullScreen">
@@ -242,51 +273,3 @@ const Viewer = (props) => {
 }
 
 export default Viewer;
-
-/*
-useEffect(() => {
-		if (dimensions["w"] !== 0 && dimensions["h"] !== 0 && sets.length !== 0) {
-			console.log("Recalculating Points! " + dimensions["w"] + "x" + dimensions["h"]);
-
-			setLoading(true);
-
-			const url1 = "http://127.0.0.1:5000/end-all-be-all?set_numb=" + sets[curSet]["setNumb"] + "&school_code=" + SCHOOL_CODE +
-				"&width=" + dimensions["w"] + "&height=" + dimensions["h"] + "&token=" + props.token;
-			fetch(url1)
-				.then(res => res.json())
-				.then(
-					(result) => {
-						// console.log(result)
-						setDots(result);
-						setLoading(false);
-					},
-					// Note: it's important to handle errors here
-					// instead of a catch() block so that we don't swallow
-					// exceptions from actual bugs in components.
-					(error) => {
-						console.log(error);
-						setLoading(false);
-					}
-				);
-		}
-	}, [curSet, dimensions, sets])
-
-	// useEffect(() => { setLoading(false); }, [dots])
-
-	useEffect(() => {
-		fetch("http://127.0.0.1:5000/sets?school_code=" + SCHOOL_CODE + "&token=" + props.token)
-			.then(res => res.json())
-			.then(
-				(result) => {
-					// console.log(result)
-					setSets(result);
-				},
-				// Note: it's important to handle errors here
-				// instead of a catch() block so that we don't swallow
-				// exceptions from actual bugs in components.
-				(error) => {
-					console.log(error);
-				}
-		);
-	}, [])
-*/

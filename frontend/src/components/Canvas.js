@@ -32,14 +32,13 @@ const ANIMATION_FPS = 20; // 20fps
 const Canvas = props => {
 
     const { draw, setDimensions, curDimensions, curSet, sets, loading, timeCode, ...rest } = props
-    // const { draw, postdraw=_postdraw, ...rest } = props
-    // const canvasRef = useCanvas(draw, {predraw, postdraw})
+
     const canvasRef = useRef(null)
+
     const [dots, setDots] = useState([]);
     const [hoverDot, setHoverDot] = useState({});
     const [cameraOffset, setCameraOffset] = useState({x: 0, y: 0});
-    const [lastCameraOffset, setLastCameraOffset] = useState({x: 0, y: 0});
-    // const [totalMovement, setTotalMovement] = useState({x: 0, y: 0})
+
     const [cameraZoom, setCameraZoom] = useState(1);
 
     const [isDragging, setIsDragging] = useState(false);
@@ -53,6 +52,8 @@ const Canvas = props => {
     const [animationStartTime, setAnimationStartTime] = useState(0);
     const [animationDirection, setAnimationDirection] = useState(-1);  
     const [lastSetID, setLastSetID] = useState(-1);
+
+    const [hadResize, setHadResize] = useState(false);
     // This will be 0 until there's an animation and then it will be set to 1 for forward or 0 for backward
 
     useEffect(() => {
@@ -720,7 +721,7 @@ const Canvas = props => {
 
             for (let x = 0; x < curSetData.length; x++) {
                 const dot = curSetData[x];
-                let color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                let color = "rgb(" + dot.r + ", " + dot.g + ", " + dot.b + ")";
 
                 newDots.push(dot);
 
@@ -729,16 +730,16 @@ const Canvas = props => {
                 }
 
                 
-                let useX = dot["x"];
-                let useY = dot["y"];
+                let useX = dot.x;
+                let useY = dot.y;
 
-                if (_draw.userOptions.highlightUser !== null && _draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                if (_draw.userOptions.highlightUser !== null && _draw.userOptions.highlightUser.label === dot.userLabel) {
                     if (_draw.userOptions.showMovementBrackets) {
-                        drawBracket = {useX:useX, useY:useY, dot:dot["dot"]};
+                        drawBracket = {useX:useX, useY:useY, dot:dot.dot};
                     }
-                    drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot["userLabel"]);
+                    drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot.userLabel);
                 } else {
-                    drawPoint(useX, useY, color, dot["userLabel"]);
+                    drawPoint(useX, useY, color, dot.userLabel);
                 }
             }
 
@@ -758,7 +759,7 @@ const Canvas = props => {
                 let curActualTime = Date.now();
                 let durationInSecs = 2;
 
-                let counts = drawInfo[curSet]["counts"];
+                let counts = drawInfo[curSet].counts;
 
                 // 2000 / 2000
                 let curTime = (curActualTime - startTime) / ((1000 * durationInSecs / counts))
@@ -767,8 +768,8 @@ const Canvas = props => {
 
                 let direction = 0;
 
-                let curSetData = drawInfo[curSet]["dots"];
-                let lastSetData = drawInfo[lastSetID]["dots"];
+                let curSetData = drawInfo[curSet].dots;
+                let lastSetData = drawInfo[lastSetID].dots;
 
                 if (curSet > lastSetID) { direction = 1;  }
                 else                    { direction = -1; }
@@ -813,6 +814,7 @@ const Canvas = props => {
 
             if (curDimensions["w"] !== canvas.width || curDimensions["h" !== canvas.height]) {
                 setDimensions({"w": canvas.width, "h": canvas.height});
+                setHadResize(true);
             }
             if (cameraOffset === null) {
                 // setCameraOffset({x: canvas.width / 2, y: canvas.height / 2});
@@ -831,35 +833,40 @@ const Canvas = props => {
             let userOptions = _draw.userOptions;
 
             if (data.length !== 0 || isAnimation)  { clear(); }
-            
+
+            let isNewFrame = lastSetID !== curSet && animationDirection !== 0 && !loading && data.length !== 0;
+            let isRerender = hadResize && !loading && data.length !== 0 && data !== drawInfo;
+
             // If it is an animation, draw the animation
             if (isAnimation) { drawAnimation(_draw); }
 
             // Check to see if we have a new frame (right after an animation)
-            else if (lastSetID !== curSet && animationDirection !== 0 && !loading && data.length !== 0) {
+            else if (isNewFrame || isRerender) {
                 setDrawInfo(data);
                 setLastSetID(curSet);
                 setAnimationDirection(0);
 
-                let curSetData = data[curSet]["dots"];
+                if (hadResize) { setHadResize(false); }
+
+                let curSetData = data[curSet].dots;
 
                 let newDots = drawDots(_draw, curSetData);
                 setDots(newDots)
 
-                if (hoverDot["x"] !== undefined) {
-                    drawUserDialogue(hoverDot["x"], hoverDot["y"], hoverDot);
+                if (hoverDot.x !== undefined) {
+                    drawUserDialogue(hoverDot.x, hoverDot.y, hoverDot);
                 }
             }
 
             // If it isn't a new frame, used a buffered frame. This is so we don't set vars and overwrite things.
             else if (drawInfo.length > curSet && drawInfo[curSet] !== undefined)  {
-                let curSetData = drawInfo[curSet]["dots"];
+                let curSetData = drawInfo[curSet].dots;
 
                 let newDots = drawDots(_draw, curSetData);
                 setDots(newDots)
 
-                if (hoverDot["x"] !== undefined) {
-                    drawUserDialogue(hoverDot["x"], hoverDot["y"], hoverDot);
+                if (hoverDot.x !== undefined) {
+                    drawUserDialogue(hoverDot.x, hoverDot.y, hoverDot);
                 }
             }
 

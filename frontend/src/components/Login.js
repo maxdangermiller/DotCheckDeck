@@ -10,16 +10,21 @@ const darkTheme = createTheme({
   },
 });
 
+const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+
 const Login = (props) => {
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showAlert, setShowAlert] = useState(false);
+	const [alertText, setAlertText] = useState("");
+
 
 	const btnClick = (e) => {
+		console.log(WINDOW_LOCATION + "/token")
 		axios({
 			method: "POST",
-			url:"http://127.0.0.1:5000/token",
+			url: WINDOW_LOCATION + "/token",
 			data:{
 				email: email,
 				password: password
@@ -28,6 +33,7 @@ const Login = (props) => {
 			// console.log(response.data)
 			props.setToken(response.data.access_token);
 			props.setRefToken(response.data.refresh_token);
+			props.setSchoolCode(response.data.school_code);
 			// window.location.href = "/editor";
 		}).catch((error) => {
 			if (error.response) {
@@ -35,6 +41,7 @@ const Login = (props) => {
 				console.log(error.response.status)
 				console.log(error.response.headers)
 				setShowAlert(true);
+				setAlertText(error.response);
 			}
 		})
 
@@ -87,7 +94,7 @@ const Login = (props) => {
 			{
 				showAlert ?
 				<div className="alert alert-danger alert-dismissible customAlert" role="alert">
-					<div>Something went wrong! We guess it's possible that we did something wrong, but it's probably on you.</div>
+					<div>Something went wrong! We guess it's possible that we did something wrong, but it's probably on you. {alertText}</div>
 					<button className="btn-close" onClick={(e) => setShowAlert(false)}></button>
 				</div>
 				: null

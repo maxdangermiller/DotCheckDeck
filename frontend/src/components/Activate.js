@@ -14,6 +14,8 @@ const darkTheme = createTheme({
   },
 });
 
+const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+
 const Activate = (props) => {
 
     const [curPage, setCurPage] = useState(0);
@@ -40,7 +42,7 @@ const Activate = (props) => {
     });
 
     const activateUser = (label, email, password, firstName, lastName) => {
-        fetch('http://127.0.0.1:5000/users/activate', {
+        fetch(WINDOW_LOCATION + '/users/activate', {
                 method: 'POST',
                 body: JSON.stringify({
                     school_code: schoolCode,
@@ -73,7 +75,7 @@ const Activate = (props) => {
 
     const checkSchoolCode = () => {
         setIsLoading(true);
-        fetch('http://127.0.0.1:5000/school-code-auth', {
+        fetch(WINDOW_LOCATION + '/school-code-auth', {
                 method: 'POST',
                 body: JSON.stringify({
                     school_code: schoolCode,

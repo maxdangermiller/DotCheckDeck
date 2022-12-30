@@ -647,4 +647,4 @@ if __name__ == "__main__":
 	# GUITest(1125, 600)
 
 	if not rebuild:
-		app.run(debug=True)
+		app.run(debug=True, host="0.0.0.0")
