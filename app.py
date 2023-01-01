@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
-from flask_restful import Api, Resource
+from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
 from datetime import datetime, timedelta, timezone
 from flask_admin import Admin
@@ -105,8 +105,8 @@ class Set(db.Model):
 	setNames = db.relationship('SetName', backref='set')
 	dots = db.relationship('Dot', backref='set')
 
-	start_time_code = db.Column(db.Time, default=datetime.time(hour=0, minute=0, second=0))
-	end_time_code = db.Column(db.Time, default=datetime.time(hour=0, minute=0, second=0))
+	start_time_code = db.Column(db.Integer)
+	end_time_code = db.Column(db.Integer)
 	
 
 	def __str__(self):
@@ -218,7 +218,7 @@ class SetNameSchema(ma.Schema):
 
 class SetSchema(ma.Schema):
 	class Meta:
-		fields = ("id", "setNumb", "measure", "counts", "setNames")
+		fields = ("id", "setNumb", "measure", "counts", "setNames", "start_time_code", "end_time_code")
 		model = Set
 	
 	setNames = ma.Nested(SetNameSchema)
@@ -572,10 +572,59 @@ class GetDotsWithBufferResource(Resource):
 		return output
 
 
+class UpdateSetResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+		loggedInUser = User.query.filter(User.email == identity).first()
+
+		print(user_schema.dumps(loggedInUser))
+
+		if not loggedInUser.is_admin and not loggedInUser.is_section_leader:
+			return "Unauthorized", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, default=None, required=True, help="You must include the ID of the set")
+		parser.add_argument('set_numb', type=str, default=None)
+		parser.add_argument('measure', type=str, default=None)
+		parser.add_argument('counts', type=str, default=None)
+		parser.add_argument('start_time_code', type=str, default=None)
+		parser.add_argument('end_time_code', type=str, default=None)
+		args = parser.parse_args()
+
+		id = args.get('id')
+		setNumb = args.get('set_numb')
+		measure = args.get('measure')
+		counts = args.get('counts')
+		start_time_code = args.get('start_time_code')
+		end_time_code = args.get('end_time_code')
+
+		set = Set.query.filter(Set.id == id).first()
+
+		if set is None:
+			return "Invalid Set ID", 404
+
+		if setNumb is not None:
+			set.setNumb = setNumb
+		if measure is not None:
+			set.measure = measure
+		if counts is not None:
+			set.counts = counts
+		if start_time_code is not None:
+			set.start_time_code = start_time_code
+		if end_time_code is not None:
+			set.end_time_code = end_time_code
+		
+		db.session.commit()
+
+		return "Updated Successfully", 201
+
+
 api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
+api.add_resource(UpdateSetResource, '/update-set')
 
 
 # For use to build database
@@ -629,16 +678,18 @@ if __name__ == "__main__":
 			if (input("Are you sure want to rebuild (y/n)?:  ") == "y"):
 				print("REBUILDING!\r\n")
 
-				# Delete the database
-				db.drop_all()
-				db.create_all()
+				with app.app_context():
 
-				# Read these dot sheets
-				addAllDataFromPDF("Mvt-1and2.pdf")
-				addAllDataFromPDF("Mvt-3.pdf")
-				addAllDataFromPDF("Mvt-4.pdf")
+					# Delete the database
+					db.drop_all()
+					db.create_all()
 
-				print("\r\nDONE.")
+					# Read these dot sheets
+					addAllDataFromPDF("Mvt-1and2.pdf")
+					addAllDataFromPDF("Mvt-3.pdf")
+					addAllDataFromPDF("Mvt-4.pdf")
+
+					print("\r\nDONE.")
 
 			break
 

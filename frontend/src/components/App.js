@@ -92,7 +92,7 @@ function App() {
 						: <Viewer token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/activate" exact element={
-						token !== "" && token !== undefined
+						token !== "" && token !== undefined && schoolCode !== ""
 						? <Navigate to="/" />
 						: <Activate setToken={setToken} setRefToken={setRefToken}/>
 					} />

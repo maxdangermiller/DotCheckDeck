@@ -10,6 +10,8 @@ const SCHOOL_CODE = "12345678";
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
 const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 
+let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
+
 const Viewer = (props) => {
 	const [data, setData] = useState([]);
 	const [curSet, setCurSet]  = useState(0);
@@ -19,8 +21,6 @@ const Viewer = (props) => {
 	const [dimensions, setDimensions]  = useState({"w": 0, "h": 0});
 	const [loading, setLoading] = useState(false);
 	const [sentRequest, setSentRequest] = useState(false);
-
-	let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
@@ -69,7 +69,7 @@ const Viewer = (props) => {
 		for (let i = 0; i < _sets.length; i++) {
 			if (_data[i] === undefined) {
 				let value = i + BUFFER_SIZE;
-				return value < _sets.length ? value : -1;
+				return value < _sets.length ? value : i;
 			}
 		}
 
@@ -100,6 +100,14 @@ const Viewer = (props) => {
 			}
 			// console.log(string, _data[i]);
 		} 
+
+		if (curStartRange !== -1) {
+			if (string === "") {
+				string = _data[curStartRange].setNumb + "-" + _data[_sets.length - 1].setNumb;
+			} else {
+				string = string + ", " + _data[curStartRange].setNumb + "-" + _data[_sets.length - 1].setNumb;
+			}
+		}
 
 		return string;
 	}
@@ -160,7 +168,7 @@ const Viewer = (props) => {
 					dataBackup[setNumb] = response.data[i];
 				}
 
-				console.log(dataBackup);
+				// console.log(dataBackup);
 				console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
 
 				setData(dataBackup);
@@ -210,6 +218,7 @@ const Viewer = (props) => {
 	const draw = () => {
 		// console.log("DRAWING!")
 		// return {dots: dots, userOptions: userOptions};
+		getAudioSyncedSet();
 		return {data: data, userOptions: userOptions};
 	}
 
@@ -240,8 +249,34 @@ const Viewer = (props) => {
 		audio.play();
 	}
 
+	const timeStrToSeconds = (timeStr) => {
+		const [hours, minutes, seconds] = timeStr.split(':');
+
+		return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
+	}
+
+	const getAudioSyncedSet = () => {
+		let secsElapsed = audio.currentTime;
+
+		// console.log(secsElapsed);
+
+		for (let i = 0; i < sets.length; i++) {
+			if (sets[i]["start_time_code"] !== null && sets[i]["end_time_code"] !== null) {
+				let startTime = sets[i]["start_time_code"];
+				let endTime = sets[i]["end_time_code"];
+
+				if(secsElapsed >= startTime && secsElapsed < endTime) {
+					// sets[i] is currently active
+					if (curSet !== i) {
+						setCurSet(i);
+					}
+				}
+			}
+		}
+	}
+
 	return (
-		<div className="flex-row justify-content-center d-flex align-items-center fullScreen">
+		<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
 			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass">
 				<Canvas 
 					draw={draw} 

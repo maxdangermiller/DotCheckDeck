@@ -1,5 +1,5 @@
 .customNavbar {
-    height: 6vh;
+    height: calc(var(--app-height) * 0.06);
     width: 100vw;
     margin-top: 0 !important;
 }

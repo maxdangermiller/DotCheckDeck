@@ -1,6 +1,6 @@
 .sideBarClass {
     width: 20vw;
-    height: 96vh!important;
+    height: calc(var(--app-height) * 0.94);
     border-style: solid;
     border-width: 5px;
 }
