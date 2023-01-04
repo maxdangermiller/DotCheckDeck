@@ -757,14 +757,23 @@ const Canvas = props => {
                 if (startTime === 0) { startTime = Date.now(); setAnimationStartTime(startTime); }
 
                 let curActualTime = Date.now();
-                let durationInSecs = 2;
+                let durationInSecs = 2; // Default Value
+
+                // Find what the API says the duration is
+                let setStartTime = drawInfo[curSet]["start_time_code"];
+                let setEndTime = drawInfo[curSet]["end_time_code"];
+                if (setStartTime !== null && setEndTime !== null) {
+                    durationInSecs = setEndTime - setStartTime;
+                }
+
+                // If the duration is 0, then just end the animation here. 
+                // This is because below when it finds curTime it divides and you cannot divide by zero
+                if (durationInSecs == 0) { setIsAnimation(false); setAnimationStartTime(0); return; }
 
                 let counts = drawInfo[curSet].counts;
 
                 // 2000 / 2000
                 let curTime = (curActualTime - startTime) / ((1000 * durationInSecs / counts))
-
-                // console.log((curActualTime - startTime) + " : " + curTime);
 
                 let direction = 0;
 

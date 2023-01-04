@@ -2,7 +2,15 @@ import React, { useRef, useEffect, useState} from 'react';
 import './Nav.css';
 
 const Nav = (props) => {
-    const { token, loggedIn, logout, ...rest } = props
+    const { token, loggedIn, logout, isAdminAuthorized, ...rest } = props
+
+	const goToEditor = () => {
+		window.location.href = "/";
+	}
+	
+	const goToAdmin = () => {
+		window.location.href = "/admin";
+	}
 
     return (
 		<nav className="navbar navbar-expand-sm bg-dark navbar-dark customNavbar">
@@ -10,24 +18,18 @@ const Nav = (props) => {
 				{
 					token !== "" && token !== undefined
 						? <ul className="navbar-nav">
-							
-							<li className="nav-item dropdown">
-								<a className="nav-link dropdown-toggle" id="navbarScrollingDropdown" role="button"
-								   data-bs-toggle="dropdown" aria-expanded="false">
-									Code
-								</a>
-								<ul className="dropdown-menu" aria-labelledby="navbarScrollingDropdown">
-									<li><a className="dropdown-item" >Package Manager</a></li>
-								</ul>
+							<li className="nav-item">
+								<a className="nav-link" onClick={goToEditor}>Editor</a>
 							</li>
-						</ul>
-						: props.token !== "" && props.token !== undefined
-							?<ul className="navbar-nav">
+							{
+								isAdminAuthorized() ?
 								<li className="nav-item">
-									<a className="nav-link" >Open Editor</a>
+									<a className="nav-link" onClick={goToAdmin}>Admin</a>
 								</li>
-							</ul>
-							: null
+								: null
+							}
+						</ul>
+						: null
 				}
 
 			</ul>

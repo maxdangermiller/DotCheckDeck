@@ -21,6 +21,7 @@ const Viewer = (props) => {
 	const [dimensions, setDimensions]  = useState({"w": 0, "h": 0});
 	const [loading, setLoading] = useState(false);
 	const [sentRequest, setSentRequest] = useState(false);
+	const [audioPlaying, setAudioPlaying] = useState(false);
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
@@ -216,9 +217,8 @@ const Viewer = (props) => {
 
 	// This is passed to the Canvas and is called to get the data for drawing
 	const draw = () => {
-		// console.log("DRAWING!")
-		// return {dots: dots, userOptions: userOptions};
-		getAudioSyncedSet();
+		if (audioPlaying) { getAudioSyncedSet(); }
+
 		return {data: data, userOptions: userOptions};
 	}
 
@@ -246,13 +246,9 @@ const Viewer = (props) => {
 	}
 
 	const playMusic = () => {
+		audio.loop = false;
 		audio.play();
-	}
-
-	const timeStrToSeconds = (timeStr) => {
-		const [hours, minutes, seconds] = timeStr.split(':');
-
-		return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
+		setAudioPlaying(true);
 	}
 
 	const getAudioSyncedSet = () => {
@@ -268,7 +264,7 @@ const Viewer = (props) => {
 				if(secsElapsed >= startTime && secsElapsed < endTime) {
 					// sets[i] is currently active
 					if (curSet !== i) {
-						setCurSet(i);
+						changeCurSet(i);
 					}
 				}
 			}

@@ -565,6 +565,8 @@ class GetDotsWithBufferResource(Resource):
 				'setNumb': set.setNumb,
 				'setName': setName,
 				'counts': set.counts,
+				'start_time_code': set.start_time_code,
+				'end_time_code': set.end_time_code,
 				'index': i,
 				'dots': dotCords
 			})

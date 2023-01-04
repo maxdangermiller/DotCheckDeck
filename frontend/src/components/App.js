@@ -7,6 +7,7 @@ import useToken from './useToken';
 import Login from './Login';
 import Nav from './Nav';
 import Admin from './Admin';
+import AdminTimeline from './AdminComponents/AdminTimeline';
 
 import axios from "axios";
 
@@ -32,7 +33,7 @@ function App() {
 					}
 				}).then((response) => {
 					if (response.status === 202) {
-						console.log(response.data)
+						// console.log(response.data)
 						setToken(response.data.access_token);
 						setUserData(response.data.user);
 						setSchoolCode(response.data.school_code);
@@ -67,6 +68,10 @@ function App() {
 	}
 
 	const isAdminAuthorized = () => {
+		if (token === "" || token === undefined) {
+			return false;
+		}
+
 		if (userData !== undefined && userData["is_admin"] !== undefined) {
 			return userData["is_admin"] || userData["is_section_leader"];
 		}
@@ -84,7 +89,12 @@ function App() {
 	} else {
 		return (
 			<Router>
-				<Nav token={token} loggedIn={token !== "" && token !== undefined} logout={logout}/>
+				<Nav 
+					token={token} 
+					loggedIn={token !== "" && token !== undefined} 
+					logout={logout}
+					isAdminAuthorized={isAdminAuthorized}
+				/>
 				<Routes>
 					<Route path="/" exact element={
 						token === "" || schoolCode === ""
@@ -105,6 +115,11 @@ function App() {
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/" />
 						: <Admin token={token} schoolCode={schoolCode}/>
+					} />
+					<Route path="/admin-timeline" exact element={
+						token !== "" && token !== undefined && !isAdminAuthorized()
+						? <Navigate to="/" />
+						: <AdminTimeline token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="*" element={<h1>404, you've been dumb</h1>} />
 				</Routes>
