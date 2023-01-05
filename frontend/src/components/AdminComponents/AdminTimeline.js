@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AdminTimelineObj from './AdminTimelineObj';
+import AdminTimelineTimestamp from './AdminTimelineTimestamp';
+import PausePlayBtn from './PausePlayBtn';
 import './AdminTimeline.css';
+import { fontSize } from '@mui/system';
 
 const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 const PIXELS_PER_SECOND = 10;
 const DEFAULT_LENGTH = 10;
 const MIN_SIZE = 1;
+const TIMESTAMP_INTERVAL = 10;
 
 const DRAG_STATE_NONE = 0;
 const DRAG_STATE_LEFT = 1;
@@ -25,13 +29,16 @@ const AdminTimeline = (props) => {
         index: -1,
         currentlyResizing: false,
         startX: -1,
-        startY: -1
+        startY: -1,
+        initialStart: -1,
+        initialEnd: -1,
     });
 
     const [data, setData] = useState([]);
     const intervalRef = useRef();
     const dragItem = useRef();
     const dragOverItem = useRef();
+    const dialDivRef = useRef();
     
     
     const currentPercentage = audio.duration
@@ -51,11 +58,11 @@ const AdminTimeline = (props) => {
             } else {
                 setCurPlayTime(audio.currentTime);
             }
-        }, [1000]);
+        }, [100]);
     };
 
     const secsToMS = (seconds) => {
-        return new Date(seconds * 1000).toISOString().slice(14, 19)
+        return new Date(Math.floor(seconds) * 1000).toISOString().slice(14, 19)
     }
 
 
@@ -69,7 +76,7 @@ const AdminTimeline = (props) => {
     const onScrubEnd = () => {
         // If not already playing, start
         if (!isPlaying) {
-          // setIsPlaying(true);
+          setIsPlaying(true);
         }
         startTimer();
     };
@@ -120,13 +127,26 @@ const AdminTimeline = (props) => {
     };
 
     const changeTimeCodes = (index, start, end) => {
-        if (Math.abs(start - end) <= MIN_SIZE) { return; }
+        if (end - start <= MIN_SIZE) { return; }
+
+        // TODO: MUST CHANGE SETS AROUND IT, OTHERWISE THERE WILL BE BLANKS
+
+        let shift = 0;
 
         const newData = data.map((_value, i) => {
             if (i === index) {
-                _value["start_time_code"] = start
-                _value["end_time_code"] = end
-
+                _value["start_time_code"] = start;
+                _value["end_time_code"] = end;
+                
+            }
+            
+            else if (i > index && _value["start_time_code"] !== null && _value["end_time_code"] !== null) {
+                let diff = _value["end_time_code"] - _value["start_time_code"];
+                _value["start_time_code"] = end + shift;
+                _value["end_time_code"] = end + diff + shift;
+                
+                shift = _value["end_time_code"] - end;
+                 
             }
 
             return _value;
@@ -175,7 +195,9 @@ const AdminTimeline = (props) => {
                 index: timelineResizeInfo.index,
                 currentlyResizing: true,
                 startX: e.clientX,
-                startY: e.clientY
+                startY: e.clientY,
+                initialStart: timelineResizeInfo.initialStart,
+                initialEnd: timelineResizeInfo.initialEnd
             });
         }
     }
@@ -186,24 +208,12 @@ const AdminTimeline = (props) => {
         let xDistance = e.clientX - timelineResizeInfo.startX;
         let seconds = Math.floor(xDistance / PIXELS_PER_SECOND);
         let index = timelineResizeInfo.index;
+        
+        if (timelineResizeInfo.state === DRAG_STATE_RIGHT) {
+            let alreadyMovedSecs = data[index]["end_time_code"] - timelineResizeInfo.initialEnd;
 
-        console.log({x: e.clientX, y: e.clientY}, timelineResizeInfo.state)
-        console.log(xDistance, seconds);
-
-        if (timelineResizeInfo.state === DRAG_STATE_LEFT) {
-            changeTimeCodes(index, data[index]["start_time_code"] + seconds, data[index]["end_time_code"]);
+            changeTimeCodes(index, data[index]["start_time_code"], data[index]["end_time_code"] + seconds - alreadyMovedSecs);
         }
-        else if (timelineResizeInfo.state === DRAG_STATE_RIGHT) {
-            changeTimeCodes(index, data[index]["start_time_code"], data[index]["end_time_code"] + seconds);
-        }
-
-        setTimelineResizeInfo({ 
-            state: timelineResizeInfo.state,
-            index: timelineResizeInfo.index,
-            currentlyResizing: true,
-            startX: e.clientX,
-            startY: e.clientY
-        });
     }
 
     const checkEndTimelineResize = (e) => {
@@ -214,8 +224,57 @@ const AdminTimeline = (props) => {
             index: timelineResizeInfo.index,
             currentlyResizing: false,
             startX: -1,
-            startY: -1
+            startY: -1,
+            initialStart: timelineResizeInfo.initialStart,
+            initialEnd: timelineResizeInfo.initialEnd
         });
+    }
+
+    const getTimestamps = () => {
+        let content = [];
+
+        let timestamps = Math.floor(audio.duration / TIMESTAMP_INTERVAL);
+        let timestampWidth = TIMESTAMP_INTERVAL * PIXELS_PER_SECOND;
+
+        content.push(<AdminTimelineTimestamp width={Math.floor(timestampWidth / 2) + "px"} text="0:00" align="left" key="0"/>);
+
+        for (let i = 1; i < timestamps; i++) {
+            let val = secsToMS(i * TIMESTAMP_INTERVAL)
+            content.push(<AdminTimelineTimestamp width={timestampWidth + "px"} text={val} align="center" key={i}/>);
+        }
+
+        return content;
+    }
+
+    const drawDial = () => {
+        if (dialDivRef.current === undefined) { return; }
+
+        const FONT_SIZE = 24;
+
+        let rect = dialDivRef.current.getBoundingClientRect();
+        let x = rect.x + (curPlayTime * PIXELS_PER_SECOND);
+        let y = rect.y;
+
+        let textStyle = {
+            textAlign: "center", 
+            position: "absolute", left: x - 50, top: y - FONT_SIZE,
+            width: "100px",
+            fontSize: FONT_SIZE
+        };
+
+        let dialStyle = {
+            textAlign: "center", 
+            position: "absolute", left: x - (FONT_SIZE / 2), top: y,
+            fontSize: FONT_SIZE
+        };
+
+        return (
+            <div>
+                <text style={textStyle}>{secsToMS(curPlayTime)}</text>
+                <i style={dialStyle} className="material-icons">&#xe313;</i>
+            </div>
+        );
+        
     }
 
     return(
@@ -228,6 +287,13 @@ const AdminTimeline = (props) => {
                 onMouseMove={(e) => resizeTimelineObj(e)}
                 onMouseUp={(e) => checkEndTimelineResize(e)}
             >
+                <div className='flex-row d-flex' style={{height: "20%"}} ref={dialDivRef}>
+                    {drawDial()}
+                </div>
+                <div className='flex-row d-flex' style={{height: "20%"}}>
+                    {getTimestamps()}
+                </div>
+                <div className='flex-row d-flex' style={{height: "60%"}}>
                 {
                     data.map((setData, index) => 
                         isInTimeline(setData) ?
@@ -267,9 +333,11 @@ const AdminTimeline = (props) => {
                         : null
                     )
                 }
+                </div>
             </div>
 
             <div className="timelineOverflow" onDragEnter={(e) => dragEnterBank(e)}>
+                <div className='flex-row d-flex' style={{height: "100%"}}>
                 {
                     data.map((setData, index) => 
                         !isInTimeline(setData) || (!dragInTimeline && index === dragItem.current) ?
@@ -291,7 +359,24 @@ const AdminTimeline = (props) => {
                         />
                         : null
                     )
-                }    
+                }  
+                </div>  
+            </div>
+            
+            <div className='flex-row d-flex justify-content-center align-items-center'>
+                <input
+                    type="range"
+                    value={curPlayTime}
+                    step="1"
+                    min="0"
+                    max={audio.duration ? audio.duration : 0}
+                    className="timelineProgress"
+                    onChange={(e) => onScrub(e.target.value)}
+                    onMouseUp={onScrubEnd}
+                    onKeyUp={onScrubEnd}
+                    style={{ background: trackStyling }}
+                />
+                <PausePlayBtn isPlaying={isPlaying} setIsPlaying={setIsPlaying}/>
             </div>
         </div>
     );

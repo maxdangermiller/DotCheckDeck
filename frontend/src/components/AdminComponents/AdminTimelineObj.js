@@ -30,27 +30,17 @@ const AdminTimelineObj = (props) => {
         let x = event.clientX - rect.left; // x position within the element.
         let y = event.clientY - rect.top;  // y position within the element.
 
-        // Hovering on left side
-        if (Math.abs(x) <= HOVER_MARGIN) {
-            containerRef.current.style.cursor = "col-resize";
-            setTimelineResizeInfo({ 
-                state: DRAG_STATE_LEFT,
-                index: index,
-                currentlyResizing: false,
-                startX: -1,
-                startY: -1
-            })
-            
-        }
         // Hovering on right side
-        else if (Math.abs(rect.width - x) <= HOVER_MARGIN) {
+        if (Math.abs(rect.width - x) <= HOVER_MARGIN) {
             containerRef.current.style.cursor = "col-resize";
             setTimelineResizeInfo({ 
                 state: DRAG_STATE_RIGHT,
                 index: index,
                 currentlyResizing: false,
                 startX: -1,
-                startY: -1
+                startY: -1,
+                initialStart: setData.start_time_code,
+                initialEnd: setData.end_time_code
             })
         }
         // Not hovering on anything
@@ -61,9 +51,15 @@ const AdminTimelineObj = (props) => {
                 index: index,
                 currentlyResizing: false,
                 startX: -1,
-                startY: -1
+                startY: -1,
+                initialStart: -1,
+                initialEnd: -1
             })
         }
+    }
+
+    const secsToMS = (seconds) => {
+        return new Date(seconds * 1000).toISOString().slice(14, 19)
     }
 
     return(
@@ -73,12 +69,14 @@ const AdminTimelineObj = (props) => {
             onDragEnd={(e) => dragEnd(e)} 
             onMouseMove={(e) => checkForEdgeHover(e)}
             
-            draggable={!timelineResizeInfo.state === DRAG_STATE_NONE}
+            draggable={timelineResizeInfo.state === DRAG_STATE_NONE}
             ref={containerRef}
+
+            title={secsToMS(setData["start_time_code"]) + "-" + secsToMS(setData["end_time_code"])}
         > 
             <svg height={height} width={width}>
-                <rect x="0" y="0" width={width} height={height} fill="silver" stroke="black" strokeWidth="0.1" ry="5" rx="5"/>
-                <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle">{value}</text>
+                <rect x="0" y="0" width={width} height={height} fill="silver" stroke="grey" strokeWidth="1" ry="5" rx="5"/>
+                <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className='prevent-select'>{value}</text>
             </svg>
         </div>
     );

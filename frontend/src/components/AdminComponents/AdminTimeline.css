@@ -15,17 +15,33 @@
 }
 
 .adminTimelineObj {
+    display: flex;
+    flex-direction: column;
+}
 
+.prevent-select {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }
 
 
+.playPauseBtn {
+    background: none;
+    border: none; 
+    font-size: 5vh; 
+    cursor: pointer;
+}
+
 .timelineOverflow {
-    height:10vh;
+    height:16vh;
     width: 80vw;
     display: flex;
-    flex-wrap: nowrap;
-    white-space: nowrap;
+    flex-direction: column;
     overflow-x: auto;
+
+    margin-bottom: 2vh;
+    margin-top: 10vh;
 
 }
 
