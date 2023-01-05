@@ -22,13 +22,14 @@ const Viewer = (props) => {
 	const [loading, setLoading] = useState(false);
 	const [sentRequest, setSentRequest] = useState(false);
 	const [audioPlaying, setAudioPlaying] = useState(false);
+	const [curPlayTime, setCurPlayTime] = useState(0);
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
 		"multiSelect": false, "drawPath": false,
 		"useSectionColors": true,
 		"showMovementBrackets": false, "highlightUser": null,
-		"moveSpeed": 10,
+		"moveSpeed": 10, "useActualSetLength": false
 	});
 
 	const setInput = useRef(null);
@@ -215,6 +216,15 @@ const Viewer = (props) => {
 		);
 	}, [])
 
+	useEffect(() => {
+		if (audioPlaying) {
+			audio.loop = false;
+			audio.play();
+		} else {
+			audio.pause();
+		}
+	}, [audioPlaying])
+
 	// This is passed to the Canvas and is called to get the data for drawing
 	const draw = () => {
 		if (audioPlaying) { getAudioSyncedSet(); }
@@ -228,6 +238,16 @@ const Viewer = (props) => {
 			setCurSet(x);
 			setCurSetNumb(sets[x]["setNumb"]);
 			setCurSetInfo(sets[x]);
+		}
+	}
+
+	const handelSetBtnControls = (x) => {
+		if (x >= 0 && x < sets.length && !loading) {
+			if (audioPlaying) {
+				audio.currentTime = sets[x]["start_time_code"] / 1000;
+			} else {
+				changeCurSet(x);
+			}
 		}
 	}
 
@@ -245,14 +265,8 @@ const Viewer = (props) => {
 		setInput.current.blur();
 	}
 
-	const playMusic = () => {
-		audio.loop = false;
-		audio.play();
-		setAudioPlaying(true);
-	}
-
 	const getAudioSyncedSet = () => {
-		let secsElapsed = audio.currentTime;
+		let msElapsed = audio.currentTime * 1000;
 
 		// console.log(secsElapsed);
 
@@ -261,7 +275,7 @@ const Viewer = (props) => {
 				let startTime = sets[i]["start_time_code"];
 				let endTime = sets[i]["end_time_code"];
 
-				if(secsElapsed >= startTime && secsElapsed < endTime) {
+				if(msElapsed >= startTime && msElapsed < endTime) {
 					// sets[i] is currently active
 					if (curSet !== i) {
 						changeCurSet(i);
@@ -281,7 +295,9 @@ const Viewer = (props) => {
 					curSet={curSet} 
 					sets={sets} 
 					loading={loading} 
-					timeCode={audio.getStartDate}
+					curPlayTime={curPlayTime}
+					audioPlaying={audioPlaying}
+					userOptions={userOptions}
 				/>
 			</div>
 			<ViewerSideBar 
@@ -291,13 +307,18 @@ const Viewer = (props) => {
 				curSet={curSet} 
 				sets={sets} 
 				changeCurSet={changeCurSet}
+				handelSetBtnControls={handelSetBtnControls}
 				loading={loading}
 				setCurSetNumb={setCurSetNumb}
 				changeCurSetNumb={changeCurSetNumb}
 				userOptions={userOptions}
 				setUserOptions={setUserOptions}
 				data={data}
-				playMusic={playMusic}
+				audioPlaying={audioPlaying}
+				setAudioPlaying={setAudioPlaying}
+				audio={audio}
+				curPlayTime={curPlayTime}
+				setCurPlayTime={setCurPlayTime}
 			/>
 		</div>
 	);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './ViewerSideBar.css';
 import OptionsDropDown from './ViewerSideBarComponents/OptionsDropDown';
+import AudioProgressBar from './AdminComponents/AudioProgressBar';
 import Spinner from './utils/Spinner';
 
 // STILL WORKING ON THIS! NOT TESTED YET!
@@ -8,9 +9,11 @@ import Spinner from './utils/Spinner';
 const ViewerSideBar = (props) => {
     const { 
         curSetInfo, curSetNumb, setInput, 
-        curSet, sets, changeCurSet, 
+        curSet, sets, changeCurSet, handelSetBtnControls, 
         loading, setCurSetNumb, changeCurSetNumb, 
-        userOptions, setUserOptions, data, playMusic, ...rest 
+        userOptions, setUserOptions, data, 
+        audioPlaying, setAudioPlaying, audio, 
+        curPlayTime, setCurPlayTime, ...rest 
     } = props;
 
     return (
@@ -50,28 +53,54 @@ const ViewerSideBar = (props) => {
                 
             </div>
             <OptionsDropDown userOptions={userOptions} setUserOptions={setUserOptions} data={data} curSet={curSet}/>
-            <div className='mb-2 buttonDiv flex-row justify-content-between d-flex align-items-center'>
-                <button 
-                    type="button" 
-                    className="btn btn-warning" 
-                    onClick={() => changeCurSet(curSet - 1)}
-                    disabled={curSet > 0 ? false : true}
-                >&#8592;</button>
-                <button 
-                    type="button" 
-                    className="btn btn-success" 
-                    onClick={() => changeCurSet(curSet + 1)}
-                    disabled={curSet < sets.length - 1 ? false : true}
-                >&#8594;</button>
-                <button 
-                    type="button" 
-                    className="btn btn-success" 
-                    onClick={() => playMusic()}
-                    disabled={curSet < sets.length - 1 ? false : true}
-                >&#8594;</button>
+
+            <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
+                <div className='mb-2 flex-row justify-content-center d-flex align-items-center'>
+                    <AudioProgressBar 
+                        curPlayTime={curPlayTime} 
+                        setCurPlayTime={setCurPlayTime} 
+                        audio={audio} 
+                        isPlaying={audioPlaying} 
+                        setIsPlaying={setAudioPlaying}
+                    />
+                </div>
+                <div className='mb-2 flex-row justify-content-center d-flex align-items-center'>
+
+                    <button 
+                        type="button" 
+                        className='fas customViewerSideBarBtn backwardBtn'
+                        onClick={() => handelSetBtnControls(curSet - 1)}
+                        disabled={curSet > 0 ? false : true}
+                    >&#xf0a8;</button>
+
+                    <PausePlayBtn isPlaying={audioPlaying} setIsPlaying={setAudioPlaying} className="customViewerPlayPauseBtn"/>
+
+                    <button 
+                        type="button" 
+                        className='fas customViewerSideBarBtn forwardBtn'
+                        onClick={() => handelSetBtnControls(curSet + 1)}
+                        disabled={curSet < sets.length - 1 ? false : true}
+                    >&#xf0a9;</button>
+                </div>
             </div>
         </div>
     );
 };
 
 export default ViewerSideBar;
+
+const PausePlayBtn = (props) => {
+    const {isPlaying, setIsPlaying, ...rest} = props;
+
+    if (isPlaying) {
+        return (
+            <button 
+                className={'fas customViewerSideBarBtn'} 
+                onClick={(e) => setIsPlaying(!isPlaying)}
+            >&#xf28b;</button>
+        );
+    }
+    return (
+        <button className={'fas customViewerSideBarBtn'} onClick={(e) => setIsPlaying(!isPlaying)}>&#xf144;</button>
+    );
+}

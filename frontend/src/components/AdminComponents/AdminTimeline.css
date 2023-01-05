@@ -6,8 +6,8 @@
 .timelineProgress {
     height: 5px;
     -webkit-appearance: none;
-    width: 80vw;
-    margin-bottom: 10px;
+    width: 80%;
+    margin-bottom: 0;
     border-radius: 8px;
     background: #3b7677;
     transition: background 0.2s ease;

@@ -9,8 +9,7 @@ const AdminTimelineObj = (props) => {
         width, height, value, 
         index, setData, dragStart, 
         dragEnd, changeTimeCodes, 
-        timelineResizeInfo, setTimelineResizeInfo, 
-        PIXELS_PER_SECOND, ...rest
+        timelineResizeInfo, setTimelineResizeInfo, ...rest
     } = props;
 
     const [dragState, setDragState] = useState(0); // 0: none, 1: left, 2: right
@@ -58,8 +57,19 @@ const AdminTimelineObj = (props) => {
         }
     }
 
-    const secsToMS = (seconds) => {
-        return new Date(seconds * 1000).toISOString().slice(14, 19)
+    const formatMS = (val) => {
+        let mins = Math.floor(val / 60000);
+        let secs = Math.floor((val % 60000) / 1000);
+        let ms = Math.floor((val % 60000) % 1000);
+
+        if (secs < 10) { secs = "0" + secs; }
+
+        if (ms < 10) { ms = "00" + ms; }
+        else if (ms < 100) { ms = "0" + ms; }
+
+        console.log()
+
+        return mins + ":" + secs + ":" + ms;
     }
 
     return(
@@ -72,7 +82,7 @@ const AdminTimelineObj = (props) => {
             draggable={timelineResizeInfo.state === DRAG_STATE_NONE}
             ref={containerRef}
 
-            title={secsToMS(setData["start_time_code"]) + "-" + secsToMS(setData["end_time_code"])}
+            title={formatMS(setData["start_time_code"]) + "-" + formatMS(setData["end_time_code"])}
         > 
             <svg height={height} width={width}>
                 <rect x="0" y="0" width={width} height={height} fill="silver" stroke="grey" strokeWidth="1" ry="5" rx="5"/>

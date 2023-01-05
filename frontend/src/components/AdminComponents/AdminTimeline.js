@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import AdminTimelineObj from './AdminTimelineObj';
 import AdminTimelineTimestamp from './AdminTimelineTimestamp';
 import PausePlayBtn from './PausePlayBtn';
+import AudioProgressBar from './AudioProgressBar';
 import './AdminTimeline.css';
 import { fontSize } from '@mui/system';
 
 const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 const PIXELS_PER_SECOND = 10;
-const DEFAULT_LENGTH = 10;
+const PIXELS_PER_MS = PIXELS_PER_SECOND / 1000;
+const DEFAULT_LENGTH = 10000;
 const MIN_SIZE = 1;
 const TIMESTAMP_INTERVAL = 10;
 
@@ -35,51 +37,25 @@ const AdminTimeline = (props) => {
     });
 
     const [data, setData] = useState([]);
-    const intervalRef = useRef();
     const dragItem = useRef();
-    const dragOverItem = useRef();
     const dialDivRef = useRef();
     
-    
-    const currentPercentage = audio.duration
-    ? `${(curPlayTime / audio.duration) * 100}%`
-    : "0%";
-    const trackStyling = `
-        -webkit-gradient(linear, 0% 0%, 100% 0%, color-stop(${currentPercentage}, #777), color-stop(${currentPercentage}, #777))
-    `;
 
-    const startTimer = () => {
-        // Clear any timers already running
-        clearInterval(intervalRef.current);
-    
-        intervalRef.current = setInterval(() => {
-            if (audio.ended) {
-                // Do nothing
-            } else {
-                setCurPlayTime(audio.currentTime);
-            }
-        }, [100]);
-    };
 
-    const secsToMS = (seconds) => {
-        return new Date(Math.floor(seconds) * 1000).toISOString().slice(14, 19)
+    const formatMS = (val) => {
+        let mins = Math.floor(val / 60000);
+        let secs = Math.floor((val % 60000) / 1000);
+        let ms = Math.floor((val % 60000) % 1000);
+
+        if (secs < 10) { secs = "0" + secs; }
+
+        if (ms < 10) { ms = "00" + ms; }
+        else if (ms < 100) { ms = "0" + ms; }
+
+        console.log()
+
+        return mins + ":" + secs + ":" + ms;
     }
-
-
-    const onScrub = (value) => {
-        // Clear any timers already running
-        clearInterval(intervalRef.current);
-        audio.currentTime = value;
-        setCurPlayTime(audio.currentTime);
-    };
-    
-    const onScrubEnd = () => {
-        // If not already playing, start
-        if (!isPlaying) {
-          setIsPlaying(true);
-        }
-        startTimer();
-    };
 
     useEffect(() => {
 		fetch(WINDOW_LOCATION + "/sets?school_code=" + schoolCode + "&token=" + token)
@@ -96,23 +72,6 @@ const AdminTimeline = (props) => {
 				}
 		);
 	}, [])
-
-    useEffect(() => {
-        if (isPlaying) {
-            audio.play();
-            startTimer();
-        } else {
-            audio.pause();
-        }
-    }, [isPlaying]);
-
-    useEffect(() => {
-        // Pause and clean up on unmount
-        return () => {
-            audio.pause();
-            clearInterval(intervalRef.current);
-        };
-    }, []);
 
     const dragStart = (e, index) => {
         dragItem.current = index;
@@ -181,7 +140,7 @@ const AdminTimeline = (props) => {
     const calcTimelineWidth = (setData) => {
         let length = setData.end_time_code - setData.start_time_code;
 
-        return PIXELS_PER_SECOND * length;
+        return PIXELS_PER_MS * length;
     }
 
     const isInTimeline = (setData) => {
@@ -206,7 +165,7 @@ const AdminTimeline = (props) => {
         if (timelineResizeInfo.state === DRAG_STATE_NONE || !timelineResizeInfo.currentlyResizing) { return; }
 
         let xDistance = e.clientX - timelineResizeInfo.startX;
-        let seconds = Math.floor(xDistance / PIXELS_PER_SECOND);
+        let seconds = Math.floor(xDistance / PIXELS_PER_MS);
         let index = timelineResizeInfo.index;
         
         if (timelineResizeInfo.state === DRAG_STATE_RIGHT) {
@@ -239,7 +198,7 @@ const AdminTimeline = (props) => {
         content.push(<AdminTimelineTimestamp width={Math.floor(timestampWidth / 2) + "px"} text="0:00" align="left" key="0"/>);
 
         for (let i = 1; i < timestamps; i++) {
-            let val = secsToMS(i * TIMESTAMP_INTERVAL)
+            let val = formatMS(i * TIMESTAMP_INTERVAL * 1000)
             content.push(<AdminTimelineTimestamp width={timestampWidth + "px"} text={val} align="center" key={i}/>);
         }
 
@@ -252,7 +211,7 @@ const AdminTimeline = (props) => {
         const FONT_SIZE = 24;
 
         let rect = dialDivRef.current.getBoundingClientRect();
-        let x = rect.x + (curPlayTime * PIXELS_PER_SECOND);
+        let x = rect.x + (curPlayTime * 1000 * PIXELS_PER_MS);
         let y = rect.y;
 
         let textStyle = {
@@ -270,11 +229,36 @@ const AdminTimeline = (props) => {
 
         return (
             <div>
-                <text style={textStyle}>{secsToMS(curPlayTime)}</text>
+                <div style={textStyle}>{formatMS(curPlayTime * 1000)}</div>
                 <i style={dialStyle} className="material-icons">&#xe313;</i>
             </div>
         );
         
+    }
+
+    const saveData = () => {
+        fetch(WINDOW_LOCATION + '/update-sets', {
+            method: 'POST',
+            body: JSON.stringify({data}),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer ' + token
+            }
+            })
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    console.log(result);
+                    window.location.reload();
+                },
+                // Note: it's important to handle errors here
+                // instead of a catch() block so that we don't swallow
+                // exceptions from actual bugs in components.
+                (error) => {
+                    console.log(error);
+                    alert(error)
+                }
+            );
     }
 
     return(
@@ -310,8 +294,6 @@ const AdminTimeline = (props) => {
                             changeTimeCodes={changeTimeCodes}
                             timelineResizeInfo={timelineResizeInfo}
                             setTimelineResizeInfo={setTimelineResizeInfo}
-
-                            PIXELS_PER_SECOND={PIXELS_PER_SECOND}
                         />
                         : dragInTimeline && index === dragItem.current ?
                         <AdminTimelineObj 
@@ -327,8 +309,6 @@ const AdminTimeline = (props) => {
                             changeTimeCodes={changeTimeCodes}
                             timelineResizeInfo={timelineResizeInfo}
                             setTimelineResizeInfo={setTimelineResizeInfo}
-
-                            PIXELS_PER_SECOND={PIXELS_PER_SECOND}
                         />
                         : null
                     )
@@ -354,8 +334,6 @@ const AdminTimeline = (props) => {
                             changeTimeCodes={changeTimeCodes}
                             timelineResizeInfo={timelineResizeInfo}
                             setTimelineResizeInfo={setTimelineResizeInfo}
-
-                            PIXELS_PER_SECOND={PIXELS_PER_SECOND}
                         />
                         : null
                     )
@@ -363,21 +341,17 @@ const AdminTimeline = (props) => {
                 </div>  
             </div>
             
-            <div className='flex-row d-flex justify-content-center align-items-center'>
-                <input
-                    type="range"
-                    value={curPlayTime}
-                    step="1"
-                    min="0"
-                    max={audio.duration ? audio.duration : 0}
-                    className="timelineProgress"
-                    onChange={(e) => onScrub(e.target.value)}
-                    onMouseUp={onScrubEnd}
-                    onKeyUp={onScrubEnd}
-                    style={{ background: trackStyling }}
+            <div className='flex-row d-flex justify-content-center align-items-center' style={{width: "80%"}}>
+                <AudioProgressBar 
+                    curPlayTime={curPlayTime} 
+                    setCurPlayTime={setCurPlayTime} 
+                    audio={audio} 
+                    isPlaying={isPlaying} 
+                    setIsPlaying={setIsPlaying}
                 />
                 <PausePlayBtn isPlaying={isPlaying} setIsPlaying={setIsPlaying}/>
             </div>
+            <button className="btn btn-outline-success btn-lg px-5" type="submit" onClick={e => saveData(e)}>Save</button>
         </div>
     );
 }

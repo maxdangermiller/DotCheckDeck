@@ -30,6 +30,10 @@ const OptionsDropDown = (props) => {
         setUserOptions({...userOptions,  "showMovementBrackets": value});
     }
 
+    const setUseActualSetLength = (value) => {
+        setUserOptions({...userOptions,  "useActualSetLength": value});
+    }
+
     const setHighlightUser = (value) => {
         setUserOptions({...userOptions,  "highlightUser": value});
     }
@@ -127,6 +131,18 @@ const OptionsDropDown = (props) => {
                                 />
                                 <label className="form-check-label ">
                                     Show Movement Brackets
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    onChange={() => setUseActualSetLength(!userOptions.useActualSetLength)} 
+                                    checked={userOptions.useActualSetLength} 
+                                />
+                                <label className="form-check-label ">
+                                    Use Actual Set Lengths
                                 </label>
                             </div>
                             <Autocomplete

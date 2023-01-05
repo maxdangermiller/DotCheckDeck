@@ -31,7 +31,7 @@ const ANIMATION_FPS = 20; // 20fps
 
 const Canvas = props => {
 
-    const { draw, setDimensions, curDimensions, curSet, sets, loading, timeCode, ...rest } = props
+    const { draw, setDimensions, curDimensions, curSet, sets, loading, curPlayTime, audioPlaying, userOptions, ...rest } = props
 
     const canvasRef = useRef(null)
 
@@ -375,7 +375,7 @@ const Canvas = props => {
             context.closePath();
         };
 
-        const drawPointAnimation = (x0, y0, x1, y1, counts, count, color) => {
+        const drawPointAnimation = (x0, y0, x1, y1, counts, count, color, userLabel) => {
             // y = mx + b
             if (x1 - x0 !== 0) {
                 const m = (y1 - y0) / (x1 - x0)
@@ -384,12 +384,12 @@ const Canvas = props => {
                 const x = ((x1 - x0) / counts * count) + x0;
                 const y = m * x + b;
 
-                drawPoint(x, y, color, "")
+                drawPoint(x, y, color, userLabel)
             } else {
                 const x = x0
                 const y = ((y1 - y0) / counts * count) + y0;
 
-                drawPoint(x, y, color, "")
+                drawPoint(x, y, color, userLabel)
             }
             
         };
@@ -752,18 +752,33 @@ const Canvas = props => {
 
         // Takes data from API, and draws the animation
         const drawAnimation = (_draw) => {
+            // This is so if we're playing the show, the sets don't overlap
+            const MARGIN = 100;
+
             if (drawInfo.length !== 0 && curSet !== lastSetID && drawInfo[curSet] !== undefined) {
                 let startTime = animationStartTime;
-                if (startTime === 0) { startTime = Date.now(); setAnimationStartTime(startTime); }
+                
+                if (audioPlaying) {
+                    startTime = drawInfo[curSet]["start_time_code"];
+                }
 
-                let curActualTime = Date.now();
-                let durationInSecs = 2; // Default Value
+                if (startTime === 0) {
+                    if (audioPlaying)   { startTime = curPlayTime * 1000; } 
+                    else                { startTime = Date.now();  }
+
+                    setAnimationStartTime(startTime); 
+                }
+
+                let curActualTime = audioPlaying ? curPlayTime * 1000 : Date.now();
+                let durationInSecs = 2000; // Default Value
 
                 // Find what the API says the duration is
-                let setStartTime = drawInfo[curSet]["start_time_code"];
-                let setEndTime = drawInfo[curSet]["end_time_code"];
-                if (setStartTime !== null && setEndTime !== null) {
-                    durationInSecs = setEndTime - setStartTime;
+                if (audioPlaying || userOptions.useActualSetLength) {
+                    let setStartTime = drawInfo[curSet]["start_time_code"];
+                    let setEndTime = drawInfo[curSet]["end_time_code"];
+                    if (setStartTime !== null && setEndTime !== null) {
+                        durationInSecs = setEndTime - setStartTime - MARGIN;
+                    }
                 }
 
                 // If the duration is 0, then just end the animation here. 
@@ -773,7 +788,7 @@ const Canvas = props => {
                 let counts = drawInfo[curSet].counts;
 
                 // 2000 / 2000
-                let curTime = (curActualTime - startTime) / ((1000 * durationInSecs / counts))
+                let curTime = (curActualTime - startTime) / ((durationInSecs / counts))
 
                 let direction = 0;
 
@@ -791,21 +806,39 @@ const Canvas = props => {
                     const dot = curSetData[x];
                     const lastDot = lastSetData[x];
 
-                    const color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                    let color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
+                    if (!_draw.userOptions.useSectionColors) { color = CURRENT_DOT_COLOR; }
                     // drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
                     // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
                     
-                    if (dot["userLabel"] !== lastDot["userLabel"]) { console.log("FAIL"); }
+                    if (dot["userLabel"] !== lastDot["userLabel"]) { 
+                        console.log("FAIL! Labels don't match between sets in animation"); 
+                    }
                     
 
                     if (_draw.userOptions.highlightUser !== null) {
                         if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
-                            drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, HIGHLIGHT_USER_COLOR);
+                            drawPointAnimation(
+                                lastDot["x"], lastDot["y"], 
+                                dot["x"], dot["y"], 
+                                counts, curTime, 
+                                HIGHLIGHT_USER_COLOR, dot["userLabel"]
+                            );
                         } else {
-                            drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, color);
+                            drawPointAnimation(
+                                lastDot["x"], lastDot["y"], 
+                                dot["x"], dot["y"], 
+                                counts, curTime, 
+                                color, dot["userLabel"]
+                            );
                         }
                     } else {
-                        drawPointAnimation(lastDot["x"], lastDot["y"], dot["x"], dot["y"], counts, curTime, color);
+                        drawPointAnimation(
+                            lastDot["x"], lastDot["y"], 
+                            dot["x"], dot["y"], 
+                            counts, curTime, 
+                            color, dot["userLabel"]
+                        );
                     }
                 }
 
@@ -843,14 +876,21 @@ const Canvas = props => {
 
             if (data.length !== 0 || isAnimation)  { clear(); }
 
-            let isNewFrame = lastSetID !== curSet && animationDirection !== 0 && !loading && data.length !== 0;
+            let isNewFrame = lastSetID !== curSet && animationDirection !== 0 && !loading  && data.length !== 0;
             let isRerender = hadResize && !loading && data.length !== 0 && data !== drawInfo;
 
             // If it is an animation, draw the animation
-            if (isAnimation) { drawAnimation(_draw); }
+            if (isAnimation) {
+                // Sometimes there's problems
+                try {
+                    drawAnimation(_draw);
+                } catch (error) {
+                    console.log("CAUGHT ERROR")
+                }
+            }
 
             // Check to see if we have a new frame (right after an animation)
-            else if (isNewFrame || isRerender) {
+            else if ((isNewFrame || isRerender) && data[curSet].dots !== undefined) {
                 setDrawInfo(data);
                 setLastSetID(curSet);
                 setAnimationDirection(0);

@@ -580,8 +580,6 @@ class UpdateSetResource(Resource):
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
 
-		print(user_schema.dumps(loggedInUser))
-
 		if not loggedInUser.is_admin and not loggedInUser.is_section_leader:
 			return "Unauthorized", 401
 
@@ -622,11 +620,39 @@ class UpdateSetResource(Resource):
 		return "Updated Successfully", 201
 
 
+class UpdateSetsResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+		loggedInUser = User.query.filter(User.email == identity).first()
+
+		if not loggedInUser.is_admin and not loggedInUser.is_section_leader:
+			return "Unauthorized", 401
+
+		data = json.loads(request.data)
+
+		for _set in data["data"]:
+			set = Set.query.filter(Set.id == _set["id"]).first()
+
+			set.setNumb = _set["setNumb"]
+			set.measure = _set["measure"]
+			set.counts = _set["counts"]
+			set.start_time_code = _set["start_time_code"]
+			set.end_time_code = _set["end_time_code"]
+
+		
+			db.session.commit()
+
+		return "Updated Successfully", 201
+
+
+
 api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
 api.add_resource(UpdateSetResource, '/update-set')
+api.add_resource(UpdateSetsResource, '/update-sets')
 
 
 # For use to build database
