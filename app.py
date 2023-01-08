@@ -726,4 +726,7 @@ if __name__ == "__main__":
 	# GUITest(1125, 600)
 
 	if not rebuild:
-		app.run(debug=True, host="0.0.0.0")
+		# Available Externally on LAN
+		# app.run(debug=True, host="0.0.0.0")
+		# Use Default Config
+		app.run(debug=True)
