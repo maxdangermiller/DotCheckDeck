@@ -1,6 +1,3 @@
-from turtle import Turtle
-
-
 def side2Convert(line) -> int:
     if line == 50:
         return 50
