@@ -41,7 +41,7 @@ def read_string_from_stream(
 ) -> Union["TextStringObject", "ByteStringObject"]:
     tok = stream.read(1)
     parens = 1
-    txt = b""
+    txt = []
     while True:
         tok = stream.read(1)
         if not tok:
@@ -79,7 +79,7 @@ def read_string_from_stream(
             try:
                 tok = escape_dict[tok]
             except KeyError:
-                if tok.isdigit():
+                if b"0" <= tok and tok <= b"7":
                     # "The number ddd may consist of one, two, or three
                     # octal digits; high-order overflow shall be ignored.
                     # Three octal digits shall be used, with leading zeros
@@ -87,7 +87,7 @@ def read_string_from_stream(
                     # a digit." (PDF reference 7.3.4.2, p 16)
                     for _ in range(2):
                         ntok = stream.read(1)
-                        if ntok.isdigit():
+                        if b"0" <= ntok and ntok <= b"7":
                             tok += ntok
                         else:
                             stream.seek(-1, 1)  # ntok has to be analysed
@@ -106,8 +106,8 @@ def read_string_from_stream(
                 else:
                     msg = rf"Unexpected escaped string: {tok.decode('utf8')}"
                     logger_warning(msg, __name__)
-        txt += tok
-    return create_string_object(txt, forced_encoding)
+        txt.append(tok)
+    return create_string_object(b"".join(txt), forced_encoding)
 
 
 def create_string_object(
