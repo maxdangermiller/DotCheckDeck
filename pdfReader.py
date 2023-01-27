@@ -135,8 +135,8 @@ def goThroughTable(regions_raw) -> list:
 def pdfReader(file) -> list:
 
 	pdfFileObj = open(file, 'rb')
-	pdfReaderObj = PyPDF2.PdfFileReader(pdfFileObj)
-	n_pages = pdfReaderObj.getNumPages()
+	pdfReaderObj = PyPDF2.PdfReader(pdfFileObj)
+	n_pages = len(pdfReaderObj.pages)
 
 	pages = [x for x in range(1, n_pages + 1)]
 	# pages = [15]

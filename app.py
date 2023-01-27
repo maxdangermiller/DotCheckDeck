@@ -1,5 +1,5 @@
 from email.policy import default
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
@@ -58,129 +58,165 @@ CORS(app)
 # flask db migrate -m "message"
 # flask db upgrade
 
-
 class Dot(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	setID = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
-	userID = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 
+	# Relationships
+	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
+	set_id = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
+	show_user_id = db.Column(db.Integer, db.ForeignKey('show_user.id'), nullable=False)
+
+	# Data
 	direction = db.Column(db.String(16))
 	line = db.Column(db.String(16))
-
 	steps = db.Column(db.Float)
 	side = db.Column(db.Integer)
-	fbSteps = db.Column(db.Float)
-	fbDirection = db.Column(db.String(16))
-	useHash = db.Column(db.String(32))
+	fb_steps = db.Column(db.Float)
+	fb_direction = db.Column(db.String(16))
+	use_hash = db.Column(db.String(32))
 
 	def __repr__(self):
-		return f"Dot({self.setID})"
+		return f"Dot({self.id})"
+
+	def __str__(self):
+		return f"Dot({self.id})"
 
 
 class SetName(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	setID = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
-	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	sectionID = db.Column(db.Integer, db.ForeignKey('band_section.id'), nullable=False)
 
+	# Relationships
+	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
+	set_id = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
+	section_id = db.Column(db.Integer, db.ForeignKey('band_section.id'), nullable=False)
+
+	# Data
 	name = db.Column(db.String(32), default="default")
 
-	def __str__(self) -> str:
-		return f"Set Name - {self.name} | SetID:{self.setID}"
+	def __repr__(self):
+		return f"SetName({self.name})"
 
-	def __repr__(self) -> str:
-		return f"Set Name - {self.name} | SetID:{self.setID}"
+	def __str__(self):
+		return f"SetName({self.name})"
 
 
 class Set(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	# showIndex = db.Column(db.Integer, nullable=False, default=-1)
-	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 
-	setNumb = db.Column(db.String(8), nullable=False)
-	measure = db.Column(db.String(16))
-	counts = db.Column(db.Integer, nullable=False)
-
-	setNames = db.relationship('SetName', backref='set')
+	# Relationships
+	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
+	set_names = db.relationship('SetName', backref='set')
 	dots = db.relationship('Dot', backref='set')
 
+
+	# Data
+	set_numb = db.Column(db.String(8), nullable=False)
+	measure = db.Column(db.String(16))
+	counts = db.Column(db.Integer, nullable=False)
 	start_time_code = db.Column(db.Integer)
 	end_time_code = db.Column(db.Integer)
-	
-
-	def __str__(self):
-		return f"Set {self.setNumb}"
+	showIndex = db.Column(db.Integer, nullable=False, default=-1)
 
 	def __repr__(self):
-		return f"Set {self.setNumb}"
+		return f"Set({self.set_numb})"
+
+	def __str__(self):
+		return f"Set({self.set_numb})"
+
+
+class BandSection(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+
+	# Relationships
+	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
+	show_users = db.relationship('ShowUser', backref='band_section')
+	set_names = db.relationship('SetName', backref='band_section')
+
+	# Data
+	name = db.Column(db.String(32), default="default")
+	color_r = db.Column(db.Integer)
+	color_g = db.Column(db.Integer)
+	color_b = db.Column(db.Integer)
+
+	def __repr__(self):
+		return f"BandSection({self.name})"
+
+	def __str__(self):
+		return f"BandSection({self.name})"
+
+
+class ShowUser(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+
+	# Relationships
+	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
+	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+	section_id = db.Column(db.Integer, db.ForeignKey('band_section.id'))
+	dots = db.relationship('Dot', backref='show_user')
+
+	# Data
+	symbol = db.Column(db.String(16))
+	label = db.Column(db.String(16))
+	is_section_leader = db.Column(db.Boolean, default=False)
+
+	def __repr__(self):
+		return f"ShowUser({self.label})"
+
+	def __str__(self):
+		return f"ShowUser({self.label})"
 
 
 class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	symbol = db.Column(db.String(16))
-	label = db.Column(db.String(16))
+
+	# Relationships
+	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	show_users = db.relationship('ShowUser', backref='user')
+
+	# Data
 	email = db.Column(db.String(128), unique=True)
 	password_hash = db.Column(db.String(128))
-	firstName = db.Column(db.String(64))
-	lastName = db.Column(db.String(64))
+	first_name = db.Column(db.String(64))
+	last_name = db.Column(db.String(64))
 
 	is_admin = db.Column(db.Boolean, default=False)
-	is_section_leader = db.Column(db.Boolean, default=False)
-	
-	section = db.Column(db.Integer, db.ForeignKey('band_section.id'))
-
-	dots = db.relationship('Dot', backref='user')
 
 	activated_date = db.Column(db.DateTime, default=None, nullable=True)
 	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
 	last_updated = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
 
+	# Methods
 	def set_password(self, password):
 		self.password_hash = generate_password_hash(password)
 
 	def check_password(self, password):
 		return check_password_hash(self.password_hash, password)
 
-	def __str__(self) -> str:
-		return f"User {self.firstName} {self.lastName} | {self.symbol} | {self.label}"
+	def __repr__(self):
+		return f"User({self.email})"
 
-	def __repr__(self) -> str:
-		return f"User {self.firstName} {self.lastName} | {self.symbol} | {self.label}"
+	def __str__(self):
+		return f"User({self.email})"
 
 
-class BandSection(db.Model):
+class Show(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	schoolID = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	users = db.relationship('User', backref='bandSection')
-	setNames = db.relationship('SetName', backref='bandSection')
-	
 
-	name = db.Column(db.String(32), default="default")
-	colorR = db.Column(db.Integer)
-	colorG = db.Column(db.Integer)
-	colorB = db.Column(db.Integer)
+	# Relationships
+	show_users = db.relationship('ShowUser', backref='show')
+	sets = db.relationship('Set', backref='show')
+	dots = db.relationship('Dot', backref='show')
+	band_sections = db.relationship('BandSection', backref='show')
+	set_names = db.relationship('SetName', backref='show')
+	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 
-	def __str__(self) -> str:
-		return f"Band Section - {self.name}"
-
-	def __repr__(self) -> str:
-		return f"Band Section - {self.name}"
-
-
-class School(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
+	# Data
 	code = db.Column(db.String(8), unique=True)
-	name = db.Column(db.String(256))
-	email = db.Column(db.String(128))
-
-	# permissions = db.relationship('Permissions', backref='school')
-	users = db.relationship('User', backref='school')
-	sets = db.relationship('Set', backref='school')
-	dots = db.relationship('Dot', backref='school')
-	bandSections = db.relationship('BandSection', backref='school')
-	setNames = db.relationship('SetName', backref='school')
 
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
@@ -188,11 +224,37 @@ class School(db.Model):
 		self.code = "12345678"
 		return self.code
 
-	def __str__(self) -> str:
-		return f"{self.name} School"
+	def __repr__(self):
+		return f"Show({self.code})"
 
-	def __repr__(self) -> str:
-		return f"{self.name} School"
+	def __str__(self):
+		return f"Show({self.code})"
+
+
+class School(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+
+	# Relationships
+	shows = db.relationship('Show', backref='school')
+	users = db.relationship('User', backref='school')
+
+	show_users = db.relationship('ShowUser', backref='school')
+	sets = db.relationship('Set', backref='school')
+	dots = db.relationship('Dot', backref='school')
+	band_sections = db.relationship('BandSection', backref='school')
+	set_names = db.relationship('SetName', backref='school')
+
+	# default_show = db.Column(db.Integer, db.ForeignKey('show.id'))
+
+	# Data
+	name = db.Column(db.String(256))
+	email = db.Column(db.String(128))
+
+	def __repr__(self):
+		return f"School({self.name})"
+
+	def __str__(self):
+		return f"School({self.name})"
 
 
 # Serializers
@@ -200,8 +262,8 @@ class DotSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
 		"""
 		fields = (
-			"id", "set", "userID", "direction", "line",
-			"steps", "side", "fbSteps", "fbDirectsion", "useHash"
+			"id", "show_id", "set_id", "show_user_id", "direction", "line",
+			"steps", "side", "fb_steps", "fb_direction", "use_hash"
 		)
 		"""
 
@@ -210,30 +272,50 @@ class DotSchema(ma.SQLAlchemyAutoSchema):
 		load_instance = True
 
 
-class SetNameSchema(ma.Schema):
+class SetNameSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
-		fields = ("id", "name", "setID", "schoolID", "sectionID")
+		# fields = ("id", "name", "setID", "schoolID", "sectionID")
 		model = SetName
+		include_fk = True
+		load_instance = True
 
 
-class SetSchema(ma.Schema):
+class SetSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
-		fields = ("id", "setNumb", "measure", "counts", "setNames", "start_time_code", "end_time_code")
+		fields = ("id", "set_numb", "measure", "counts", "setNames", "start_time_code", "end_time_code")
 		model = Set
 	
 	setNames = ma.Nested(SetNameSchema)
 
 
-
-class UserSchema(ma.Schema):
+class UserSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
+		"""
 		fields = (
 			"id", "symbol", "label", 
 			"firstName", "lastName", "email", 
 			"is_admin", "is_section_leader", "section"
 			"activated_date", "created_date", "last_updated"
 		)
+		"""
 		model = User
+		include_fk = True
+		load_instance = True
+
+
+class ShowUserSchema(ma.SQLAlchemyAutoSchema):
+	class Meta:
+		"""
+		fields = (
+			"id", "symbol", "label", 
+			"firstName", "lastName", "email", 
+			"is_admin", "is_section_leader", "section"
+			"activated_date", "created_date", "last_updated"
+		)
+		"""
+		model = ShowUser
+		include_fk = True
+		load_instance = True
 
 
 dot_schema = DotSchema()
@@ -242,13 +324,17 @@ set_schema = SetSchema()
 sets_schema = SetSchema(many=True)
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
+show_user_schema = ShowUserSchema()
+show_users_schema = ShowUserSchema(many=True)
 
 
 admin.add_view(ModelView(Dot, db.session))
 admin.add_view(ModelView(SetName, db.session))
 admin.add_view(ModelView(Set, db.session))
+admin.add_view(ModelView(ShowUser, db.session))
 admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(BandSection, db.session))
+admin.add_view(ModelView(Show, db.session))
 admin.add_view(ModelView(School, db.session))
 
 
@@ -273,10 +359,12 @@ def create_token():
 	access_token = create_access_token(identity=email)
 	refresh_token = create_refresh_token(identity=email)
 
-	userSchool = School.query.filter(School.id == user.schoolID).first()
+	userSchool = School.query.filter(School.id == user.school_id).first()
 	schoolCode = ""
 	if userSchool is not None:
-		schoolCode = userSchool.code
+		userShow = Show.query.filter(Show.school_id == userSchool.id).first()
+		if userShow is not None:
+			schoolCode = userShow.code
 
 	response = {
 		"access_token": access_token, 
@@ -308,9 +396,11 @@ def get_jwt():
 		if user is not None:
 			userString = user_schema.dump(user)
 
-			userSchool = School.query.filter(School.id == user.schoolID).first()
+			userSchool = School.query.filter(School.id == user.school_id).first()
 			if userSchool is not None:
-				schoolCode = userSchool.code
+				userShow = Show.query.filter(Show.school_id == userSchool.id).first()
+				if userShow is not None:
+					schoolCode = userShow.code
 
 		response = {"access_token": access_token, "user": userString, "school_code": schoolCode}
 		# print(response)
@@ -327,68 +417,92 @@ def logout():
 	return response
 
 
+# Serve Images
+@app.route('/get-audio')
+def send_report():
+	# identity = get_jwt_identity()
+	# user = User.query.filter_by(email=identity).first()
+
+	# if user is None: 
+	# 	return "Invalid Token", 401
+
+	# TODO: GET DYNAMIC SHOW FILE FROM SCHOOL OBJ
+
+	return send_from_directory('static', "steampunk.mp3")
+
+
 class SetListResource(Resource):
 	@jwt_required()
 	def get(self):
 		setNumb = request.args.get('set_id', None)
 		measure = request.args.get('measure', None)
-		schoolCode = request.args.get('school_code', None)
+		schoolCode = request.args.get('school_code', None) # TODO: Change name to show_code
 
 		# REQUIRE A SCHOOL CODE
 		if schoolCode is None:
 			return "Missing School Code", 404
 
 		# CHECK IF CODE IS VALID
-		school = School.query.filter(School.code == schoolCode).first()
-		if school is None:
-			return "INVALID SCHOOL CODE", 404
+		show = Show.query.filter(Show.code == schoolCode).first()
+		if show is None:
+			return "INVALID SHOW CODE", 404
 
 		if setNumb is not None and measure is not None:
-			sets = Set.query.filter(Set.setNumb == setNumb, Set.measure == measure, Set.schoolID == school.id).all()
+			sets = Set.query.filter(Set.set_numb == setNumb, Set.measure == measure, Set.show_id == show.id).all()
 		elif setNumb is not None:
-			sets = Set.query.filter(Set.setNumb == setNumb, Set.schoolID == school.id).all()
+			sets = Set.query.filter(Set.set_numb == setNumb, Set.show_id == show.id).all()
 		elif measure is not None:
-			sets = Set.query.filter(Set.measure == measure, Set.schoolID == school.id).all()
+			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).all()
 		else:
-			sets = Set.query.filter(Set.schoolID == school.id).all()
+			sets = Set.query.filter(Set.show_id == show.id).all()
 
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
-		loggedInUserSection = BandSection.query.filter(BandSection.id == loggedInUser.section).first()
+		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
+		if showUser.section_id is not None:
+			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
+		else:
+			loggedInUserSection = None
 
 		setsOutput = list()
 
 		for set in sets:
-			setNameObj = SetName.query.filter(SetName.sectionID == loggedInUserSection.id, SetName.setID == set.id).first()
-
 			setName = "Undefined"
-			if setNameObj is not None:
-				setName = setNameObj.name
+
+			if loggedInUserSection is not None:
+				setNameObj = SetName.query.filter(SetName.section_id == loggedInUserSection.id, SetName.set_id == set.id).first()
+				if setNameObj is not None:
+					setName = setNameObj.name
 
 			schema = set_schema.dump(set)
-			schema["setName"] = setName
+			schema["setName"] = setName # TODO: Refactor to "set_name"
 			
 			setsOutput.append(schema)
+
+		print(setsOutput)
 
 		return setsOutput
 
 
 class SchoolCodeAuthResource(Resource):
 	def post(self):
+		# TODO: Refactor to "show_code"
 		if "school_code" not in request.json:
 			return "Missing School Code param", 404
 
 		# Attempt to load the School with that code
-		school = School.query.filter(School.code == request.json['school_code']).first()
+		show = Show.query.filter(Show.code == request.json['school_code']).first()
 
 		# Check to see if we got a school obj
-		if school is None:
+		if show is None:
 			return "INVALID SCHOOL CODE", 404
 		
-		users = User.query.filter(User.schoolID == school.id, User.email == None)
+		school = School.query.filter(School.id == show.school_id).first()
+		
+		users = ShowUser.query.filter(ShowUser.show_id == show.id).all()
 
 		
-		return {"name": school.name, "users": users_schema.dump(users), "email": school.email}, 200
+		return {"name": school.name, "users": show_users_schema.dump(users), "email": school.email}, 200
 
 
 # To allow a user to setup their credentials, as by default they cannot login
@@ -418,6 +532,7 @@ class SetUpUserResource(Resource):
         .then(console.log)
     """
 	def post(self):
+		# TODO: Refactor to "show_code"
 		if "school_code" not in request.json or request.json['school_code'] == "":
 			return "Missing School Code", 404
 		if "label" not in request.json or request.json['label'] == "":
@@ -431,34 +546,33 @@ class SetUpUserResource(Resource):
 		if "last_name" not in request.json or request.json['last_name'] == "":
 			return "Missing Last Name", 404
 
-		# Attempt to load the School with that code
-		school = School.query.filter(School.code == request.json['school_code']).first()
+		# Attempt to load the Show with that code
+		show = Show.query.filter(Show.code == request.json['school_code']).first()
 
 		# Check to see if we got a school obj
-		if school is None:
+		if show is None:
 			return "INVALID SCHOOL CODE", 404
+		
+
 
 		# Find users that fit the params,
 		# it's possible for multiple users to have the same label so we have to do this for now.
-		users = User.query.filter(
-			User.schoolID == school.id,
-			User.label == request.json['label']
-		).all()
-		print(users)
+		showUsers = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.label == request.json['label']).all()
+		print(showUsers)
 
-		if len(users) > 1:
+		if len(showUsers) > 1:
 			return "Multiple Users found for that query, INTERNAL SERVER ERROR!", 402
-		if len(users) != 1:
+		if len(showUsers) != 1:
 			return "No users found with that school_id and label"
 
-		user = users[0]
+		user = showUsers[0].user
 
 		if user.activated_date is not None:
 			return "User has already been activated", 404
 
 		user.email = request.json["email"]
-		user.firstName = request.json["first_name"]
-		user.lastName = request.json["last_name"]
+		user.first_name = request.json["first_name"]
+		user.last_name = request.json["last_name"]
 		user.activated_date = datetime.datetime.now()
 
 		user.set_password(request.json["password"])
@@ -471,7 +585,7 @@ class SetUpUserResource(Resource):
 
 def getSetIndex(sets, middleSet) -> int:
 	for x in range(len(sets)):
-		if sets[x].setNumb == middleSet:
+		if sets[x].set_numb == middleSet:
 			return x
 	return -1
 
@@ -498,12 +612,14 @@ class GetDotsWithBufferResource(Resource):
 		if schoolCode is None:
 			return "Missing School Code", 404
 
-		# CHECK IF CODE IS VALID
-		school = School.query.filter(School.code == schoolCode).first()
-		if school is None:
+		# Attempt to load the Show with that code
+		show = Show.query.filter(Show.code == request.json['school_code']).first()
+
+		# Check to see if we got a school obj
+		if show is None:
 			return "INVALID SCHOOL CODE", 404
 
-		sets = Set.query.filter(Set.schoolID == school.id).all()
+		sets = Set.query.filter(Set.show_id == show.id).all()
 
 		# TODO: GET ORDER HERE
 
@@ -524,30 +640,32 @@ class GetDotsWithBufferResource(Resource):
 
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
-		loggedInUserSection = BandSection.query.filter(BandSection.id == loggedInUser.section).first()
+		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id)
+		loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
 
 		for i in range(startIndex, endIndex + 1):
 
 			set = sets[i]
-			dots = Dot.query.filter(Dot.setID == set.id)
+			dots = Dot.query.filter(Dot.set_id == set.id).all()
 			
-			setNameObj = SetName.query.filter(SetName.sectionID == loggedInUserSection.id, SetName.setID == set.id).first()
-
 			setName = ""
-			if setNameObj is not None:
-				setName = setNameObj.name
+			if loggedInUserSection is not None:
+				setNameObj = SetName.query.filter(SetName.section_id == loggedInUserSection.id, SetName.set_id == set.id).first()
+
+				if setNameObj is not None:
+					setName = setNameObj.name
 
 			dotCords = []
 
 			for dot in dots:
 				x, y = convertHashToCords.convertHashToCords(
 					dot.direction, dot.line, dot.steps,
-					dot.side, dot.fbSteps, dot.fbDirection,
-					dot.useHash, width=width, height=height
+					dot.side, dot.fb_steps, dot.fb_direction,
+					dot.use_hash, width=width, height=height
 				)
 
-				userObj = User.query.filter(User.id == dot.userID, User.schoolID == school.id).first()
-				r, g, b = getSectionColor(userObj)
+				showUserObj = ShowUser.query.filter(ShowUser.id == dot.user_id).first()
+				r, g, b = getSectionColor(showUserObj)
 
 				dotCords.append({
 					'x': x, 'y': y, 'dot': dot_schema.dump(dot),
@@ -556,13 +674,13 @@ class GetDotsWithBufferResource(Resource):
 					
 					"r": r, "g": g, "b": b,
 					
-					"userLabel": userObj.label, "userID": userObj.id,
-					"userName": f"{userObj.firstName} {userObj.lastName}",
+					"userLabel": showUserObj.label, "userID": showUserObj.id,
+					"userName": f"{showUserObj.first_name} {showUserObj.last_name}",
 				})
 			
 			output.append({
 				'setID': set.id,
-				'setNumb': set.setNumb,
+				'setNumb': set.set_numb,
 				'setName': setName,
 				'counts': set.counts,
 				'start_time_code': set.start_time_code,
@@ -646,7 +764,6 @@ class UpdateSetsResource(Resource):
 		return "Updated Successfully", 201
 
 
-
 api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
@@ -664,36 +781,56 @@ def addAllDataFromPDF(file):
 
 	if len(School.query.all()) == 0:
 		school = School(name="U-High", email="max@benmiller.com")
-		school.generateCode()
 		db.session.add(school)
+		db.session.commit()
+
+		show = Show(school_id=school.id)
+		show.generateCode()
+
+		db.session.add(show)
 		db.session.commit()
 	else:
 		school = School.query.first()
+		show = Show.query.filter(Show.school_id == school.id).first()
 
 	# print(stuff[34])
 	for dotSheet in stuff:
-		if User.query.filter(User.label==dotSheet.label, User.schoolID==school.id).first() is None:
-			user = User(label=dotSheet.label, schoolID=school.id, symbol=dotSheet.symbol)
+		firstShowUser = ShowUser.query.filter(ShowUser.label == dotSheet.label, ShowUser.show_id == show.id).first()
+
+		if firstShowUser is None:
+			user = User(school_id = school.id)
 			db.session.add(user)
 			db.session.commit()
+
+			showUser = ShowUser(
+				school_id = school.id,
+				show_id = show.id, 
+				user_id = user.id,
+				symbol=dotSheet.symbol,
+				label = dotSheet.label
+			)
+			db.session.add(showUser)
+			db.session.commit()
 		else:
-			user = User.query.filter(User.label==dotSheet.label, User.schoolID==school.id).first()
+			showUser = firstShowUser
+			user = firstShowUser.user
 
 		for dot in dotSheet.dots:
-			if Set.query.filter(Set.setNumb==dot.setNumb, Set.schoolID==school.id).first() is None:
-				_set = Set(setNumb=dot.setNumb, measure=dot.measure, counts=dot.counts, schoolID=school.id)
+			if Set.query.filter(Set.set_numb==dot.setNumb, Set.show_id==show.id).first() is None:
+				_set = Set(set_numb=dot.setNumb, measure=dot.measure, counts=dot.counts, school_id=school.id, show_id=show.id)
 				db.session.add(_set)
 				db.session.commit()
 			else:
-				_set = Set.query.filter(Set.setNumb==dot.setNumb, Set.schoolID==school.id).first()
-			print(f"Adding dot: '{dot}' to DATABASE [SET {_set.setNumb}]")
+				_set = Set.query.filter(Set.set_numb==dot.setNumb, Set.show_id==show.id).first()
+			print(f"Adding dot: '{dot}' to DATABASE [SET {_set.set_numb}]")
 			_dot = Dot(
-				setID=_set.id, userID=user.id, direction=str(dot.direction),
-				line=str(dot.line), steps=float(dot.steps), side=int(dot.side), fbSteps=float(dot.fbSteps),
-				fbDirection=str(dot.fbDirection), useHash=str(dot.useHash), schoolID=school.id
+				set_id=_set.id, show_user_id=showUser.id, direction=str(dot.direction),
+				line=str(dot.line), steps=float(dot.steps), side=int(dot.side), fb_steps=float(dot.fbSteps),
+				fb_direction=str(dot.fbDirection), use_hash=str(dot.useHash), school_id=school.id, show_id = show.id
 			)
 			db.session.add(_dot)
 			db.session.commit()
+
 
 
 if __name__ == "__main__":
