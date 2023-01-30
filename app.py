@@ -165,10 +165,10 @@ class ShowUser(db.Model):
 	is_section_leader = db.Column(db.Boolean, default=False)
 
 	def __repr__(self):
-		return f"ShowUser({self.label})"
+		return f"ShowUser({self.symbol}{self.label})"
 
 	def __str__(self):
-		return f"ShowUser({self.label})"
+		return f"ShowUser({self.symbol}{self.label})"
 
 
 class User(db.Model):
@@ -459,6 +459,7 @@ class SetListResource(Resource):
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
 		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
+		
 		if showUser.section_id is not None:
 			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
 		else:
@@ -591,7 +592,7 @@ def getSetIndex(sets, middleSet) -> int:
 
 
 def getSectionColor(userObj) -> list:
-	userSection = BandSection.query.filter(BandSection.id == userObj.section).first()
+	userSection = BandSection.query.filter(BandSection.id == userObj.section_id).first()
 
 	if userSection is None:
 		return 0, 0, 0
@@ -613,7 +614,7 @@ class GetDotsWithBufferResource(Resource):
 			return "Missing School Code", 404
 
 		# Attempt to load the Show with that code
-		show = Show.query.filter(Show.code == request.json['school_code']).first()
+		show = Show.query.filter(Show.code == schoolCode).first()
 
 		# Check to see if we got a school obj
 		if show is None:
@@ -623,9 +624,13 @@ class GetDotsWithBufferResource(Resource):
 
 		# TODO: GET ORDER HERE
 
+		if middleSet == "undefined":
+			middleSet = "1"
+
 		searchSetIndex = getSetIndex(sets, middleSet)
 
 		if searchSetIndex == -1:
+			print("INVALID MIDDLE SET!")
 			return "INVALID MIDDLE SET PARM", 404
 
 		startIndex = 0
@@ -640,8 +645,10 @@ class GetDotsWithBufferResource(Resource):
 
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
-		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id)
+		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 		loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
+
+		print("WEEEE!")
 
 		for i in range(startIndex, endIndex + 1):
 
@@ -664,7 +671,8 @@ class GetDotsWithBufferResource(Resource):
 					dot.use_hash, width=width, height=height
 				)
 
-				showUserObj = ShowUser.query.filter(ShowUser.id == dot.user_id).first()
+				showUserObj = ShowUser.query.filter(ShowUser.id == dot.show_user_id).first()
+				userObj = User.query.filter(User.id == showUserObj.user_id).first()
 				r, g, b = getSectionColor(showUserObj)
 
 				dotCords.append({
@@ -675,7 +683,7 @@ class GetDotsWithBufferResource(Resource):
 					"r": r, "g": g, "b": b,
 					
 					"userLabel": showUserObj.label, "userID": showUserObj.id,
-					"userName": f"{showUserObj.first_name} {showUserObj.last_name}",
+					"userName": f"{userObj.first_name} {userObj.last_name}",
 				})
 			
 			output.append({
@@ -697,8 +705,10 @@ class UpdateSetResource(Resource):
 	def post(self):
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
+		show = Show.query.filter(Show.school_id == loggedInUser.school.id).first()
+		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 
-		if not loggedInUser.is_admin and not loggedInUser.is_section_leader:
+		if not loggedInUser.is_admin and not showUser.is_section_leader:
 			return "Unauthorized", 401
 
 		parser = reqparse.RequestParser()
@@ -723,7 +733,7 @@ class UpdateSetResource(Resource):
 			return "Invalid Set ID", 404
 
 		if setNumb is not None:
-			set.setNumb = setNumb
+			set.set_numb = setNumb
 		if measure is not None:
 			set.measure = measure
 		if counts is not None:
@@ -743,8 +753,10 @@ class UpdateSetsResource(Resource):
 	def post(self):
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
+		show = Show.query.filter(Show.school_id == loggedInUser.school.id).first()
+		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 
-		if not loggedInUser.is_admin and not loggedInUser.is_section_leader:
+		if not loggedInUser.is_admin and not showUser.is_section_leader:
 			return "Unauthorized", 401
 
 		data = json.loads(request.data)
@@ -752,7 +764,7 @@ class UpdateSetsResource(Resource):
 		for _set in data["data"]:
 			set = Set.query.filter(Set.id == _set["id"]).first()
 
-			set.setNumb = _set["setNumb"]
+			set.set_numb = _set["setNumb"]
 			set.measure = _set["measure"]
 			set.counts = _set["counts"]
 			set.start_time_code = _set["start_time_code"]

@@ -150,7 +150,7 @@ const Viewer = (props) => {
 
 			// console.log(sets)
 			const url1 = WINDOW_LOCATION + "/get-dots?school_code=" + props.schoolCode 
-				+ "&set=" + sets[useSetIndex]["setNumb"] + 
+				+ "&set=" + sets[useSetIndex]["set_numb"] + 
 				"&width=" + dimensions["w"] + "&height=" + dimensions["h"] + "&token=" + props.token;
 
 			axios({
@@ -237,7 +237,7 @@ const Viewer = (props) => {
 		if (x >= 0 && x < sets.length && !loading) {
 			// console.log("Changing set");
 			setCurSet(x);
-			setCurSetNumb(sets[x]["setNumb"]);
+			setCurSetNumb(sets[x]["set_numb"]);
 			setCurSetInfo(sets[x]);
 		}
 	}
@@ -256,13 +256,13 @@ const Viewer = (props) => {
 		if (event.key !== "Enter") { return; }
 		event.preventDefault();
 		for (let x = 0; x < sets.length; x++) {
-			if (sets[x]["setNumb"] === event.target.value) {
+			if (sets[x]["set_numb"] === event.target.value) {
 				setCurSet(x);
 				// setCurSetNumb(numb);
 				return;
 			}
 		}
-		setCurSetNumb(sets[curSet]["setNumb"]);
+		setCurSetNumb(sets[curSet]["set_numb"]);
 		setInput.current.blur();
 	}
 

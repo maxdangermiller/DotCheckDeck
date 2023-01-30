@@ -118,7 +118,11 @@ const AdminTimeline = (props) => {
         const newData = data.map((_value, i) => {
             if (i === dragItem.current) {
                 if (dragInTimeline && _value["start_time_code"] == null || _value["end_time_code"] == null) {
-                    let lastSetEnd = data[i - 1]["end_time_code"];
+                    if (i > 0) {
+                        let lastSetEnd = data[i - 1]["end_time_code"];
+                    } else {
+                        let lastSetEnd = 0;
+                    }
                     _value["start_time_code"] = lastSetEnd;
                     _value["end_time_code"] = lastSetEnd + DEFAULT_LENGTH;
                 } else if (!dragInTimeline) {
@@ -284,7 +288,7 @@ const AdminTimeline = (props) => {
                         <AdminTimelineObj 
                             width={calcTimelineWidth(setData)} 
                             height="100%" 
-                            value={setData.setNumb} 
+                            value={setData.set_numb} 
                             key={setData.id}
                             index={index}
                             setData={setData}
@@ -299,7 +303,7 @@ const AdminTimeline = (props) => {
                         <AdminTimelineObj 
                             width="6vw"
                             height="100%" 
-                            value={setData.setNumb} 
+                            value={setData.set_numb} 
                             key={setData.id}
                             index={index}
                             setData={setData}
@@ -324,7 +328,7 @@ const AdminTimeline = (props) => {
                         <AdminTimelineObj 
                             width="6vw"
                             height="100%" 
-                            value={setData.setNumb} 
+                            value={setData.set_numb} 
                             key={setData.id}
                             index={index}
                             setData={setData}
