@@ -77,10 +77,10 @@ class Dot(db.Model):
 	use_hash = db.Column(db.String(32))
 
 	def __repr__(self):
-		return f"Dot({self.id})"
+		return f"Dot({self.show_user_id} ->{self.id})"
 
 	def __str__(self):
-		return f"Dot({self.id})"
+		return f"Dot({self.show_user_id} ->{self.id})"
 
 
 class SetName(db.Model):
@@ -597,7 +597,7 @@ def getSectionColor(userObj) -> list:
 	if userSection is None:
 		return 0, 0, 0
 	
-	return userSection.colorR, userSection.colorG, userSection.colorB
+	return userSection.color_r, userSection.color_g, userSection.color_b
 
 
 class GetDotsWithBufferResource(Resource):
@@ -647,8 +647,6 @@ class GetDotsWithBufferResource(Resource):
 		loggedInUser = User.query.filter(User.email == identity).first()
 		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 		loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
-
-		print("WEEEE!")
 
 		for i in range(startIndex, endIndex + 1):
 
@@ -764,7 +762,7 @@ class UpdateSetsResource(Resource):
 		for _set in data["data"]:
 			set = Set.query.filter(Set.id == _set["id"]).first()
 
-			set.set_numb = _set["setNumb"]
+			set.set_numb = _set["set_numb"]
 			set.measure = _set["measure"]
 			set.counts = _set["counts"]
 			set.start_time_code = _set["start_time_code"]

@@ -118,11 +118,10 @@ const AdminTimeline = (props) => {
         const newData = data.map((_value, i) => {
             if (i === dragItem.current) {
                 if (dragInTimeline && _value["start_time_code"] == null || _value["end_time_code"] == null) {
+                    let lastSetEnd = 0;
                     if (i > 0) {
-                        let lastSetEnd = data[i - 1]["end_time_code"];
-                    } else {
-                        let lastSetEnd = 0;
-                    }
+                        lastSetEnd = data[i - 1]["end_time_code"];
+                    } 
                     _value["start_time_code"] = lastSetEnd;
                     _value["end_time_code"] = lastSetEnd + DEFAULT_LENGTH;
                 } else if (!dragInTimeline) {

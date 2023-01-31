@@ -14,8 +14,8 @@ const OptionsDropDown = (props) => {
     Highlight User Dropdown
     */
 
-    const setMultiSelect = (value) => {
-        setUserOptions({...userOptions,  "multiSelect": value});
+    const setShowNewSet = (value) => {
+        setUserOptions({...userOptions,  "showNextSet": value});
     }
 
     const setDrawPaths = (value) => {
@@ -24,6 +24,10 @@ const OptionsDropDown = (props) => {
 
     const seUseSectionColors = (value) => {
         setUserOptions({...userOptions,  "useSectionColors": value});
+    }
+
+    const setHighlightSection = (value) => {
+        setUserOptions({...userOptions,  "highlightSection": value});
     }
 
     const setShowMovementBrackets = (value) => {
@@ -36,6 +40,10 @@ const OptionsDropDown = (props) => {
 
     const setHighlightUser = (value) => {
         setUserOptions({...userOptions,  "highlightUser": value});
+    }
+    
+    const setDimOtherUsers = (value) => {
+        setUserOptions({...userOptions,  "dimOtherUsers": value});
     }
 
     const getUserOptions = (value, set_numb) => {
@@ -91,24 +99,6 @@ const OptionsDropDown = (props) => {
                     <div className="accordion-collapse collapse show">
                         <div className="accordion-body">
                             <div className="form-check">
-                                <input className="form-check-input" type="checkbox" value="" onChange={() => setMultiSelect(!userOptions.multiSelect)} checked={userOptions.multiSelect} />
-                                <label className="form-check-label ">
-                                    Enable Multi-Select
-                                </label>
-                            </div>
-                            <div className="form-check">
-                                <input 
-                                    className="form-check-input" 
-                                    type="checkbox" 
-                                    value="" 
-                                    onChange={() => setDrawPaths(!userOptions.drawPath)} 
-                                    checked={userOptions.drawPath} 
-                                />
-                                <label className="form-check-label">
-                                    Draw Paths
-                                </label>
-                            </div>
-                            <div className="form-check">
                                 <input 
                                     className="form-check-input" 
                                     type="checkbox" 
@@ -118,6 +108,30 @@ const OptionsDropDown = (props) => {
                                 />
                                 <label className="form-check-label ">
                                     Use Section Colors
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    onChange={() => setUseActualSetLength(!userOptions.useActualSetLength)} 
+                                    checked={userOptions.useActualSetLength} 
+                                />
+                                <label className="form-check-label ">
+                                    Use Actual Set Timings
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    onChange={() => setHighlightSection(!userOptions.highlightSection)} 
+                                    checked={userOptions.highlightSection} 
+                                />
+                                <label className="form-check-label ">
+                                    Highlight Section
                                 </label>
                             </div>
                             <div className="form-check">
@@ -138,13 +152,41 @@ const OptionsDropDown = (props) => {
                                     className="form-check-input" 
                                     type="checkbox" 
                                     value="" 
-                                    onChange={() => setUseActualSetLength(!userOptions.useActualSetLength)} 
-                                    checked={userOptions.useActualSetLength} 
+                                    onChange={() => setShowNewSet(!userOptions.showNextSet)} 
+                                    checked={userOptions.showNextSet} 
+                                    disabled={userOptions.highlightUser === null}
                                 />
                                 <label className="form-check-label ">
-                                    Use Actual Set Lengths
+                                    Show Next Set
                                 </label>
                             </div>
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    onChange={() => setDrawPaths(!userOptions.drawPath)} 
+                                    checked={userOptions.drawPath} 
+                                    disabled={userOptions.highlightUser === null}
+                                />
+                                <label className="form-check-label">
+                                    Draw Path
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    onChange={() => setDimOtherUsers(!userOptions.dimOtherUsers)} 
+                                    checked={userOptions.dimOtherUsers} 
+                                    disabled={userOptions.highlightUser === null}
+                                />
+                                <label className="form-check-label">
+                                    Highlight User
+                                </label>
+                            </div>
+
                             <Autocomplete
                                 
                                 options={getUserOptions(data, curSet)}

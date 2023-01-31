@@ -27,10 +27,12 @@ const Viewer = (props) => {
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
-		"multiSelect": false, "drawPath": false,
+		"showNextSet": false, "drawPath": false,
+		"highlightSection": false,
 		"useSectionColors": true,
 		"showMovementBrackets": false, "highlightUser": null,
-		"moveSpeed": 10, "useActualSetLength": false
+		"moveSpeed": 10, "useActualSetLength": false,
+		"dimOtherUsers": false
 	});
 
 	const setInput = useRef(null);

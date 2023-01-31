@@ -11,6 +11,10 @@ const Nav = (props) => {
 	const goToAdmin = () => {
 		window.location.href = "/admin";
 	}
+	
+	const goToAdminTimeline = () => {
+		window.location.href = "/admin-timeline";
+	}
 
     return (
 		<nav className="navbar navbar-expand-sm bg-dark navbar-dark customNavbar">
@@ -19,12 +23,19 @@ const Nav = (props) => {
 					token !== "" && token !== undefined
 						? <ul className="navbar-nav">
 							<li className="nav-item">
-								<a className="nav-link" onClick={goToEditor}>Editor</a>
+								<a className="nav-link" onClick={goToEditor}>Home</a>
 							</li>
 							{
 								isAdminAuthorized() ?
 								<li className="nav-item">
 									<a className="nav-link" onClick={goToAdmin}>Admin</a>
+								</li>
+								: null
+							}
+							{
+								isAdminAuthorized() ?
+								<li className="nav-item">
+									<a className="nav-link" onClick={goToAdminTimeline}>Admin Timeline</a>
 								</li>
 								: null
 							}

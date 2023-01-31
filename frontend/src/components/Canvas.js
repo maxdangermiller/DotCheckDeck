@@ -2,6 +2,7 @@ import React, {useRef, useEffect, useState} from 'react'
 
 const FUTURE_DOT_COLOR = "rgb(0, 100, 0)";
 const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
+const CURRENT_DOT_HIGHLIGHT_COLOR = "rgba(0, 0, 255, 0.4)";  // This is the value given if another thing is highlighted
 const HIGHLIGHT_USER_COLOR = "rgb(255, 0, 0)";
 
 const MAX_ZOOM = 3;
@@ -23,11 +24,9 @@ const HEIGHT_IN_YDS = 53 + 1/3;
 const RELATIVE_HASH_HEIGHT = 0.01;
 const RELATIVE_HASH_WIDTH = 0.005;
 
-const GRID_MAJOR_DIVISION_COLOR = "rgb(100, 100, 255)";
-const GRID_MINOR_DIVISION_COLOR = "rgb(200, 200, 255)";
+const GRID_MAJOR_DIVISION_COLOR = "rgba(100, 100, 255, 0.6)";
+const GRID_MINOR_DIVISION_COLOR = "rgba(200, 200, 255, 0.4)";
 const COLLAGE_HASH_COLOR = "rgb(100, 0, 0)";
-
-const ANIMATION_FPS = 20; // 20fps
 
 const Canvas = props => {
 
@@ -176,7 +175,7 @@ const Canvas = props => {
             if (dot === null) { return; }
             // Find the cords of the closest line and hash
             const lineRatio = sideLineRatioConvert( dot["side"], dot["line"] );
-            const hashRatio = hashRatioConvert(dot["useHash"]);
+            const hashRatio = hashRatioConvert(dot["use_hash"]);
             const lineX = lineRatio * canvas.width;
             const hashY = hashRatio * canvas.height;
 
@@ -260,7 +259,7 @@ const Canvas = props => {
 
                 // drawTextBetween(textX, textY, TEXT_OFFSET * 3, maxHeight, dot["fbSteps"], HIGHLIGHT_USER_COLOR);
 
-                drawMovementBracketText(useX, hashY, useX, y, 0, yDirection, dot["fbSteps"], HIGHLIGHT_USER_COLOR);
+                drawMovementBracketText(useX, hashY, useX, y, 0, yDirection, dot["fb_steps"], HIGHLIGHT_USER_COLOR);
             }
 
             context.stroke();
@@ -333,13 +332,13 @@ const Canvas = props => {
                 context.fillText(textStr, x + w * 0.5, y + h * 0.5, w * 0.9);
             }
 
-            if (dotI["fbSteps"] !== 0) {
-                const fbDirection = dotI["fbDirection"] === "Front" ? "in front of" : dotI["fbDirection"];
-                const textStr = dotI["fbSteps"] + " steps " + fbDirection + " " + dotI["useHash"];
+            if (dotI["fb_steps"] !== 0) {
+                const fbDirection = dotI["fb_direction"] === "Front" ? "in front of" : dotI["fb_direction"];
+                const textStr = dotI["fb_steps"] + " steps " + fbDirection + " " + dotI["use_hash"];
 
                 context.fillText(textStr, x + w * 0.5, y + h * 0.65, w * 0.9);
             } else {
-                context.fillText("On " + dotI["useHash"], x + w * 0.5, y + h * 0.65, w * 0.9);
+                context.fillText("On " + dotI["use_hash"], x + w * 0.5, y + h * 0.65, w * 0.9);
             }
             context.fillText("for " + dot["counts"] + " counts", x + w * 0.5, y + h * 0.8, w * 0.9);
             // console.log(dot);
@@ -714,6 +713,21 @@ const Canvas = props => {
             }
         }
 
+        const getDotColor = (_dotData, highlighted, useSectionColors) => {
+            let color = "rgb(" + _dotData.r + ", " + _dotData.g + ", " + _dotData.b + ")";
+            if (!useSectionColors && highlighted) {
+                color = CURRENT_DOT_COLOR;
+            }
+            else if (!useSectionColors) {
+                color = CURRENT_DOT_HIGHLIGHT_COLOR;
+            }
+            else if (!highlighted) {
+                color = "rgba(" + _dotData.r + ", " + _dotData.g + ", " + _dotData.b + ", 0.4)"
+            }
+
+            return color
+        }
+
         // Takes data from API and draws them, used to condense the render method
         const drawDots = (_draw, curSetData) => {
             let newDots = [];
@@ -721,24 +735,35 @@ const Canvas = props => {
 
             for (let x = 0; x < curSetData.length; x++) {
                 const dot = curSetData[x];
-                let color = "rgb(" + dot.r + ", " + dot.g + ", " + dot.b + ")";
-
                 newDots.push(dot);
-
-                if (!_draw.userOptions.useSectionColors) {
-                    color = CURRENT_DOT_COLOR;
-                }
-
                 
                 let useX = dot.x;
                 let useY = dot.y;
 
-                if (_draw.userOptions.highlightUser !== null && _draw.userOptions.highlightUser.label === dot.userLabel) {
-                    if (_draw.userOptions.showMovementBrackets) {
-                        drawBracket = {useX:useX, useY:useY, dot:dot.dot};
+                let userOptions = _draw.userOptions;
+                
+                // Check to see if a user is selected to be highlighted
+                if (userOptions.highlightUser !== null) {
+                    // Check to see if this dot is the selected user
+                    if (userOptions.highlightUser.label === dot.userLabel) {
+                        // Check to see if the "Show Movement Brackets" option is selected
+                        if (userOptions.showMovementBrackets) {
+                            drawBracket = {useX:useX, useY:useY, dot:dot.dot};
+                        }
+
+                        // Draw the dot with the Highlighted Color
+                        drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot.userLabel);
                     }
-                    drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot.userLabel);
-                } else {
+                    
+                    // no change needed
+                    else {
+                        let color = getDotColor(dot, !userOptions.dimOtherUsers, userOptions.useSectionColors)
+                        drawPoint(useX, useY, color, dot.userLabel);
+                    }
+                }
+                // No change needed
+                else {
+                    let color = getDotColor(dot, true, userOptions.useSectionColors)
                     drawPoint(useX, useY, color, dot.userLabel);
                 }
             }
@@ -748,6 +773,14 @@ const Canvas = props => {
             }
 
             return newDots;
+        }
+
+        const getMatchingLabel = (data, label) => {
+            for (const set in data) {
+                if (set["userLabel"] == label) {
+                    return set;
+                }
+            }
         }
 
         // Takes data from API, and draws the animation
@@ -812,11 +845,14 @@ const Canvas = props => {
                     // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
                     
                     if (dot["userLabel"] !== lastDot["userLabel"]) { 
-                        console.log("FAIL! Labels don't match between sets in animation"); 
+                        console.log("FAIL! Labels don't match between sets in animation. Attempting to fix."); 
+                        lastDot = getMatchingLabel(lastSetData, dot["userLabel"]);
                     }
                     
 
+                    // Check if there is a highlighted user
                     if (_draw.userOptions.highlightUser !== null) {
+                        // Check if this dot is the highlighted User
                         if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
                             drawPointAnimation(
                                 lastDot["x"], lastDot["y"], 
@@ -824,7 +860,12 @@ const Canvas = props => {
                                 counts, curTime, 
                                 HIGHLIGHT_USER_COLOR, dot["userLabel"]
                             );
-                        } else {
+                        }
+
+                        // Check to see if the other users need to be dimmed
+                        else if (userOptions.dimOtherUsers) {
+                            color = "rgb(" + (dot.r / 2) + ", " + (dot.g / 2) + ", " + (dot.b / 2) + ")";
+
                             drawPointAnimation(
                                 lastDot["x"], lastDot["y"], 
                                 dot["x"], dot["y"], 
@@ -832,7 +873,20 @@ const Canvas = props => {
                                 color, dot["userLabel"]
                             );
                         }
-                    } else {
+
+                        // No change needed
+                        else {
+                            drawPointAnimation(
+                                lastDot["x"], lastDot["y"], 
+                                dot["x"], dot["y"], 
+                                counts, curTime, 
+                                color, dot["userLabel"]
+                            );
+                        }
+                    }
+
+                    // No change needed
+                    else {
                         drawPointAnimation(
                             lastDot["x"], lastDot["y"], 
                             dot["x"], dot["y"], 
@@ -902,6 +956,12 @@ const Canvas = props => {
                 let newDots = drawDots(_draw, curSetData);
                 setDots(newDots)
 
+                // Check to see if we need to show the next dots too
+                if (_draw.userOptions.showNextSet && data[curSet + 1].dots !== undefined) {
+                    let nextSetData = data[curSet + 1].dots
+                    drawDots(_draw, nextSetData);
+                }
+
                 if (hoverDot.x !== undefined) {
                     drawUserDialogue(hoverDot.x, hoverDot.y, hoverDot);
                 }
@@ -913,6 +973,12 @@ const Canvas = props => {
 
                 let newDots = drawDots(_draw, curSetData);
                 setDots(newDots)
+
+                // Check to see if we need to show the next dots too
+                if (_draw.userOptions.showNextSet && drawInfo[curSet + 1].dots !== undefined) {
+                    let nextSetData = drawInfo[curSet + 1].dots
+                    drawDots(_draw, nextSetData);
+                }
 
                 if (hoverDot.x !== undefined) {
                     drawUserDialogue(hoverDot.x, hoverDot.y, hoverDot);
