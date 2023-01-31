@@ -27,7 +27,7 @@ const Viewer = (props) => {
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
-		"showNextSet": false, "drawPath": false,
+		"showNextSet": false, "showLastSet": false, "drawPath": false,
 		"highlightSection": false,
 		"useSectionColors": true,
 		"showMovementBrackets": false, "highlightUser": null,
@@ -260,11 +260,12 @@ const Viewer = (props) => {
 		for (let x = 0; x < sets.length; x++) {
 			if (sets[x]["set_numb"] === event.target.value) {
 				setCurSet(x);
+				setCurSetNumb(sets[x]["set_numb"]);
+				setCurSetInfo(sets[x]);
 				// setCurSetNumb(numb);
 				return;
 			}
 		}
-		setCurSetNumb(sets[curSet]["set_numb"]);
 		setInput.current.blur();
 	}
 

@@ -1,6 +1,7 @@
 import React, {useRef, useEffect, useState} from 'react'
 
 const FUTURE_DOT_COLOR = "rgb(0, 100, 0)";
+const PREVIOUS_DOT_COLOR = "rgb(100, 0, 0)";
 const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
 const CURRENT_DOT_HIGHLIGHT_COLOR = "rgba(0, 0, 255, 0.4)";  // This is the value given if another thing is highlighted
 const HIGHLIGHT_USER_COLOR = "rgb(255, 0, 0)";
@@ -374,6 +375,94 @@ const Canvas = props => {
             context.closePath();
         };
 
+        const drawHighlightedPoint = (data, curSetIndex, curUserIndex, userOptions, color, userLabel) => {
+            // This will draw the previous, current, and next points
+            // As well as draw paths if selected
+
+            let size = canvas.height * 0.012;
+
+            let preDef = data[curSetIndex - 1]  != undefined;
+            let curDef = data[curSetIndex]      != undefined;
+            let nextDef = data[curSetIndex + 1] != undefined;
+
+            // Draw Path between previous and current
+            if (preDef && curDef && userOptions.drawPath && userOptions.showLastSet) {
+                let x0 = data[curSetIndex - 1].dots[curUserIndex].x
+                let y0 = data[curSetIndex - 1].dots[curUserIndex].y
+
+                let x1 = data[curSetIndex].dots[curUserIndex].x
+                let y1 = data[curSetIndex].dots[curUserIndex].y
+
+                context.beginPath();
+                context.moveTo(x0, y0);
+                context.lineTo(x1, y1);
+                context.strokeStyle = PREVIOUS_DOT_COLOR;
+                context.lineWidth = 1;
+                context.stroke();
+                context.closePath();
+            }
+
+            // Draw Path between next and current
+            if (nextDef && curDef && userOptions.drawPath && userOptions.showNextSet) {
+                let x0 = data[curSetIndex + 1].dots[curUserIndex].x
+                let y0 = data[curSetIndex + 1].dots[curUserIndex].y
+
+                let x1 = data[curSetIndex].dots[curUserIndex].x
+                let y1 = data[curSetIndex].dots[curUserIndex].y
+
+                context.beginPath();
+                context.moveTo(x0, y0);
+                context.lineTo(x1, y1);
+                context.strokeStyle = FUTURE_DOT_COLOR;
+                context.lineWidth = 1;
+                context.stroke();
+                context.closePath();
+            }
+
+            // Previous point
+            if (preDef && userOptions.showLastSet) {
+                let x = data[curSetIndex - 1].dots[curUserIndex].x
+                let y = data[curSetIndex - 1].dots[curUserIndex].y
+
+                context.beginPath();
+                context.fillStyle = PREVIOUS_DOT_COLOR;
+                context.arc(x, y, size / 2, 0, 2 * Math.PI);
+                context.fill();
+                context.closePath();
+            }
+
+            // Center point
+            if (curDef) {
+                let x = data[curSetIndex].dots[curUserIndex].x
+                let y = data[curSetIndex].dots[curUserIndex].y
+
+                context.beginPath();
+                context.fillStyle = color;
+                context.arc(x, y, size / 2, 0, 2 * Math.PI);
+                context.fill();
+                context.closePath();
+    
+                context.beginPath();
+                context.font = canvas.height * 0.015 + 'px Arial Black';
+                context.textBaseline = "middle";
+                context.textAlign = "center";
+                context.fillText(userLabel, x, y + canvas.height * 0.015);
+                context.closePath();
+            }
+
+            // Next point
+            if (nextDef && userOptions.showNextSet) {
+                let x = data[curSetIndex + 1].dots[curUserIndex].x
+                let y = data[curSetIndex + 1].dots[curUserIndex].y
+
+                context.beginPath();
+                context.fillStyle = FUTURE_DOT_COLOR;
+                context.rect(x - size / 2, y - size / 2, size, size);
+                context.fill();
+                context.closePath();
+            }
+        }
+
         const drawPointAnimation = (x0, y0, x1, y1, counts, count, color, userLabel) => {
             // y = mx + b
             if (x1 - x0 !== 0) {
@@ -729,9 +818,10 @@ const Canvas = props => {
         }
 
         // Takes data from API and draws them, used to condense the render method
-        const drawDots = (_draw, curSetData) => {
+        const drawDots = (_draw, data, index) => {
             let newDots = [];
             let drawBracket = {useX:null, useY:null, dot:null};
+            let curSetData = data[index].dots;
 
             for (let x = 0; x < curSetData.length; x++) {
                 const dot = curSetData[x];
@@ -752,7 +842,8 @@ const Canvas = props => {
                         }
 
                         // Draw the dot with the Highlighted Color
-                        drawPoint(useX, useY, HIGHLIGHT_USER_COLOR, dot.userLabel);
+                        let color = getDotColor(dot, true, userOptions.useSectionColors)
+                        drawHighlightedPoint(data, index, x, userOptions, color, dot.userLabel)
                     }
                     
                     // no change needed
@@ -838,11 +929,6 @@ const Canvas = props => {
                 for (let x = 0; x < Math.min(curSetData.length, lastSetData.length); x++) {
                     const dot = curSetData[x];
                     const lastDot = lastSetData[x];
-
-                    let color = "rgb(" + dot["r"] + ", " + dot["g"] + ", " + dot["b"] + ")";
-                    if (!_draw.userOptions.useSectionColors) { color = CURRENT_DOT_COLOR; }
-                    // drawPoint(dot["curX"], dot["curY"], color, dot["userLabel"]);
-                    // drawPoint(dot["nextX"], dot["nextY"], FUTURE_DOT_COLOR, "");
                     
                     if (dot["userLabel"] !== lastDot["userLabel"]) { 
                         console.log("FAIL! Labels don't match between sets in animation. Attempting to fix."); 
@@ -862,20 +948,9 @@ const Canvas = props => {
                             );
                         }
 
-                        // Check to see if the other users need to be dimmed
-                        else if (userOptions.dimOtherUsers) {
-                            color = "rgb(" + (dot.r / 2) + ", " + (dot.g / 2) + ", " + (dot.b / 2) + ")";
-
-                            drawPointAnimation(
-                                lastDot["x"], lastDot["y"], 
-                                dot["x"], dot["y"], 
-                                counts, curTime, 
-                                color, dot["userLabel"]
-                            );
-                        }
-
                         // No change needed
                         else {
+                            let color = getDotColor(dot, !userOptions.dimOtherUsers, userOptions.useSectionColors);
                             drawPointAnimation(
                                 lastDot["x"], lastDot["y"], 
                                 dot["x"], dot["y"], 
@@ -887,6 +962,7 @@ const Canvas = props => {
 
                     // No change needed
                     else {
+                        let color = getDotColor(dot, true, userOptions.useSectionColors);
                         drawPointAnimation(
                             lastDot["x"], lastDot["y"], 
                             dot["x"], dot["y"], 
@@ -951,15 +1027,13 @@ const Canvas = props => {
 
                 if (hadResize) { setHadResize(false); }
 
-                let curSetData = data[curSet].dots;
-
-                let newDots = drawDots(_draw, curSetData);
+                let newDots = drawDots(_draw, data, curSet);
                 setDots(newDots)
 
                 // Check to see if we need to show the next dots too
                 if (_draw.userOptions.showNextSet && data[curSet + 1].dots !== undefined) {
                     let nextSetData = data[curSet + 1].dots
-                    drawDots(_draw, nextSetData);
+                    // drawDots(_draw, nextSetData);
                 }
 
                 if (hoverDot.x !== undefined) {
@@ -969,15 +1043,13 @@ const Canvas = props => {
 
             // If it isn't a new frame, used a buffered frame. This is so we don't set vars and overwrite things.
             else if (drawInfo.length > curSet && drawInfo[curSet] !== undefined)  {
-                let curSetData = drawInfo[curSet].dots;
-
-                let newDots = drawDots(_draw, curSetData);
+                let newDots = drawDots(_draw, drawInfo, curSet);
                 setDots(newDots)
 
                 // Check to see if we need to show the next dots too
                 if (_draw.userOptions.showNextSet && drawInfo[curSet + 1].dots !== undefined) {
                     let nextSetData = drawInfo[curSet + 1].dots
-                    drawDots(_draw, nextSetData);
+                    // drawDots(_draw, nextSetData);
                 }
 
                 if (hoverDot.x !== undefined) {

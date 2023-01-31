@@ -14,8 +14,12 @@ const OptionsDropDown = (props) => {
     Highlight User Dropdown
     */
 
-    const setShowNewSet = (value) => {
+    const setShowNextSet = (value) => {
         setUserOptions({...userOptions,  "showNextSet": value});
+    }
+
+    const setShowLastSet = (value) => {
+        setUserOptions({...userOptions,  "showLastSet": value});
     }
 
     const setDrawPaths = (value) => {
@@ -152,7 +156,7 @@ const OptionsDropDown = (props) => {
                                     className="form-check-input" 
                                     type="checkbox" 
                                     value="" 
-                                    onChange={() => setShowNewSet(!userOptions.showNextSet)} 
+                                    onChange={() => setShowNextSet(!userOptions.showNextSet)} 
                                     checked={userOptions.showNextSet} 
                                     disabled={userOptions.highlightUser === null}
                                 />
@@ -165,12 +169,25 @@ const OptionsDropDown = (props) => {
                                     className="form-check-input" 
                                     type="checkbox" 
                                     value="" 
-                                    onChange={() => setDrawPaths(!userOptions.drawPath)} 
-                                    checked={userOptions.drawPath} 
+                                    onChange={() => setShowLastSet(!userOptions.showLastSet)} 
+                                    checked={userOptions.showLastSet} 
                                     disabled={userOptions.highlightUser === null}
                                 />
+                                <label className="form-check-label ">
+                                    Show Last Set
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    onChange={() => setDrawPaths(!userOptions.drawPath)} 
+                                    checked={userOptions.drawPath} 
+                                    disabled={userOptions.highlightUser === null || !userOptions.showLastSet && !userOptions.showNextSet}
+                                />
                                 <label className="form-check-label">
-                                    Draw Path
+                                    Draw Paths
                                 </label>
                             </div>
                             <div className="form-check">
