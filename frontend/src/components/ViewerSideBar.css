@@ -1,0 +1,74 @@
+.sideBarClass {
+    width: 20vw;
+    height: calc(var(--app-height) * 0.94);
+    border-style: solid;
+    border-width: 5px;
+}
+
+.invisibleInput {
+    font-size: 7vh;
+    font-weight: bold;
+    width: 80%;
+    text-align: center;
+    border: none;
+    height: 10vh;
+}
+
+.spinnerSuspender {
+    height: 10vh;
+    width:80%;
+}
+
+.viewerSideBarHeader {
+    font-size: 4vh;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    border: none;
+    margin-bottom: 0;
+}
+
+.centerText {
+    text-align: center;
+    font-size: 3vh;
+    width: 100%;
+    margin-bottom: 0;
+    overflow: hidden;
+}
+
+.customViewerSideBarBtn {
+    background: none;
+    border: none; 
+    font-size: 2rem; 
+}
+
+.forwardBtn {
+    color:#03542e;
+}
+
+.forwardBtn:hover {
+    color:#01361d;
+}
+
+.backwardBtn {
+    color:#0320a1;
+}
+
+.backwardBtn:hover {
+    color:#01156b;
+}
+
+.customViewerPlayPauseBtn {
+    font-size: 100%!important;
+}
+
+.mediaControlRow {
+    height: 20%;
+    width: 80%;
+    background-color: #ddd;
+    border: none;
+    color: black;
+    cursor: default;
+    border-radius: 4vh;
+  
+}

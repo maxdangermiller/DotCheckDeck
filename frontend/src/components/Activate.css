@@ -1,0 +1,55 @@
+/* @import '~mdb-ui-kit/css/mdb.min.css'; */
+
+.gradient-custom {
+    /* fallback for old browsers */
+    background: #6a11cb;
+
+    /* Chrome 10-25, Safari 5.1-6 */
+    background: -webkit-linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
+
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
+
+    height: 100vh;
+}
+
+.customAlert {
+    position: absolute;
+    bottom: 0;
+}
+
+.customInput {
+    width: 100%;
+    border-width: 0.125rem !important;
+}
+
+.customCardBody {
+    height: 60%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-top: 1vh;
+    padding-right: 1vw;
+    padding-left: 1vw;
+    margin: 0;
+}
+
+.customCardBody::-webkit-scrollbar {
+    width: 1vw;
+}
+  
+/* Track */
+.customCardBody::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px white; 
+    border-radius: 0.5vw;
+}
+   
+/* Handle */
+.customCardBody::-webkit-scrollbar-thumb {
+    background: rgba(0, 94, 255, 0.5); 
+    border-radius: 10px;
+}
+  
+/* Handle on hover */
+.customCardBody::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 94, 255, 0.8); 
+}
