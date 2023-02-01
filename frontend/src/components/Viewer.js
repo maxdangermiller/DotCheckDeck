@@ -228,6 +228,11 @@ const Viewer = (props) => {
 		}
 	}, [audioPlaying])
 
+	// Automatically Grab The Users Info and select them for highlighting
+	useEffect(() => {
+		setUserOptions({...userOptions,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
+	}, [props.userData])
+
 	// This is passed to the Canvas and is called to get the data for drawing
 	const draw = () => {
 		if (audioPlaying) { getAudioSyncedSet(); }

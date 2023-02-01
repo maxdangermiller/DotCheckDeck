@@ -99,7 +99,7 @@ function App() {
 					<Route path="/" exact element={
 						token === "" || schoolCode === ""
 						? <Navigate to="/login" />
-						: <Viewer token={token} schoolCode={schoolCode}/>
+						: <Viewer token={token} schoolCode={schoolCode} userData={userData}/>
 					} />
 					<Route path="/activate" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""

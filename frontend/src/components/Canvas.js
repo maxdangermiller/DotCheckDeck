@@ -1,12 +1,12 @@
 import React, {useRef, useEffect, useState} from 'react'
 
-const FUTURE_DOT_COLOR = "rgb(0, 100, 0)";
-const PREVIOUS_DOT_COLOR = "rgb(100, 0, 0)";
+const FUTURE_DOT_COLOR = "rgba(0, 100, 0, 0.8)";
+const PREVIOUS_DOT_COLOR = "rgba(100, 0, 0, 0.8)";
 const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
 const CURRENT_DOT_HIGHLIGHT_COLOR = "rgba(0, 0, 255, 0.4)";  // This is the value given if another thing is highlighted
 const HIGHLIGHT_USER_COLOR = "rgb(255, 0, 0)";
 
-const MAX_ZOOM = 3;
+const MAX_ZOOM = 4;
 const MIN_ZOOM = 0.9;
 const SCROLL_SENSITIVITY = 0.0005;
 
@@ -381,9 +381,9 @@ const Canvas = props => {
 
             let size = canvas.height * 0.012;
 
-            let preDef = data[curSetIndex - 1]  != undefined;
-            let curDef = data[curSetIndex]      != undefined;
-            let nextDef = data[curSetIndex + 1] != undefined;
+            let preDef = data[curSetIndex - 1]  != undefined && data[curSetIndex - 1].dots[curUserIndex]    != undefined;
+            let curDef = data[curSetIndex]      != undefined && data[curSetIndex].dots[curUserIndex]        != undefined;
+            let nextDef = data[curSetIndex + 1] != undefined && data[curSetIndex + 1].dots[curUserIndex]    != undefined;
 
             // Draw Path between previous and current
             if (preDef && curDef && userOptions.drawPath && userOptions.showLastSet) {
@@ -940,11 +940,13 @@ const Canvas = props => {
                     if (_draw.userOptions.highlightUser !== null) {
                         // Check if this dot is the highlighted User
                         if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                            let color = getDotColor(dot, true, userOptions.useSectionColors)
+                        
                             drawPointAnimation(
                                 lastDot["x"], lastDot["y"], 
                                 dot["x"], dot["y"], 
                                 counts, curTime, 
-                                HIGHLIGHT_USER_COLOR, dot["userLabel"]
+                                color, dot["userLabel"]
                             );
                         }
 

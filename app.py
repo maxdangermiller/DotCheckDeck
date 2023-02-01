@@ -288,17 +288,9 @@ class SetSchema(ma.SQLAlchemyAutoSchema):
 	setNames = ma.Nested(SetNameSchema)
 
 
-class UserSchema(ma.SQLAlchemyAutoSchema):
+class ShowSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
-		"""
-		fields = (
-			"id", "symbol", "label", 
-			"firstName", "lastName", "email", 
-			"is_admin", "is_section_leader", "section"
-			"activated_date", "created_date", "last_updated"
-		)
-		"""
-		model = User
+		model = Set
 		include_fk = True
 		load_instance = True
 
@@ -318,6 +310,26 @@ class ShowUserSchema(ma.SQLAlchemyAutoSchema):
 		load_instance = True
 
 
+class UserSchema(ma.SQLAlchemyAutoSchema):
+	class Meta:
+		"""
+		fields = (
+			"id", "symbol", "label", 
+			"firstName", "lastName", "email", 
+			"is_admin", "is_section_leader", "section"
+			"activated_date", "created_date", "last_updated"
+		)
+		"""
+		model = User
+		include_fk = True
+		include_relationships = True
+		load_instance = True
+
+		exclude = ("password_hash",)
+	
+	show_users = ma.Nested(ShowUserSchema, many=True)
+
+
 dot_schema = DotSchema()
 dots_schema = DotSchema(many=True)
 set_schema = SetSchema()
@@ -326,6 +338,8 @@ user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 show_user_schema = ShowUserSchema()
 show_users_schema = ShowUserSchema(many=True)
+show_schema = ShowSchema()
+shows_schema = ShowSchema(many=True)
 
 
 admin.add_view(ModelView(Dot, db.session))
@@ -383,6 +397,21 @@ def refresh_expiring_jwts():
 	return jsonify(access_token=access_token)
 
 
+def mergeJsonDicts(a, b):
+	merged_dict = {}
+
+	for key, val in a.items():
+		merged_dict[key] = val
+
+	for key, val in b.items():
+		if key not in merged_dict:
+			merged_dict[key] = val
+
+	# string dump of the merged dict
+	return merged_dict
+
+
+
 @app.route('/get-token', methods=["POST"])
 @jwt_required(refresh=True)
 def get_jwt():
@@ -391,18 +420,26 @@ def get_jwt():
 		access_token = create_access_token(identity=get_jwt_identity())
 		user = User.query.filter_by(email=identity).first()
 
-		userString = ""
+		userString = {}
+		showString = {}
 		schoolCode = ""
 		if user is not None:
 			userString = user_schema.dump(user)
 
 			userSchool = School.query.filter(School.id == user.school_id).first()
 			if userSchool is not None:
-				userShow = Show.query.filter(Show.school_id == userSchool.id).first()
+				userShow = Show.query.filter(Show.school_id == userSchool.id).first() # TODO: Change from defaulting with the first show
+
 				if userShow is not None:
 					schoolCode = userShow.code
 
-		response = {"access_token": access_token, "user": userString, "school_code": schoolCode}
+					showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
+					if showUser is not None:
+						showString = show_user_schema.dump(showUser)
+	
+		print(mergeJsonDicts(userString, showString))
+
+		response = {"access_token": access_token, "user": mergeJsonDicts(userString, showString), "school_code": schoolCode}
 		# print(response)
 		return response, 202
 	except (RuntimeError, KeyError):
@@ -479,8 +516,6 @@ class SetListResource(Resource):
 			schema["setName"] = setName # TODO: Refactor to "set_name"
 			
 			setsOutput.append(schema)
-
-		print(setsOutput)
 
 		return setsOutput
 
@@ -559,7 +594,6 @@ class SetUpUserResource(Resource):
 		# Find users that fit the params,
 		# it's possible for multiple users to have the same label so we have to do this for now.
 		showUsers = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.label == request.json['label']).all()
-		print(showUsers)
 
 		if len(showUsers) > 1:
 			return "Multiple Users found for that query, INTERNAL SERVER ERROR!", 402
@@ -803,7 +837,6 @@ def addAllDataFromPDF(file):
 		school = School.query.first()
 		show = Show.query.filter(Show.school_id == school.id).first()
 
-	# print(stuff[34])
 	for dotSheet in stuff:
 		firstShowUser = ShowUser.query.filter(ShowUser.label == dotSheet.label, ShowUser.show_id == show.id).first()
 

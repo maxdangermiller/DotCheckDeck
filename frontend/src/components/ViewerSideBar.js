@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './ViewerSideBar.css';
 import OptionsDropDown from './ViewerSideBarComponents/OptionsDropDown';
+import OptionsModal from './ViewerSideBarComponents/OptionsModal';
 import AudioProgressBar from './AdminComponents/AudioProgressBar';
 import Spinner from './utils/Spinner';
 
@@ -15,6 +16,8 @@ const ViewerSideBar = (props) => {
         audioPlaying, setAudioPlaying, audio, 
         curPlayTime, setCurPlayTime, ...rest 
     } = props;
+
+    const [showSettings, setShowSettings] = useState(false);
 
     let setName = data.length > curSet && data[curSet] !== undefined ? data[curSet]["setName"] : "";
 
@@ -54,10 +57,18 @@ const ViewerSideBar = (props) => {
                 }
                 
             </div>
-            <OptionsDropDown userOptions={userOptions} setUserOptions={setUserOptions} data={data} curSet={curSet}/>
+
+            <OptionsModal
+                show = {showSettings}
+                setShow = {setShowSettings}
+                userOptions={userOptions}
+                setUserOptions={setUserOptions} 
+                data={data} 
+                curSet={curSet}
+            />
 
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
-                <div className='mb-2 flex-row justify-content-center d-flex align-items-center'>
+                <div className='flex-row justify-content-center d-flex align-items-center' style={{height: '30%'}}>
                     <AudioProgressBar 
                         curPlayTime={curPlayTime} 
                         setCurPlayTime={setCurPlayTime} 
@@ -66,7 +77,7 @@ const ViewerSideBar = (props) => {
                         setIsPlaying={setAudioPlaying}
                     />
                 </div>
-                <div className='mb-2 flex-row justify-content-center d-flex align-items-center'>
+                <div className='flex-row justify-content-center d-flex align-items-center'>
 
                     <button 
                         type="button" 
@@ -85,6 +96,8 @@ const ViewerSideBar = (props) => {
                     >&#xf0a9;</button>
                 </div>
             </div>
+
+            <div className='btn btn-success' onClick={(e) => setShowSettings(!showSettings)}>Settings</div>
         </div>
     );
 };
