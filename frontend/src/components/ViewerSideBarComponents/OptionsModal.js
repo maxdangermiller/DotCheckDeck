@@ -82,7 +82,7 @@ const OptionsModal = (props) => {
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>
-                <Modal.Title>Modal heading</Modal.Title>
+                <Modal.Title>Settings</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <div className="form-check">

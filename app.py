@@ -373,17 +373,27 @@ def create_token():
 	access_token = create_access_token(identity=email)
 	refresh_token = create_refresh_token(identity=email)
 
-	userSchool = School.query.filter(School.id == user.school_id).first()
+	userString = {}
+	showString = {}
 	schoolCode = ""
-	if userSchool is not None:
-		userShow = Show.query.filter(Show.school_id == userSchool.id).first()
-		if userShow is not None:
-			schoolCode = userShow.code
+	if user is not None:
+		userString = user_schema.dump(user)
+
+		userSchool = School.query.filter(School.id == user.school_id).first()
+		if userSchool is not None:
+			userShow = Show.query.filter(Show.school_id == userSchool.id).first() # TODO: Change from defaulting with the first show
+
+			if userShow is not None:
+				schoolCode = userShow.code
+
+				showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
+				if showUser is not None:
+					showString = show_user_schema.dump(showUser)
 
 	response = {
 		"access_token": access_token, 
 		"refresh_token": refresh_token, 
-		"user": user_schema.dump(user),
+		"user": mergeJsonDicts(userString, showString),
 		"school_code": schoolCode
 	}
 	return response
@@ -436,8 +446,6 @@ def get_jwt():
 					showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
 					if showUser is not None:
 						showString = show_user_schema.dump(showUser)
-	
-		print(mergeJsonDicts(userString, showString))
 
 		response = {"access_token": access_token, "user": mergeJsonDicts(userString, showString), "school_code": schoolCode}
 		# print(response)
@@ -808,12 +816,31 @@ class UpdateSetsResource(Resource):
 		return "Updated Successfully", 201
 
 
+class GetUsersResource(Resource):
+	@jwt_required()
+	def get(self):
+		identity = get_jwt_identity()
+		
+		activeUser = User.query.filter(User.email == identity).first()
+		school = School.query.filter(School.id == activeUser.school_id).first()
+		users = User.query.filter(User.school_id == activeUser.school_id).all()
+		
+		activeShowUser = ShowUser.query.filter(ShowUser.user_id == activeUser.id).first() # TODO: Change the default show
+		show = Show.query.filter(Show.id == activeShowUser.show_id).first()
+
+		return users_schema.dump(users)
+
+
+
+
+
 api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
 api.add_resource(UpdateSetResource, '/update-set')
 api.add_resource(UpdateSetsResource, '/update-sets')
+api.add_resource(GetUsersResource, '/users/get-all')
 
 
 # For use to build database

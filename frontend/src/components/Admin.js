@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AdminAccordionItem from './AdminComponents/AdminAccordionItem';
+import AdminUsersPage from './AdminComponents/AdminUsersPage';
 
 import './Admin.css';
 
@@ -7,6 +8,7 @@ const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostna
 
 const Admin = (props) => {
     const [accordionState, setAccordionState] = useState([]);
+    const [menuIndex, setMenuIndex] = useState(0);
 
     const { schoolCode, token, ...rest } = props
 
@@ -48,22 +50,36 @@ const Admin = (props) => {
 		);
 	}, [])
 
+    const getActiveClassName = (target) => {
+        if (menuIndex == target) {
+            return "nav-link active";
+        }
+        return "nav-link";
+    }
+
+
     return(
         <div className="flex-column justify-content-center d-flex align-items-center adminFullScreen">
             <h1 className="customHeader">Admin</h1>
-            <div className="overflow-auto customOverflow">
-                <div className="accordion customAccordion">
+
+            <div className="flex-row justify-content-center d-flex align-items-center adminContentHolder">
+                <div className="adminContentSideBar">
+                    <nav className="h-100 flex-column align-items-stretch pe-4 border-end">
+                        <nav className="nav nav-pills flex-column">
+                            <a className={getActiveClassName(0)} onClick={(e) => setMenuIndex(0)}>Users</a>
+                            <a className={getActiveClassName(1)} onClick={(e) => setMenuIndex(1)}>Sections</a>
+                            <a className={getActiveClassName(2)} onClick={(e) => setMenuIndex(2)}>Set Names</a>
+                            <a className={getActiveClassName(3)} onClick={(e) => setMenuIndex(3)}>Show Settings</a>
+                            <a className={getActiveClassName(4)} onClick={(e) => setMenuIndex(4)}>School Settings</a>
+                           
+                        </nav>
+                    </nav>
+                </div>
+                <div className="adminContentPage">
                     {
-                        accordionState.map((accordionItem, index) => 
-                            <AdminAccordionItem 
-                                accordionItem={accordionItem} 
-                                index={index} 
-                                key={accordionItem.id}
-                                accordionState={accordionState}
-                                setAccordionState={setAccordionState}
-                                token={token}
-                            />
-                        )
+                        menuIndex === 0 ?
+                        <AdminUsersPage token={token}/>
+                        : null
                     }
                 </div>
             </div>

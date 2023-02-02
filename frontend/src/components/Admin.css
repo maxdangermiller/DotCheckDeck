@@ -5,6 +5,24 @@
     
 }
 
+.adminContentHolder {
+    width: 100vw;
+    height: 80vh;
+    overflow: hidden!important;
+}
+
+.adminContentSideBar {
+    width: 30%;
+    height: 100%;
+    overflow: auto!important;
+}
+
+.adminContentPage {
+    width: 70%;
+    height: 100%;
+    overflow: auto!important;
+}
+
 .customHeader {
     font-size: min(8vw, 8vh);
     font-family: Arial Black;
@@ -41,4 +59,13 @@
 /* Handle on hover */
 .customOverflow::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 94, 255, 0.8); 
+}
+
+.adminFullSize {
+    height: 100%;
+    width: 100%;
+}
+
+.adminTextAlignCenter {
+    text-align: center;
 }
