@@ -21,14 +21,14 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminUsersPage = (props) => {
+    const {token, users, sections, ...rest} = props;
 
     const [showEditUser, setShowEditUser] = useState(false);
     const [showEditShowUser, setShowEditShowUser] = useState(false);
     const [editUserData, setEditUserData] = useState({});
     const [sortBy, setSortBy] = useState(0);
-    const [sortDirection, setSortDirection] = useState(SORT_DOWN);
+    const [sortDirection, setSortDirection] = useState(SORT_UP);
 
-    const {token, users, sections, ...rest} = props;
 
     const dateTimeFormat = (dateTime) => {
         if (dateTime == null) { return ""; }
@@ -127,9 +127,6 @@ const AdminUsersPage = (props) => {
             let keyB = b[useKey] !== null ? b[useKey] : "";
 
             let oppDir = sortDirection === SORT_UP ? SORT_DOWN : SORT_UP;
-
-            console.log(keyA, keyB)
-
             if (keyA < keyB) return oppDir;
             if (keyA > keyB) return sortDirection;
 

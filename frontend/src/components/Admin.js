@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AdminAccordionItem from './AdminComponents/AdminAccordionItem';
 import AdminUsersPage from './AdminComponents/UserPage/AdminUsersPage';
+import AdminSectionsPage from './AdminComponents/SectionPage/AdminSectionsPage';
 
 import './Admin.css';
 
@@ -17,7 +18,7 @@ const Admin = (props) => {
             return (<AdminUsersPage token={token} users={data.users} sections={data.sections}/>);
         }
         if (menuIndex === 1) {
-            // return ();
+            return (<AdminSectionsPage token={token} sections={data.sections}/>);
         }
         return null;
     }
