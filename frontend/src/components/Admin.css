@@ -12,13 +12,13 @@
 }
 
 .adminContentSideBar {
-    width: 30%;
+    width: 20%;
     height: 100%;
     overflow: auto!important;
 }
 
 .adminContentPage {
-    width: 70%;
+    width: 80%;
     height: 100%;
     overflow: auto!important;
 }

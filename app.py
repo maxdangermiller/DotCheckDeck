@@ -831,6 +831,30 @@ class UpdateSetsResource(Resource):
 class UpdateUserResource(Resource):
 	@jwt_required()
 	def post(self):
+		"""
+		{
+			"email":"max@benmiller.com",
+			"last_name":"Miller",
+			"activated_date":"2023-01-27T14:07:42",
+			"school_id":1,
+			"show_users":[{
+				"label":"d7",
+				"symbol":"!",
+				"school_id":1,
+				"show_id":1,
+				"user_id":71,
+				"id":71,
+				"section_id":5,
+				"is_section_leader":true
+			}],
+			"id":71,
+			"last_updated":"2023-01-27T14:07:43",
+			"is_admin":true,
+			"school":1,
+			"first_name":"Max",
+			"created_date":"2023-01-27T13:49:35"
+		}
+		"""
 		identity = get_jwt_identity()
 		
 		activeUser = User.query.filter(User.email == identity).first()
@@ -843,7 +867,6 @@ class UpdateUserResource(Resource):
 		parser.add_argument('email', type=str, default=None, required=True)
 		parser.add_argument('first_name', type=str, default=None, required=True)
 		parser.add_argument('last_name', type=str, default=None, required=True)
-		parser.add_argument('show_users', type=list, default=None, required=True)
 		args = parser.parse_args()
 		
 		user = User.query.filter(User.id == args.get('id')).first()
@@ -855,12 +878,15 @@ class UpdateUserResource(Resource):
 		user.first_name = args.get('first_name')
 		user.last_name = args.get('last_name')
 
-		for show in args.get('show_users'):
-			showUser = ShowUser.query.filter(ShowUser.id == show.id).first()
+		for show in json.loads(request.data)["show_users"]:
+			showUser = ShowUser.query.filter(ShowUser.id == show["id"]).first()
 
-			showUser.label = show.label
-			showUser.symbol = show.symbol
-			showUser.is_section_leader = show.is_section_leader
+			showUser.label = show["label"]
+			showUser.symbol = show["symbol"]
+			showUser.is_section_leader = show["is_section_leader"]
+			showUser.section_id = show["section_id"]
+
+			db.session.commit()
 		
 		db.session.commit()
 
@@ -915,7 +941,7 @@ api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
 api.add_resource(UpdateSetResource, '/update-set')
 api.add_resource(UpdateSetsResource, '/update-sets')
-api.add_resource(UsersResource, '/users')
+api.add_resource(UpdateUserResource, '/users')
 api.add_resource(GetDatabaseResource, '/get-all')
 
 

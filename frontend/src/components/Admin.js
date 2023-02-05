@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AdminAccordionItem from './AdminComponents/AdminAccordionItem';
-import AdminUsersPage from './AdminComponents/AdminUsersPage';
+import AdminUsersPage from './AdminComponents/UserPage/AdminUsersPage';
 
 import './Admin.css';
 
@@ -11,6 +11,16 @@ const Admin = (props) => {
     const [menuIndex, setMenuIndex] = useState(0);
 
     const { schoolCode, token, ...rest } = props
+
+    const getActivePage = () => {
+        if (menuIndex === 0) {
+            return (<AdminUsersPage token={token} users={data.users} sections={data.sections}/>);
+        }
+        if (menuIndex === 1) {
+            // return ();
+        }
+        return null;
+    }
 
     useEffect(() => {
 		fetch(WINDOW_LOCATION + "/get-all?token=" + token)
@@ -55,11 +65,7 @@ const Admin = (props) => {
                     </nav>
                 </div>
                 <div className="adminContentPage">
-                    {
-                        menuIndex === 0 ?
-                        <AdminUsersPage token={token} users={data.users} sections={data.sections}/>
-                        : null
-                    }
+                    {getActivePage()}
                 </div>
             </div>
         </div>

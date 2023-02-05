@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import './ViewerSideBar.css';
 import OptionsDropDown from './ViewerSideBarComponents/OptionsDropDown';
 import OptionsModal from './ViewerSideBarComponents/OptionsModal';
-import AudioProgressBar from './AdminComponents/AudioProgressBar';
+import AudioProgressBar from './AdminComponents/TimelinePage/AudioProgressBar';
 import Spinner from './utils/Spinner';
 
 // STILL WORKING ON THIS! NOT TESTED YET!

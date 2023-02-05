@@ -34,6 +34,7 @@ const Login = (props) => {
 			props.setToken(response.data.access_token);
 			props.setRefToken(response.data.refresh_token);
 			props.setSchoolCode(response.data.school_code);
+			props.setUserData(response.data.user);
 			// window.location.href = "/editor";
 		}).catch((error) => {
 			if (error.response) {

@@ -33,13 +33,12 @@ const AdminEditShowUser = (props) => {
     }
 
     const findSectionNameByID = (id) => {
-        console.log(sections);
         for (let i = 0; i < sections.length; i++) {
             if (sections[i].id === id) {
-                return sections[i].name;
+                return {id: sections[i].id, label: sections[i].name};
             }
         }
-        return sections[0].name;
+        return {id: sections[0].id, label: sections[0].name};
     }
 
     const fixUserOptions = (options) => {

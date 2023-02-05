@@ -1,7 +1,5 @@
-import React, { useRef, useEffect, useState} from 'react';
-import { TextField } from '@mui/material';
+import React, { useState} from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import axios from "axios";
 import './Activate.css'
 
 import SchoolCodePage from './ActivateFormPages/SchoolCodePage';
@@ -111,7 +109,7 @@ const Activate = (props) => {
             setCurPage(2);
         } else if (curPage === 2 && userData != null) {
             setCurPage(3);
-        } else if (curPage == 3) {
+        } else if (curPage === 3) {
             const errors = registrationData.errors;
             if (!errors.first_name_error && !errors.last_name_error && !errors.email_error && !errors.password_errors.any) {
                 // NO ERRORS; SEND REQUEST

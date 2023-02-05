@@ -7,7 +7,7 @@ import useToken from './useToken';
 import Login from './Login';
 import Nav from './Nav';
 import Admin from './Admin';
-import AdminTimeline from './AdminComponents/AdminTimeline';
+import AdminTimeline from './AdminComponents/TimelinePage/AdminTimeline';
 
 import axios from "axios";
 
@@ -109,7 +109,12 @@ function App() {
 					<Route path="/login" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
 						? <Navigate to="/" />
-						: <Login setToken={setToken} setRefToken={setRefToken} setSchoolCode={setSchoolCode}/>
+						: <Login 
+							setToken={setToken} 
+							setRefToken={setRefToken} 
+							setSchoolCode={setSchoolCode} 
+							setUserData={setUserData}
+						/>
 					} />
 					<Route path="/admin" exact element={
 						token === "" || token === undefined || !isAdminAuthorized()
