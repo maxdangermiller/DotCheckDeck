@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Table from 'react-bootstrap/Table';
 import Boolean from './Boolean';
 import AdminEditUser from './AdminEditUser';
+import AdminEditShowUser from './AdminEditShowUser';
 
 const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 
@@ -9,28 +10,11 @@ const CELL_STYLE = "flex-row justify-content-center d-flex align-items-center ad
 
 const AdminUsersPage = (props) => {
 
-    const [users, setUsers] = useState([]);
-    const [show, setShow] = useState(false);
+    const [showEditUser, setShowEditUser] = useState(false);
+    const [showEditShowUser, setShowEditShowUser] = useState(false);
     const [editUserData, setEditUserData] = useState({});
 
-    const {token, ...rest} = props;
-
-    useEffect(() => {
-		fetch(WINDOW_LOCATION + "/users/get-all?token=" + token)
-			.then(res => res.json())
-			.then(
-				(result) => {
-                    console.log(result);
-                    setUsers(result);
-				},
-				// Note: it's important to handle errors here
-				// instead of a catch() block so that we don't swallow
-				// exceptions from actual bugs in components.
-				(error) => {
-					console.log(error);
-				}
-		);
-	}, [])
+    const {token, users, sections, ...rest} = props;
 
     const dateTimeFormat = (dateTime) => {
         if (dateTime == null) { return ""; }
@@ -39,13 +23,18 @@ const AdminUsersPage = (props) => {
         return date.toDateString();
     }
 
-    const showEditUser = (user) => {
-        setEditUserData(user);
-        setShow(true);
+    const openEditUser = (user) => {
+        // "JSON.parse(JSON.stringify(person))" Are there for deep copying 
+        setEditUserData(JSON.parse(JSON.stringify(user)));
+        setShowEditUser(true);
+        setShowEditShowUser(false);
     }
 
-    const showEditShowUser = (user) => {
-
+    const openEditShowUser = (user) => {
+        // "JSON.parse(JSON.stringify(person))" Are there for deep copying 
+        setEditUserData(JSON.parse(JSON.stringify(user)));
+        setShowEditUser(false);
+        setShowEditShowUser(true);
     }
 
     const getAllShowUserLabels = (user) => {
@@ -59,22 +48,26 @@ const AdminUsersPage = (props) => {
         return out;
     }
 
+    const handleSave = (userData) => {
+
+    }
+
 
     return(
         <Table striped bordered hover>
             <thead>
                 <tr>
-                <th>#</th>
-                <th>Labels</th>
-                <th>Email</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Is Admin</th>
-                <th>Activated Date</th>
-                <th>Created Date</th>
-                <th>Last Updated</th>
-                <th>Edit</th>
-                <th>Edit Show Users</th>
+                    <th>#</th>
+                    <th>Labels</th>
+                    <th>Email</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Is Admin</th>
+                    <th>Activated Date</th>
+                    <th>Created Date</th>
+                    <th>Last Updated</th>
+                    <th>Edit</th>
+                    <th>Edit Show Users</th>
                 </tr>
             </thead>
             <tbody>
@@ -91,15 +84,30 @@ const AdminUsersPage = (props) => {
                             <td><div className={CELL_STYLE}> {dateTimeFormat(user.created_date)} </div></td>
                             <td><div className={CELL_STYLE}> {dateTimeFormat(user.last_updated)} </div></td>
                             <td><div className={CELL_STYLE}>
-                                <button className='btn btn-success' onClick={(e) => showEditUser(user)}>Edit</button> 
+                                <button className='btn btn-success' onClick={(e) => openEditUser(user)}>Edit</button> 
                             </div></td>
                             <td><div className={CELL_STYLE}> 
-                                <button className='btn btn-primary' onClick={(e) => showEditShowUser(user)}>Edit</button> 
+                                <button className='btn btn-primary' onClick={(e) => openEditShowUser(user)}>Edit</button> 
                             </div></td>
                         </tr> 
                 )
                 }
-                <AdminEditUser show={show} setShow={setShow} editUserData={editUserData} setEditUserData={setEditUserData}/>
+                
+                <AdminEditUser 
+                    showEditUser={showEditUser} 
+                    setShowEditUser={setShowEditUser} 
+                    editUserData={editUserData} 
+                    setEditUserData={setEditUserData}
+                    handleSave={handleSave}
+                />
+                <AdminEditShowUser 
+                    showEditShowUser={showEditShowUser} 
+                    setShowEditShowUser={setShowEditShowUser} 
+                    editUserData={editUserData} 
+                    setEditUserData={setEditUserData}
+                    sections={sections}
+                    handleSave={handleSave}
+                />
             </tbody>
         </Table>
     );

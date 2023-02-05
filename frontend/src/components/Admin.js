@@ -7,39 +7,18 @@ import './Admin.css';
 const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 
 const Admin = (props) => {
-    const [accordionState, setAccordionState] = useState([]);
+    const [data, setData] = useState({"school": {}, "sections": [], "sets": [], "shows": [], "users": []});
     const [menuIndex, setMenuIndex] = useState(0);
 
     const { schoolCode, token, ...rest } = props
 
     useEffect(() => {
-		fetch(WINDOW_LOCATION + "/sets?school_code=" + schoolCode + "&token=" + token)
+		fetch(WINDOW_LOCATION + "/get-all?token=" + token)
 			.then(res => res.json())
 			.then(
 				(result) => {
-                    for (let i = 0; i < result.length; i++) {
-                        let element = result[i];
-
-                        element["open"] = false;  
-                        
-                        // Set up and format the time codes!
-
-                        let start = element["start_time_code"]
-                        if (start !== null) {
-                            element["start_time_code"] = new Date(start * 1000).toISOString().slice(14, 19)
-                        } else {
-                            element["start_time_code"] = ""
-                        }
-
-                        let end = element["end_time_code"]
-                        if (end !== null) {
-                            element["end_time_code"] = new Date(end * 1000).toISOString().slice(14, 19)
-                        } else {
-                            element["end_time_code"] = ""
-                        }
-                    }
-
-                    setAccordionState(result);
+                    console.log(result);
+                    setData(result);
 				},
 				// Note: it's important to handle errors here
 				// instead of a catch() block so that we don't swallow
@@ -78,7 +57,7 @@ const Admin = (props) => {
                 <div className="adminContentPage">
                     {
                         menuIndex === 0 ?
-                        <AdminUsersPage token={token}/>
+                        <AdminUsersPage token={token} users={data.users} sections={data.sections}/>
                         : null
                     }
                 </div>

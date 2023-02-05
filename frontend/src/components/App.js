@@ -112,7 +112,7 @@ function App() {
 						: <Login setToken={setToken} setRefToken={setRefToken} setSchoolCode={setSchoolCode}/>
 					} />
 					<Route path="/admin" exact element={
-						token !== "" && token !== undefined && !isAdminAuthorized()
+						token === "" || token === undefined || !isAdminAuthorized()
 						? <Navigate to="/" />
 						: <Admin token={token} schoolCode={schoolCode}/>
 					} />

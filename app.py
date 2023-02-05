@@ -39,9 +39,9 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-app.config['SECRET_KEY'] = 'your secret key'
+app.config['SECRET_KEY'] = 'bfvgjubwirvbwiruevwiulhreoiheiuvbuq'
 app.config['JWT_TOKEN_LOCATION'] = ["headers", "query_string"]
-app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+app.config["JWT_SECRET_KEY"] = "uvjnwiruviuwfvbkswbnekjqbnkjubniurniofjqewainion"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_QUERY_STRING_NAME"] = "token"
@@ -217,6 +217,7 @@ class Show(db.Model):
 
 	# Data
 	code = db.Column(db.String(8), unique=True)
+	# TODO: Name!
 
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
@@ -292,22 +293,30 @@ class ShowSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
 		model = Set
 		include_fk = True
+		load_instance = True	
+
+class SchoolSchema(ma.SQLAlchemyAutoSchema):
+	class Meta:
+		model = School
+		include_fk = True
 		load_instance = True
+		load_relationships = True
+
+class BandSectionSchema(ma.SQLAlchemyAutoSchema):
+	class Meta:
+		model = BandSection
+		include_fk = True
+		load_instance = True
+
+	set_names = ma.Nested(SetNameSchema)
 
 
 class ShowUserSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
-		"""
-		fields = (
-			"id", "symbol", "label", 
-			"firstName", "lastName", "email", 
-			"is_admin", "is_section_leader", "section"
-			"activated_date", "created_date", "last_updated"
-		)
-		"""
 		model = ShowUser
 		include_fk = True
 		load_instance = True
+		load_relationships = True
 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -340,6 +349,9 @@ show_user_schema = ShowUserSchema()
 show_users_schema = ShowUserSchema(many=True)
 show_schema = ShowSchema()
 shows_schema = ShowSchema(many=True)
+school_schema = SchoolSchema()
+band_sections_schema = BandSectionSchema(many=True)
+set_names_schema = SetNameSchema(many=True)
 
 
 admin.add_view(ModelView(Dot, db.session))
@@ -748,7 +760,7 @@ class UpdateSetResource(Resource):
 		show = Show.query.filter(Show.school_id == loggedInUser.school.id).first()
 		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 
-		if not loggedInUser.is_admin and not showUser.is_section_leader:
+		if not loggedInUser.is_admin:
 			return "Unauthorized", 401
 
 		parser = reqparse.RequestParser()
@@ -796,7 +808,7 @@ class UpdateSetsResource(Resource):
 		show = Show.query.filter(Show.school_id == loggedInUser.school.id).first()
 		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 
-		if not loggedInUser.is_admin and not showUser.is_section_leader:
+		if not loggedInUser.is_admin:
 			return "Unauthorized", 401
 
 		data = json.loads(request.data)
@@ -816,21 +828,84 @@ class UpdateSetsResource(Resource):
 		return "Updated Successfully", 201
 
 
-class GetUsersResource(Resource):
+class UpdateUserResource(Resource):
 	@jwt_required()
-	def get(self):
+	def post(self):
 		identity = get_jwt_identity()
 		
 		activeUser = User.query.filter(User.email == identity).first()
-		school = School.query.filter(School.id == activeUser.school_id).first()
-		users = User.query.filter(User.school_id == activeUser.school_id).all()
+
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, default=None, required=True, help="You must include the ID of the set")
+		parser.add_argument('email', type=str, default=None, required=True)
+		parser.add_argument('first_name', type=str, default=None, required=True)
+		parser.add_argument('last_name', type=str, default=None, required=True)
+		parser.add_argument('show_users', type=list, default=None, required=True)
+		args = parser.parse_args()
 		
-		activeShowUser = ShowUser.query.filter(ShowUser.user_id == activeUser.id).first() # TODO: Change the default show
-		show = Show.query.filter(Show.id == activeShowUser.show_id).first()
+		user = User.query.filter(User.id == args.get('id')).first()
 
-		return users_schema.dump(users)
+		if user is None:
+			return "INVALID USER ID", 404
+
+		user.email = args.get('email')
+		user.first_name = args.get('first_name')
+		user.last_name = args.get('last_name')
+
+		for show in args.get('show_users'):
+			showUser = ShowUser.query.filter(ShowUser.id == show.id).first()
+
+			showUser.label = show.label
+			showUser.symbol = show.symbol
+			showUser.is_section_leader = show.is_section_leader
+		
+		db.session.commit()
+
+		return "Success", 201
 
 
+class GetDatabaseResource(Resource):
+	@jwt_required()
+	def get(self):
+		"""
+		1) Users
+		2) Sections
+		3) Set Names
+		4) Show
+		5) School
+		"""
+		identity = get_jwt_identity()
+		
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+		
+		# Get School
+		school = School.query.filter(School.id == activeUser.school_id).first()
+
+		# Get Users + Show Users
+		users = User.query.filter(User.school_id == activeUser.school_id).all()
+
+		# Get Shows
+		shows = Show.query.filter(Show.school_id == school.id).all()
+
+		# Get Sections
+		sections = BandSection.query.filter(BandSection.school_id == school.id).all()
+
+		# Get Sets + set names
+		sets = Set.query.filter(Set.school_id == school.id).all()
+
+		return {
+			"school": school_schema.dump(school),
+			"sections": band_sections_schema.dump(sections),
+			"sets": sets_schema.dump(sets),
+			"shows": shows_schema.dump(shows),
+			"users": users_schema.dump(users)
+		}
 
 
 
@@ -840,7 +915,8 @@ api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
 api.add_resource(UpdateSetResource, '/update-set')
 api.add_resource(UpdateSetsResource, '/update-sets')
-api.add_resource(GetUsersResource, '/users/get-all')
+api.add_resource(UsersResource, '/users')
+api.add_resource(GetDatabaseResource, '/get-all')
 
 
 # For use to build database

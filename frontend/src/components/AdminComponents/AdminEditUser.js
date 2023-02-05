@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {Modal, Button, FloatingLabel, Form } from 'react-bootstrap/';
 
 const AdminEditUser = (props) => {
-    const {show, setShow, editUserData, setEditUserData, ...rest} = props;
+    const {showEditUser, setShowEditUser, editUserData, setEditUserData, handleSave, ...rest} = props;
 
     const setEmail = (value) => {
         setEditUserData({...editUserData,  "email": value});
@@ -20,11 +20,11 @@ const AdminEditUser = (props) => {
         setEditUserData({...editUserData,  "is_admin": value});
     }
 
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
+    const handleClose = () => setShowEditUser(false);
+    const handleShow = () => setShowEditUser(true);
 
     return (
-        <Modal show={show} onHide={handleClose}>
+        <Modal show={showEditUser} onHide={handleClose}>
             <Modal.Header closeButton>
                 <Modal.Title>Edit User</Modal.Title>
             </Modal.Header>
@@ -85,7 +85,7 @@ const AdminEditUser = (props) => {
                 <Button variant="secondary" onClick={handleClose}>
                     Close
                 </Button>
-                <Button variant="primary" onClick={handleClose}>
+                <Button variant="primary" onClick={(e) => handleSave(editUserData)}>
                     Save
                 </Button>
             </Modal.Footer>
