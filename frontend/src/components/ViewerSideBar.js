@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './ViewerSideBar.css';
-import OptionsDropDown from './ViewerSideBarComponents/OptionsDropDown';
 import OptionsModal from './ViewerSideBarComponents/OptionsModal';
+import SetNameModel from './ViewerSideBarComponents/SetNameModel';
 import AudioProgressBar from './AdminComponents/TimelinePage/AudioProgressBar';
 import Spinner from './utils/Spinner';
 
@@ -14,12 +14,13 @@ const ViewerSideBar = (props) => {
         loading, setCurSetNumb, changeCurSetNumb, 
         userOptions, setUserOptions, data, 
         audioPlaying, setAudioPlaying, audio, 
-        curPlayTime, setCurPlayTime, ...rest 
+        curPlayTime, setCurPlayTime, token, ...rest 
     } = props;
 
     const [showSettings, setShowSettings] = useState(false);
+    const [showEditSetName, setShowEditSetName] = useState(false);
 
-    let setName = data.length > curSet && data[curSet] !== undefined ? data[curSet]["setName"] : "";
+    let setName = data.length > curSet && data[curSet] !== undefined ? data[curSet]["set_name"] : "";
 
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
@@ -67,6 +68,13 @@ const ViewerSideBar = (props) => {
                 curSet={curSet}
             />
 
+            <SetNameModel 
+                show = {showEditSetName}
+                setShow = {setShowEditSetName}
+                token = {token}
+                curSetInfo={curSetInfo}
+            />
+
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
                 <div className='flex-row justify-content-center d-flex align-items-center' style={{height: '30%'}}>
                     <AudioProgressBar 
@@ -96,8 +104,11 @@ const ViewerSideBar = (props) => {
                     >&#xf0a9;</button>
                 </div>
             </div>
-
-            <div className='btn btn-success' onClick={(e) => setShowSettings(!showSettings)}>Settings</div>
+            
+            <div className='mb-2 flex-column justify-content-center d-flex align-items-center'>
+                <div className='btn btn-success mb-2' onClick={(e) => setShowSettings(true)}>Settings</div>
+                <div className='btn btn-success mb-2' onClick={(e) => setShowEditSetName(true)}>Edit Set Name</div>
+            </div>
         </div>
     );
 };

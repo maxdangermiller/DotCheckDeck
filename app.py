@@ -217,7 +217,7 @@ class Show(db.Model):
 
 	# Data
 	code = db.Column(db.String(8), unique=True)
-	# TODO: Name!
+	name = db.Column(db.String(256))
 
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
@@ -317,6 +317,8 @@ class ShowUserSchema(ma.SQLAlchemyAutoSchema):
 		include_fk = True
 		load_instance = True
 		load_relationships = True
+	
+	show = ma.Nested(ShowSchema)
 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -533,7 +535,7 @@ class SetListResource(Resource):
 					setName = setNameObj.name
 
 			schema = set_schema.dump(set)
-			schema["setName"] = setName # TODO: Refactor to "set_name"
+			schema["set_name"] = setName # TODO: Refactor to "set_name"
 			
 			setsOutput.append(schema)
 

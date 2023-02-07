@@ -328,6 +328,7 @@ const Viewer = (props) => {
 				audio={audio}
 				curPlayTime={curPlayTime}
 				setCurPlayTime={setCurPlayTime}
+				token={props.token}
 			/>
 		</div>
 	);
