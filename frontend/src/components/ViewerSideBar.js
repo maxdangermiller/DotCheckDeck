@@ -77,7 +77,7 @@ const ViewerSideBar = (props) => {
                         setIsPlaying={setAudioPlaying}
                     />
                 </div>
-                <div className='flex-row justify-content-center d-flex align-items-center'>
+                <div className='flex-row justify-content-between d-flex align-items-center' style={{width: "90%"}}>
 
                     <button 
                         type="button" 

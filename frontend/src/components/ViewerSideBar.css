@@ -39,7 +39,8 @@
 .customViewerSideBarBtn {
     background: none;
     border: none; 
-    font-size: 2rem; 
+    font-size: min(6vh, 6vw); 
+    padding: 0;
 }
 
 .forwardBtn {
@@ -59,7 +60,7 @@
 }
 
 .customViewerPlayPauseBtn {
-    font-size: 100%!important;
+    font-size: min(6vh, 6vw);
 }
 
 .mediaControlRow {
