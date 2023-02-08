@@ -6,12 +6,12 @@
 }
 
 .invisibleInput {
-    font-size: 7vh;
+    font-size: 8vh;
     font-weight: bold;
     width: 80%;
     text-align: center;
     border: none;
-    height: 10vh;
+    height: 12vh!important;
 }
 
 .spinnerSuspender {
@@ -39,7 +39,7 @@
 .customViewerSideBarBtn {
     background: none;
     border: none; 
-    font-size: min(6vh, 6vw); 
+    font-size: min(8vh, 40px); 
     padding: 0;
 }
 
@@ -60,11 +60,11 @@
 }
 
 .customViewerPlayPauseBtn {
-    font-size: min(6vh, 6vw);
+    font-size: 8vh;
 }
 
 .mediaControlRow {
-    height: 20%;
+    height: 25%;
     width: 80%;
     background-color: #ddd;
     border: none;
@@ -72,4 +72,8 @@
     cursor: default;
     border-radius: 4vh;
   
+}
+
+.viewerButton {
+    width: 100%;
 }

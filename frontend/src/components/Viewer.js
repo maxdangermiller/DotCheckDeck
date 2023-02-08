@@ -24,6 +24,7 @@ const Viewer = (props) => {
 	const [sentRequest, setSentRequest] = useState(false);
 	const [audioPlaying, setAudioPlaying] = useState(false);
 	const [curPlayTime, setCurPlayTime] = useState(0);
+	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
@@ -233,6 +234,16 @@ const Viewer = (props) => {
 		setUserOptions({...userOptions,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
 	}, [props.userData])
 
+	useEffect(() => {
+		function handleResize() {
+			console.log('resized to: ', window.innerWidth, 'x', window.innerHeight)
+			setIsLandscape(window.innerWidth > window.innerHeight)
+	  	}
+	  
+		window.addEventListener('resize', handleResize)
+		window.addEventListener('orientationchange', handleResize)
+	}, [])
+
 	// This is passed to the Canvas and is called to get the data for drawing
 	const draw = () => {
 		if (audioPlaying) { getAudioSyncedSet(); }
@@ -292,6 +303,15 @@ const Viewer = (props) => {
 				}
 			}
 		}
+	}
+
+
+	if (!isLandscape) {
+		return (
+			<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
+				<h1>Rotate Please</h1>
+			</div>
+		);
 	}
 
 	return (

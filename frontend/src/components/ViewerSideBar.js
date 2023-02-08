@@ -24,7 +24,7 @@ const ViewerSideBar = (props) => {
 
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
-            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "30vh"}}>
+            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "35vh"}}>
                 <h1 className='viewerSideBarHeader'>Current Set:</h1>
                 {
                     !loading ?
@@ -76,7 +76,7 @@ const ViewerSideBar = (props) => {
             />
 
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
-                <div className='flex-row justify-content-center d-flex align-items-center' style={{height: '30%'}}>
+                <div className='flex-row justify-content-center d-flex align-items-center mb-2' style={{height: '30%', width: '100%'}}>
                     <AudioProgressBar 
                         curPlayTime={curPlayTime} 
                         setCurPlayTime={setCurPlayTime} 
@@ -85,7 +85,7 @@ const ViewerSideBar = (props) => {
                         setIsPlaying={setAudioPlaying}
                     />
                 </div>
-                <div className='flex-row justify-content-between d-flex align-items-center' style={{width: "90%"}}>
+                <div className='flex-row justify-content-between d-flex align-items-center mb-2' style={{width: "90%"}}>
 
                     <button 
                         type="button" 
@@ -103,11 +103,12 @@ const ViewerSideBar = (props) => {
                         disabled={curSet < sets.length - 1 ? false : true}
                     >&#xf0a9;</button>
                 </div>
+                
             </div>
             
-            <div className='mb-2 flex-column justify-content-center d-flex align-items-center'>
-                <div className='btn btn-success mb-2' onClick={(e) => setShowSettings(true)}>Settings</div>
-                <div className='btn btn-success mb-2' onClick={(e) => setShowEditSetName(true)}>Edit Set Name</div>
+            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{width:"80%"}}>
+                <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => setShowSettings(true)}>Settings</div>
+                <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => setShowEditSetName(true)}>Edit</div>
             </div>
         </div>
     );
