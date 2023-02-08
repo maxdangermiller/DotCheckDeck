@@ -234,6 +234,7 @@ const Viewer = (props) => {
 		setUserOptions({...userOptions,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
 	}, [props.userData])
 
+	// Check to see if we're in landscape, if not display a "Rotate Please" message
 	useEffect(() => {
 		function handleResize() {
 			console.log('resized to: ', window.innerWidth, 'x', window.innerHeight)
@@ -335,6 +336,7 @@ const Viewer = (props) => {
 				setInput={setInput} 
 				curSet={curSet} 
 				sets={sets} 
+				setSets={setSets}
 				changeCurSet={changeCurSet}
 				handelSetBtnControls={handelSetBtnControls}
 				loading={loading}

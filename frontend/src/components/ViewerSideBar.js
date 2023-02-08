@@ -5,22 +5,26 @@ import SetNameModel from './ViewerSideBarComponents/SetNameModel';
 import AudioProgressBar from './AdminComponents/TimelinePage/AudioProgressBar';
 import Spinner from './utils/Spinner';
 
-// STILL WORKING ON THIS! NOT TESTED YET!
-
 const ViewerSideBar = (props) => {
     const { 
         curSetInfo, curSetNumb, setInput, 
-        curSet, sets, changeCurSet, handelSetBtnControls, 
+        curSet, sets, setSets, changeCurSet, handelSetBtnControls, 
         loading, setCurSetNumb, changeCurSetNumb, 
-        userOptions, setUserOptions, data, 
+        userOptions, setUserOptions, data,
         audioPlaying, setAudioPlaying, audio, 
         curPlayTime, setCurPlayTime, token, ...rest 
     } = props;
 
     const [showSettings, setShowSettings] = useState(false);
     const [showEditSetName, setShowEditSetName] = useState(false);
+    const [tempCurSetInfo, setTempCurSetInfo] = useState({});
 
-    let setName = data.length > curSet && data[curSet] !== undefined ? data[curSet]["set_name"] : "";
+    const openEditSetName = () => {
+        setShowEditSetName(true);
+        setTempCurSetInfo(JSON.parse(JSON.stringify(curSetInfo)));
+    }
+
+    let setName = data.length > curSet && curSetInfo !== undefined ? curSetInfo["set_name"] : "";
 
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
@@ -72,7 +76,10 @@ const ViewerSideBar = (props) => {
                 show = {showEditSetName}
                 setShow = {setShowEditSetName}
                 token = {token}
-                curSetInfo={curSetInfo}
+                curSetInfo={tempCurSetInfo}
+                setCurSetInfo={setTempCurSetInfo}
+                sets={sets}
+                setSets={setSets}
             />
 
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
@@ -108,7 +115,7 @@ const ViewerSideBar = (props) => {
             
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{width:"80%"}}>
                 <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => setShowSettings(true)}>Settings</div>
-                <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => setShowEditSetName(true)}>Edit</div>
+                <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => openEditSetName()}>Edit</div>
             </div>
         </div>
     );

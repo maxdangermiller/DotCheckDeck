@@ -535,7 +535,7 @@ class SetListResource(Resource):
 					setName = setNameObj.name
 
 			schema = set_schema.dump(set)
-			schema["set_name"] = setName # TODO: Refactor to "set_name"
+			schema["set_name"] = setName
 			
 			setsOutput.append(schema)
 
@@ -936,6 +936,54 @@ class GetDatabaseResource(Resource):
 		}
 
 
+class UpdateOrCreateSetNameResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+		
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if activeUser is None: 
+			return "INVALID AUTHORIZATION", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, default=None, required=True, help="You must include the ID of the set")
+		parser.add_argument('set_name', type=str, default=None, required=True, help="You must include the Set Name")
+		args = parser.parse_args()
+
+		setName = SetName.query.filter(SetName.set_id == args.get("id")).first()
+
+		# Get School
+		school_id = activeUser.school_id
+		# Get Set
+		set = Set.query.filter(Set.id == args.get("id")).first()
+		set_id = set.id
+		# Get Show
+		show_id = set.show_id
+		# Get Section
+		showUser = ShowUser.query.filter(ShowUser.show_id == show_id, ShowUser.user_id == activeUser.id).first()
+		section_id = showUser.section_id
+
+		if not showUser.is_section_leader and not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+
+		if (setName is None):
+			setName = SetName(
+				school_id=school_id, 
+				set_id = set_id, 
+				show_id = show_id, 
+				section_id = section_id, 
+				name = args.get("set_name")
+			)
+			db.session.add(setName)
+			db.session.commit()
+		else:
+			setName.name = args.get("set_name")
+			db.session.commit()
+		return "Done.", 201
+
+
+
 
 api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
@@ -945,6 +993,7 @@ api.add_resource(UpdateSetResource, '/update-set')
 api.add_resource(UpdateSetsResource, '/update-sets')
 api.add_resource(UpdateUserResource, '/users')
 api.add_resource(GetDatabaseResource, '/get-all')
+api.add_resource(UpdateOrCreateSetNameResource, '/update-set-name')
 
 
 # For use to build database
