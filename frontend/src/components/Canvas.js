@@ -31,7 +31,11 @@ const COLLAGE_HASH_COLOR = "rgb(100, 0, 0)";
 
 const Canvas = props => {
 
-    const { draw, setDimensions, curDimensions, curSet, sets, loading, curPlayTime, audioPlaying, userOptions, ...rest } = props
+    const { 
+        draw, setDimensions, curDimensions, 
+        curSet, sets, loading, curPlayTime, 
+        audioPlaying, userOptions, userData, ...rest 
+    } = props;
 
     const canvasRef = useRef(null)
 
@@ -623,8 +627,10 @@ const Canvas = props => {
                 if (nextVal <= canvas.width) {
                     drawHash(val, nextVal, canvas.height * FRONT_HASH_RATIO, "black");
                     drawHash(val, nextVal, canvas.height * BACK_HASH_RATIO, "black");
-                    drawHash(val, nextVal, canvas.height * FRONT_COLLAGE_HASH_RATIO, COLLAGE_HASH_COLOR);
-                    drawHash(val, nextVal, canvas.height * BACK_COLLAGE_HASH_RATIO, COLLAGE_HASH_COLOR);
+                    if (userOptions.showCollegeHash) {
+                        drawHash(val, nextVal, canvas.height * FRONT_COLLAGE_HASH_RATIO, COLLAGE_HASH_COLOR);
+                        drawHash(val, nextVal, canvas.height * BACK_COLLAGE_HASH_RATIO, COLLAGE_HASH_COLOR);
+                    }
                 }
 
                 // Draw little lines on the hash marks | FRONT HASH
@@ -643,23 +649,25 @@ const Canvas = props => {
                     canvas.height * BACK_HASH_RATIO,
                     "black", 1
                 );
-
-                // Draw little lines on the hash marks | FRONT COLLAGE HASH
-                drawLine(
-                    val - canvas.width * RELATIVE_HASH_WIDTH, 
-                    canvas.height * FRONT_COLLAGE_HASH_RATIO, 
-                    val + canvas.width * RELATIVE_HASH_WIDTH, 
-                    canvas.height * FRONT_COLLAGE_HASH_RATIO,
-                    COLLAGE_HASH_COLOR, 1
-                );
-                // Draw little lines on the hash marks | BACK COLLAGE HASH
-                drawLine(
-                    val - canvas.width * RELATIVE_HASH_WIDTH, 
-                    canvas.height * BACK_COLLAGE_HASH_RATIO, 
-                    val + canvas.width * RELATIVE_HASH_WIDTH, 
-                    canvas.height * BACK_COLLAGE_HASH_RATIO,
-                    COLLAGE_HASH_COLOR, 1
-                );
+                
+                if (userOptions.showCollegeHash) {
+                    // Draw little lines on the hash marks | FRONT COLLAGE HASH
+                    drawLine(
+                        val - canvas.width * RELATIVE_HASH_WIDTH, 
+                        canvas.height * FRONT_COLLAGE_HASH_RATIO, 
+                        val + canvas.width * RELATIVE_HASH_WIDTH, 
+                        canvas.height * FRONT_COLLAGE_HASH_RATIO,
+                        COLLAGE_HASH_COLOR, 1
+                    );
+                    // Draw little lines on the hash marks | BACK COLLAGE HASH
+                    drawLine(
+                        val - canvas.width * RELATIVE_HASH_WIDTH, 
+                        canvas.height * BACK_COLLAGE_HASH_RATIO, 
+                        val + canvas.width * RELATIVE_HASH_WIDTH, 
+                        canvas.height * BACK_COLLAGE_HASH_RATIO,
+                        COLLAGE_HASH_COLOR, 1
+                    );
+                }
                 
                 context.beginPath();
                 context.font = canvas.height * 0.05 + 'px serif';
@@ -817,11 +825,29 @@ const Canvas = props => {
             return color
         }
 
+        const getHighlightedUserData = (data, userOptions) => {
+            if (userOptions.highlightUser !== null) {
+                for (let x = 0; x < data.length; x++) {
+                    const dot = data[x];
+
+                    if (userOptions.highlightUser.label === dot.userLabel) {
+                        return dot;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         // Takes data from API and draws them, used to condense the render method
         const drawDots = (_draw, data, index) => {
             let newDots = [];
             let drawBracket = {useX:null, useY:null, dot:null};
             let curSetData = data[index].dots;
+            let userOptions = _draw.userOptions;
+
+            let highlightedUserData = getHighlightedUserData(curSetData, userOptions);
+
 
             for (let x = 0; x < curSetData.length; x++) {
                 const dot = curSetData[x];
@@ -829,30 +855,41 @@ const Canvas = props => {
                 
                 let useX = dot.x;
                 let useY = dot.y;
-
-                let userOptions = _draw.userOptions;
                 
-                // Check to see if a user is selected to be highlighted
-                if (userOptions.highlightUser !== null) {
-                    // Check to see if this dot is the selected user
-                    if (userOptions.highlightUser.label === dot.userLabel) {
-                        // Check to see if the "Show Movement Brackets" option is selected
+                // Check if there is a user highlighted
+                if (highlightedUserData !== null) {
+                    // Check if the current dot being read is that label
+                    if (highlightedUserData.userLabel === dot.userLabel) {
                         if (userOptions.showMovementBrackets) {
                             drawBracket = {useX:useX, useY:useY, dot:dot.dot};
                         }
 
-                        // Draw the dot with the Highlighted Color
                         let color = getDotColor(dot, true, userOptions.useSectionColors)
                         drawHighlightedPoint(data, index, x, userOptions, color, dot.userLabel)
                     }
-                    
-                    // no change needed
+
+                    // Check if we're highlighting the section
+                    else if (userOptions.highlightSection) {
+                        // Check if this dot is part of the highlighted section
+                        if (highlightedUserData.section_id === dot.section_id) {
+                            let color = getDotColor(dot, true, userOptions.useSectionColors)
+                            drawHighlightedPoint(data, index, x, userOptions, color, dot.userLabel)
+                        }
+                        // Else dim others 
+                        else {
+                            let color = getDotColor(dot, false, userOptions.useSectionColors)
+                            drawPoint(useX, useY, color, dot.userLabel);
+                        }
+                    }
+
+                    // If not, handel all of the not selected dots
                     else {
                         let color = getDotColor(dot, !userOptions.dimOtherUsers, userOptions.useSectionColors)
                         drawPoint(useX, useY, color, dot.userLabel);
                     }
                 }
-                // No change needed
+
+                // Since nothing is selected, just highlight all
                 else {
                     let color = getDotColor(dot, true, userOptions.useSectionColors)
                     drawPoint(useX, useY, color, dot.userLabel);

@@ -738,6 +738,7 @@ class GetDotsWithBufferResource(Resource):
 					
 					"userLabel": showUserObj.label, "userID": showUserObj.id,
 					"userName": f"{userObj.first_name} {userObj.last_name}",
+					"section_id": showUserObj.section_id,
 				})
 			
 			output.append({

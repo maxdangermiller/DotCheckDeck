@@ -11,6 +11,7 @@
     background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
 
     height: 92vh;
+    width: 100vw;
 }
 
 .loginHeight {
@@ -19,6 +20,7 @@
 
 .loginFormHeight {
     height: min(80vh, 120vw);
+    overflow: auto;
 }
 
 .loginFormTextHeight {

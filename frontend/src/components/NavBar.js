@@ -20,11 +20,11 @@ const NavBar = (props) => {
 
 	return (
 		<Navbar bg="dark" variant="dark" style={{height: "8vh"}}>
-			<Container>
-				<Navbar.Brand href="/">
-					<img src={logo} alt="" width="24" height="24" />
-				</Navbar.Brand>
-				<Nav className="justify-content-start">
+			<Container fluid>
+				<Nav className="ml-auto">
+					<Navbar.Brand href="/">
+						<img src={logo} alt="" width="24" height="24" />
+					</Navbar.Brand>
 					{
 						isAdminAuthorized() ?
 						<>
@@ -34,7 +34,7 @@ const NavBar = (props) => {
 						: null
 					}
 				</Nav>
-				<Nav className="justify-content-end">
+				<Nav className="mr-auto">
 					{
 						loggedIn
 							? <Nav.Link onClick={logout} href="#logout">Logout</Nav.Link>

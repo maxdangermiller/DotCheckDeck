@@ -33,7 +33,7 @@ const Viewer = (props) => {
 		"useSectionColors": true,
 		"showMovementBrackets": false, "highlightUser": null,
 		"moveSpeed": 10, "useActualSetLength": false,
-		"dimOtherUsers": false
+		"dimOtherUsers": false, "showCollegeHash": true
 	});
 
 	const setInput = useRef(null);
@@ -328,6 +328,7 @@ const Viewer = (props) => {
 					curPlayTime={curPlayTime}
 					audioPlaying={audioPlaying}
 					userOptions={userOptions}
+					userData={props.userData}
 				/>
 			</div>
 			<ViewerSideBar 

@@ -13,6 +13,10 @@ const OptionsModal = (props) => {
         setUserOptions({...userOptions,  "showLastSet": value});
     }
 
+    const setShowCollegeHash = (value) => {
+        setUserOptions({...userOptions,  "showCollegeHash": value});
+    }
+
     const setDrawPaths = (value) => {
         setUserOptions({...userOptions,  "drawPath": value});
     }
@@ -114,11 +118,11 @@ const OptionsModal = (props) => {
                         className="form-check-input" 
                         type="checkbox" 
                         value="" 
-                        onChange={() => setHighlightSection(!userOptions.highlightSection)} 
-                        checked={userOptions.highlightSection} 
+                        onChange={() => setShowCollegeHash(!userOptions.showCollegeHash)} 
+                        checked={userOptions.showCollegeHash} 
                     />
                     <label className="form-check-label ">
-                        Highlight Section
+                        Show College Hash
                     </label>
                 </div>
                 <div className="form-check">
@@ -180,10 +184,23 @@ const OptionsModal = (props) => {
                         value="" 
                         onChange={() => setDimOtherUsers(!userOptions.dimOtherUsers)} 
                         checked={userOptions.dimOtherUsers} 
-                        disabled={userOptions.highlightUser === null}
+                        disabled={userOptions.highlightUser === null || userOptions.highlightSection}
                     />
                     <label className="form-check-label">
                         Highlight User
+                    </label>
+                </div>
+                <div className="form-check">
+                    <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        value="" 
+                        onChange={() => setHighlightSection(!userOptions.highlightSection)} 
+                        checked={userOptions.highlightSection} 
+                        disabled={userOptions.highlightUser === null || userOptions.dimOtherUsers}
+                    />
+                    <label className="form-check-label ">
+                        Highlight Section
                     </label>
                 </div>
 
