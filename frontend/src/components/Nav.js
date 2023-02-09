@@ -17,8 +17,11 @@ const Nav = (props) => {
 	}
 
     return (
-		<nav className="navbar navbar-expand-sm bg-dark navbar-dark customNavbar">
-			<ul className="container-fluid justify-content-start customULNav">
+		<nav className="navbar navbar-expand-lg bg-dark navbar-dark customNavbar">
+			<a class="navbar-brand" href="#">
+      			<img src="%PUBLIC_URL%/favicon.ico" alt="" width="30" height="24" />
+    		</a>
+			<ul className="container-fluid d-flex flex-row justify-content-start customULNav">
 				{
 					token !== "" && token !== undefined
 						? <ul className="navbar-nav">
@@ -44,7 +47,7 @@ const Nav = (props) => {
 				}
 
 			</ul>
-			<ul className="container-fluid justify-content-end customULNav">
+			<ul className="container-fluid d-flex flex-row justify-content-end customULNav">
 				{
 					loggedIn
 						? <ul className="navbar-nav">

@@ -8,6 +8,10 @@
     margin-top: 1vh !important;
     margin-bottom: 1vh !important;
     height: 100%;
+    width:100%;
+    position: absolute;
+    overflow: auto;
+    top: 0;
 }
 
 .logo {
