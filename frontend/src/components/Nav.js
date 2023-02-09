@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState} from 'react';
 import './Nav.css';
+import logo from '../logo.svg';
 
 const Nav = (props) => {
     const { token, loggedIn, logout, isAdminAuthorized, ...rest } = props
@@ -18,10 +19,11 @@ const Nav = (props) => {
 
     return (
 		<nav className="navbar navbar-expand-lg bg-dark navbar-dark customNavbar">
-			<a class="navbar-brand" href="#">
-      			<img src="%PUBLIC_URL%/favicon.ico" alt="" width="30" height="24" />
-    		</a>
-			<ul className="container-fluid d-flex flex-row justify-content-start customULNav">
+			<div className="d-flex flex-row align-items-center justify-content-between customULNav">
+				<a className="navbar-brand" href="#">
+					<img src={logo} alt="" width="24" height="24" />
+				</a>
+				<div className="d-flex flex-row align-items-center justify-content-start" style={{width: "55%", height: "100%"}}>
 				{
 					token !== "" && token !== undefined
 						? <ul className="navbar-nav">
@@ -45,9 +47,34 @@ const Nav = (props) => {
 						</ul>
 						: null
 				}
+				</div>
+				<div className="d-flex flex-row align-items-center justify-content-end" style={{width: "40%", height: "100%"}}>
+				<a className="nav-link" onClick={logout}>Logout</a>
+				{
+					loggedIn
+						? <ul className="navbar-nav">
+							<li className="nav-item">
+								<a className="nav-link" onClick={logout}>Logout</a>
+							</li>
+						</ul>
+						: <ul className="navbar-nav">
+							<li className="nav-item">
+								<a className="nav-link" href="/activate">Activate</a>
+							</li>
+							<li className="nav-item">
+								<a className="nav-link" href="/login">Login</a>
+							</li>
+						</ul>
+				}
+				</div>
+			</div>
+		</nav>
+	);
 
-			</ul>
-			<ul className="container-fluid d-flex flex-row justify-content-end customULNav">
+};
+
+/*
+<ul className="container-fluid d-flex flex-row justify-content-end customULNav">
 				{
 					loggedIn
 						? <ul className="navbar-nav">
@@ -65,10 +92,6 @@ const Nav = (props) => {
 						</ul>
 				}
 			</ul>
-			
-		</nav>
-	);
-
-};
+*/
 
 export default Nav;
