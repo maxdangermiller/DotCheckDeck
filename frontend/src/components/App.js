@@ -5,7 +5,7 @@ import Viewer from './Viewer';
 import Activate from './Activate';
 import useToken from './useToken';
 import Login from './Login';
-import Nav from './Nav';
+import NavBar from './NavBar';
 import Admin from './Admin';
 import AdminTimeline from './AdminComponents/TimelinePage/AdminTimeline';
 
@@ -89,7 +89,7 @@ function App() {
 	} else {
 		return (
 			<Router>
-				<Nav 
+				<NavBar 
 					token={token} 
 					loggedIn={token !== "" && token !== undefined} 
 					logout={logout}
