@@ -21,7 +21,7 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminUsersPage = (props) => {
-    const {token, users, sections, ...rest} = props;
+    const {token, users, sections, shows,...rest} = props;
 
     const [showEditUser, setShowEditUser] = useState(false);
     const [showEditShowUser, setShowEditShowUser] = useState(false);
@@ -198,6 +198,7 @@ const AdminUsersPage = (props) => {
                     editUserData={editUserData} 
                     setEditUserData={setEditUserData}
                     sections={sections}
+                    shows={shows}
                     handleSave={handleSave}
                 />
             </tbody>

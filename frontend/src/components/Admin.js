@@ -15,7 +15,7 @@ const Admin = (props) => {
 
     const getActivePage = () => {
         if (menuIndex === 0) {
-            return (<AdminUsersPage token={token} users={data.users} sections={data.sections}/>);
+            return (<AdminUsersPage token={token} users={data.users} sections={data.sections} shows={data.shows}/>);
         }
         if (menuIndex === 1) {
             return (<AdminSectionsPage token={token} sections={data.sections}/>);

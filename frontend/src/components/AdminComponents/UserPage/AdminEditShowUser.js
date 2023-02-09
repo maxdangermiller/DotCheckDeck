@@ -3,7 +3,7 @@ import {Modal, Button, FloatingLabel, Form, ListGroup, Row, Col } from 'react-bo
 import { Autocomplete, TextField } from '@mui/material';
 
 const AdminEditShowUser = (props) => {
-    const {showEditShowUser, setShowEditShowUser, editUserData, setEditUserData, sections, handleSave, ...rest} = props;
+    const {showEditShowUser, setShowEditShowUser, editUserData, setEditUserData, sections, shows, handleSave, ...rest} = props;
 
     const setValue = (index, key, value) => {
         const newState = editUserData.show_users.map((val, i) => {
@@ -55,6 +55,16 @@ const AdminEditShowUser = (props) => {
         return out;
     }
 
+    const getShowNameByID = (id) => {
+        for (let x = 0; x < shows.length; x++) {
+            if (shows[x].id === id) {
+                console.log(shows[x]);
+                return shows[x].name;
+            }
+        }
+        return "Undefined!";
+    }
+
     const handleClose = () => setShowEditShowUser(false);
     const handleShow = () => setShowEditShowUser(true);
 
@@ -70,7 +80,7 @@ const AdminEditShowUser = (props) => {
 
                         editUserData.show_users.map((showUser, index) => 
                             <ListGroup.Item key={index}>
-                                <h2>NAME HERE!</h2>
+                                <h2>{getShowNameByID(showUser.show_id)}</h2>
                                 <Row className="mb-3">
                                     <Form.Group as={Col}>
                                         <Form.Label>Symbol</Form.Label>

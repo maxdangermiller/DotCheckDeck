@@ -8,6 +8,7 @@ import Login from './Login';
 import NavBar from './NavBar';
 import Admin from './Admin';
 import AdminTimeline from './AdminComponents/TimelinePage/AdminTimeline';
+import PWAInstructions from './PWAInstructions';
 
 import axios from "axios";
 
@@ -78,6 +79,9 @@ function App() {
 		return false;
 	}
 
+	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+	const isPWAAdded = window.matchMedia('(display-mode: standalone)').matches;
+
 	if (token == null) {
 		return (
 			<div className="d-flex align-items-center justify-content-center flex-column fullScreen">
@@ -95,6 +99,11 @@ function App() {
 					logout={logout}
 					isAdminAuthorized={isAdminAuthorized}
 				/>
+				{
+					isMobile && !isPWAAdded ?
+					<PWAInstructions />
+					: null
+				}
 				<Routes>
 					<Route path="/" exact element={
 						token === "" || schoolCode === ""

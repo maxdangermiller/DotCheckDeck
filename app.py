@@ -16,6 +16,7 @@ import json
 import os
 import sys
 import jwt
+import urllib.parse 
 
 import convertHashToCords
 
@@ -32,10 +33,20 @@ https://towardsdatascience.com/deploy-a-micro-flask-application-into-heroku-with
 
 ENV = "dev"
 
+
 if ENV == 'dev':
 	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
 else:
-	app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://kjsknarefmtswq:067909a25be5d30e96fd2ecf47f2ef34cc869897895e6130d2ec0b2b5540b577@ec2-44-207-253-50.compute-1.amazonaws.com:5432/d6tgv8eb79479i"
+	# https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?redirectedfrom=MSDN&view=sql-server-ver16
+	database_prams = urllib.parse.quote_plus(
+		"DRIVER = {ODBC Driver 18 for SQL Server};" + 
+		"SERVER=tcp:dcd-database.database.windows.net,1433;" + 
+		"DATABASE=DCD Database;UID=dcd_admin;" + 
+		"PWD=fS3StNPK4LW269f;ENCRYPT=yes;" +
+		"Trusted_Connection=yes;"
+	)
+	app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc://?odbc_connect=%s" % database_prams
+	# app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -45,6 +56,12 @@ app.config["JWT_SECRET_KEY"] = "uvjnwiruviuwfvbkswbnekjqbnkjubniurniofjqewainion
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_QUERY_STRING_NAME"] = "token"
+
+""""
+Database auth
+dcd_admin
+fS3StNPK4LW269f
+"""
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -1070,7 +1087,7 @@ if __name__ == "__main__":
 				with app.app_context():
 
 					# Delete the database
-					db.drop_all()
+					# db.drop_all()
 					db.create_all()
 
 					# Read these dot sheets
