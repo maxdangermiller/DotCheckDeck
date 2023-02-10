@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {Modal, Button, ListGroup} from 'react-bootstrap/';
+import DCD_Add_To_Home_Screen from '../DCD_Add_To_Home_Screen.gif';
 
 const PWAInstructions = (props) => {
     const [show, setShow] = useState(true);
@@ -13,25 +14,47 @@ const PWAInstructions = (props) => {
                 <Modal.Title>Install Me!</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <p><strong>We couldn't help but notice you're on a mobile device!</strong></p>
-                <p>
-                    In order to have a better experience, it is recommended that you install this as a Progressive Web App. 
-                    All this means is that this website will act and feel like a normal app on your phone, but will actually be a web page.
-                    We know that sounds complicated, but long story short, it's just better.
-                </p>
-                <ListGroup as="ol" numbered>
-                    <ListGroup.Item as="li">Open in Safari</ListGroup.Item>
-                    <ListGroup.Item as="li">
-                        Press <IOSShareIcon width="1rem" height="1rem"/>
-                    </ListGroup.Item>
-                    <ListGroup.Item as="li">Cras justo odio</ListGroup.Item>
-                </ListGroup>
+                <div className="d-flex align-items-center justify-content-between flex-row" style={{width: "100%"}}>
+                    <div 
+                        className="d-flex align-items-start justify-content-center flex-column" 
+                        style={{width: "70%"}}
+                    >
+                        <p><strong>We couldn't help but notice you're on a mobile device!</strong></p>
+                        <p>
+                            In order to have a better experience, it is recommended that you install this as a Progressive Web App. 
+                            All this means is that this website will act and feel like a normal app on your phone, 
+                            but will actually be a web page. 
+                            We know that sounds complicated, but long story short, it's just better. 
+                            Disclaimer:  These are instructions for iPhones, because if you don't have one, your're on  your own. This is self inflicted
+                        </p>
+                        <div className="d-flex align-items-start justify-content-center flex-row" style={{width: "100%"}}>
+                            <div style={{width:"40%", height:"100%"}}>
+                                <strong>iPhone:</strong>
+                                <ListGroup as="ol" numbered>
+                                    <ListGroup.Item as="li">Open in Safari</ListGroup.Item>
+                                    <ListGroup.Item as="li">
+                                        Press <IOSShareIcon width="1rem" height="1rem"/>
+                                    </ListGroup.Item>
+                                    <ListGroup.Item as="li">Press "Add to Home Screen"</ListGroup.Item>
+                                    <ListGroup.Item as="li">Press "Add"</ListGroup.Item>
+                                </ListGroup>
+                            </div>
+                            <div style={{width:"40%", height:"100%"}}>
+                                <strong>Android:</strong>
+                                <ListGroup as="ol">
+                                    <ListGroup.Item as="li">Google it.</ListGroup.Item>
+                                    <ListGroup.Item as="li">Return to your maker (google).</ListGroup.Item>
+                                    <ListGroup.Item as="li">Good Luck.</ListGroup.Item>
+                                </ListGroup>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="d-flex align-items-center justify-content-center flex-column mb-2" style={{width: "30%", height: "100%"}}>
+                        <img src={DCD_Add_To_Home_Screen} alt="loading..." height="100%"/>
+                    </div>
+                </div>
+                
             </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
-                    I'm Okay
-                </Button>
-            </Modal.Footer>
         </Modal>
     )
 }
