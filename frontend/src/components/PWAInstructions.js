@@ -23,9 +23,8 @@ const PWAInstructions = (props) => {
                         <p>
                             In order to have a better experience, it is recommended that you install this as a Progressive Web App. 
                             All this means is that this website will act and feel like a normal app on your phone, 
-                            but will actually be a web page. 
+                            but it will actually be a web page. 
                             We know that sounds complicated, but long story short, it's just better. 
-                            Disclaimer:  These are instructions for iPhones, because if you don't have one, your're on  your own. This is self inflicted
                         </p>
                         <div className="d-flex align-items-start justify-content-center flex-row" style={{width: "100%"}}>
                             <div style={{width:"40%", height:"100%"}}>
