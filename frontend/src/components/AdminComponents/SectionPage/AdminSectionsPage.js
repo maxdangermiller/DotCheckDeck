@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Table from 'react-bootstrap/Table';
+import AdminEditSection from './AdminEditSection';
 
 const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 const CELL_STYLE = "flex-row justify-content-center d-flex align-items-center adminTextAlignCenter";
@@ -12,13 +13,56 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminSectionsPage = (props) => {
-    const {token, sections, ...rest} = props;
+    const {token, sections, setSections, ...rest} = props;
 
     const [sortBy, setSortBy] = useState(0);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
+    const [showEdit, setShowEdit] = useState(false);
+    const [curEditSection, setCurEditSection] = useState({});
 
     const openEditSection = (section) => {
+        setCurEditSection(section);
+        setShowEdit(true);
+    }
 
+    const updateSection = (section) => {
+        let newSections = JSON.parse(JSON.stringify(sections));
+
+        for (let i = 0; i < newSections.length; i++) {
+            if (newSections[i].id === section.id) {
+                for (const key in newSections[i]) {
+                    newSections[i][key] = section[key];
+                }
+            }
+        }
+
+        setSections(newSections);
+    }
+
+    const handleSave = (section) => {
+        fetch(WINDOW_LOCATION + '/update-section', {
+            method: 'POST',
+            body: JSON.stringify(section),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer ' + token
+            }
+            })
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    setShowEdit(false);
+
+                    updateSection(section);
+                },
+                // Note: it's important to handle errors here
+                // instead of a catch() block so that we don't swallow
+                // exceptions from actual bugs in components.
+                (error) => {
+                    console.log(error);
+                    alert(error)
+                }
+            );
     }
 
     const getColor = (section) => {
@@ -81,6 +125,14 @@ const AdminSectionsPage = (props) => {
                 )
                 }
             </tbody>
+
+            <AdminEditSection
+                show={showEdit}
+                setShow={setShowEdit}
+                editData={curEditSection}
+                setEditData={setCurEditSection}
+                handleSave={handleSave}
+            />
         </Table>
     );
 }

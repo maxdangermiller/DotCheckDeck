@@ -265,8 +265,11 @@ const Viewer = (props) => {
 		if (x >= 0 && x < sets.length && !loading) {
 			if (audioPlaying) {
 				audio.currentTime = sets[x]["start_time_code"] / 1000;
+				setCurPlayTime(sets[x]["start_time_code"] / 1000);
 			} else {
 				changeCurSet(x);
+				audio.currentTime = sets[x]["start_time_code"] / 1000;
+				setCurPlayTime(sets[x]["start_time_code"] / 1000);
 			}
 		}
 	}

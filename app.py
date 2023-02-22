@@ -1001,6 +1001,40 @@ class UpdateOrCreateSetNameResource(Resource):
 		return "Done.", 201
 
 
+class UpdateSectionResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if activeUser is None: 
+			return "INVALID AUTHORIZATION", 401
+		
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, default=None, required=True, help="You must include the ID of the set")
+		parser.add_argument('name', type=str, default=None, required=True, help="You must include the Name")
+		parser.add_argument('color_r', type=int, default=None, required=True, help="You must include the Color")
+		parser.add_argument('color_g', type=int, default=None, required=True, help="You must include the Color")
+		parser.add_argument('color_b', type=int, default=None, required=True, help="You must include the Color")
+		args = parser.parse_args()
+
+		section = BandSection.query.filter(BandSection.id == args.get("id"), BandSection.school_id == activeUser.school_id).first()
+
+		if section is None:
+			return "Invalid ID", 404
+		
+		section.name = args.get("name")
+		section.color_r = args.get("color_r")
+		section.color_g = args.get("color_g")
+		section.color_b = args.get("color_b")
+
+		db.session.commit()
+
+		return "Updated Successfully!", 201
 
 
 api.add_resource(SetListResource, '/sets')
@@ -1012,6 +1046,7 @@ api.add_resource(UpdateSetsResource, '/update-sets')
 api.add_resource(UpdateUserResource, '/users')
 api.add_resource(GetDatabaseResource, '/get-all')
 api.add_resource(UpdateOrCreateSetNameResource, '/update-set-name')
+api.add_resource(UpdateSectionResource, '/update-section')
 
 
 # For use to build database

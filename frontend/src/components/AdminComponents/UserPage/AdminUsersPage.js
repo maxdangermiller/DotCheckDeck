@@ -21,7 +21,7 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminUsersPage = (props) => {
-    const {token, users, sections, shows,...rest} = props;
+    const {token, users, setUsers, sections, shows,...rest} = props;
 
     const [showEditUser, setShowEditUser] = useState(false);
     const [showEditShowUser, setShowEditShowUser] = useState(false);
@@ -62,6 +62,20 @@ const AdminUsersPage = (props) => {
         return out;
     }
 
+    const updateUser = (userData) => {
+        let newUsers = JSON.parse(JSON.stringify(users));
+
+        for (let i = 0; i < newUsers.length; i++) {
+            if (newUsers[i].id === userData.id) {
+                for (const key in newUsers[i]) {
+                    newUsers[i][key] = userData[key];
+                }
+            }
+        }
+
+        setUsers(newUsers);
+    }
+
     const handleSave = (userData) => {
         fetch(WINDOW_LOCATION + '/users', {
             method: 'POST',
@@ -76,6 +90,8 @@ const AdminUsersPage = (props) => {
                 (result) => {
                     setShowEditShowUser(false);
                     setEditUserData(false);
+
+                    updateUser(userData);
                 },
                 // Note: it's important to handle errors here
                 // instead of a catch() block so that we don't swallow

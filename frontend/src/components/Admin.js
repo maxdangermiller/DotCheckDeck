@@ -15,12 +15,20 @@ const Admin = (props) => {
 
     const getActivePage = () => {
         if (menuIndex === 0) {
-            return (<AdminUsersPage token={token} users={data.users} sections={data.sections} shows={data.shows}/>);
+            return (<AdminUsersPage token={token} users={data.users} sections={data.sections} shows={data.shows} setUsers={setUsers}/>);
         }
         if (menuIndex === 1) {
-            return (<AdminSectionsPage token={token} sections={data.sections}/>);
+            return (<AdminSectionsPage token={token} sections={data.sections} setSections={setSections}/>);
         }
         return null;
+    }
+
+    const setUsers = (users) => {
+        setData({...data, "users": users})
+    }
+
+    const setSections = (sections) => {
+        setData({...data, "sections": sections})
     }
 
     useEffect(() => {
