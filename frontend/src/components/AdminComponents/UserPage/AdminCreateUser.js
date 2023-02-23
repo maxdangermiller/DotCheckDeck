@@ -59,7 +59,7 @@ const AdminCreateUser = (props) => {
             </Modal.Header>
             <Modal.Body>
                 <FloatingLabel
-                    controlId="floatingInput"
+                    controlId="emailInput"
                     label="Email address"
                     className="mb-3"
                 >
@@ -72,7 +72,7 @@ const AdminCreateUser = (props) => {
                 </FloatingLabel>
 
                 <FloatingLabel
-                    controlId="floatingInput"
+                    controlId="passwordInput"
                     label="Password"
                     className="mb-3"
                 >
@@ -85,7 +85,7 @@ const AdminCreateUser = (props) => {
                 </FloatingLabel>
 
                 <FloatingLabel
-                    controlId="floatingInput"
+                    controlId="FNInput"
                     label="First Name"
                     className="mb-3"
                 >
@@ -98,7 +98,7 @@ const AdminCreateUser = (props) => {
                 </FloatingLabel>
 
                 <FloatingLabel
-                    controlId="floatingInput"
+                    controlId="LNInput"
                     label="Last Name"
                     className="mb-3"
                 >

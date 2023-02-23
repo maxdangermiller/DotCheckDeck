@@ -31,22 +31,19 @@ https://stackoverflow.com/questions/65888631/how-do-i-use-heroku-postgres-with-m
 https://towardsdatascience.com/deploy-a-micro-flask-application-into-heroku-with-postgresql-database-d95fd0c19408
 """
 
-ENV = "dev"
-
-
-if ENV == 'dev':
+# WEBSITE_HOSTNAME exists only in production environment
+if 'WEBSITE_HOSTNAME' not in os.environ:
+	# local development, where we'll use environment variables
 	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
 else:
-	# https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?redirectedfrom=MSDN&view=sql-server-ver16
-	database_prams = urllib.parse.quote_plus(
-		"DRIVER = {ODBC Driver 18 for SQL Server};" + 
-		"SERVER=tcp:dcd-database.database.windows.net,1433;" + 
-		"DATABASE=DCD Database;UID=dcd_admin;" + 
-		"PWD=fS3StNPK4LW269f;ENCRYPT=yes;" +
-		"Trusted_Connection=yes;"
+    # production
+	print("Loading config.production from production.py")
+	app.config.from_object('production')
+
+	app.config.update(
+		SQLALCHEMY_DATABASE_URI=app.config.get('DATABASE_URI'),
+		SQLALCHEMY_TRACK_MODIFICATIONS=False,
 	)
-	app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc://?odbc_connect=%s" % database_prams
-	# app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -495,7 +492,7 @@ def logout():
 
 # Serve Images
 @app.route('/get-audio')
-def send_report():
+def send_music():
 	# identity = get_jwt_identity()
 	# user = User.query.filter_by(email=identity).first()
 
@@ -1190,6 +1187,6 @@ if __name__ == "__main__":
 
 	if not rebuild:
 		# Available Externally on LAN
-		app.run(debug=True, host="0.0.0.0")
+		# app.run(debug=True, host="0.0.0.0")
 		# Use Default Config
-		# app.run(debug=True)
+		app.run(debug=True)
