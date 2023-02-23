@@ -3,6 +3,7 @@ import Table from 'react-bootstrap/Table';
 import Boolean from '../Boolean';
 import AdminEditUser from './AdminEditUser';
 import AdminEditShowUser from './AdminEditShowUser';
+import AdminCreateUser from './AdminCreateUser';
 
 const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 
@@ -25,6 +26,7 @@ const AdminUsersPage = (props) => {
 
     const [showEditUser, setShowEditUser] = useState(false);
     const [showEditShowUser, setShowEditShowUser] = useState(false);
+    const [showCreateUser, setShowCreateUser] = useState(false);
     const [editUserData, setEditUserData] = useState({});
     const [sortBy, setSortBy] = useState(0);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
@@ -89,8 +91,7 @@ const AdminUsersPage = (props) => {
             .then(
                 (result) => {
                     setShowEditShowUser(false);
-                    setEditUserData(false);
-
+                    setShowEditUser(false);
                     updateUser(userData);
                 },
                 // Note: it's important to handle errors here
@@ -162,6 +163,7 @@ const AdminUsersPage = (props) => {
 
 
     return(
+        <>
         <Table striped bordered hover>
             <thead>
                 <tr>
@@ -217,8 +219,20 @@ const AdminUsersPage = (props) => {
                     shows={shows}
                     handleSave={handleSave}
                 />
+                <AdminCreateUser 
+                    show={showCreateUser}
+                    setShow={setShowCreateUser}
+                    token={token}
+                />
+                
             </tbody>
         </Table>
+        <button 
+            className="btn btn-success" 
+            style={{bottom: "1vh", left: "1vw", position: "absolute"}}
+            onClick={() => setShowCreateUser(true)}
+        >Create User</button>
+        </>
     );
 };
 

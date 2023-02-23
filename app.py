@@ -536,7 +536,7 @@ class SetListResource(Resource):
 		loggedInUser = User.query.filter(User.email == identity).first()
 		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 		
-		if showUser.section_id is not None:
+		if showUser is not None and showUser.section_id is not None:
 			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
 		else:
 			loggedInUserSection = None
@@ -719,7 +719,11 @@ class GetDotsWithBufferResource(Resource):
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
 		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
-		loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
+		
+		if showUser is not None:
+			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
+		else:
+			loggedInUserSection = None
 
 		for i in range(startIndex, endIndex + 1):
 
@@ -728,7 +732,10 @@ class GetDotsWithBufferResource(Resource):
 			
 			setName = ""
 			if loggedInUserSection is not None:
-				setNameObj = SetName.query.filter(SetName.section_id == loggedInUserSection.id, SetName.set_id == set.id).first()
+				setNameObj = SetName.query.filter(
+					SetName.section_id == loggedInUserSection.id, 
+					SetName.set_id == set.id
+				).first()
 
 				if setNameObj is not None:
 					setName = setNameObj.name
@@ -887,6 +894,7 @@ class UpdateUserResource(Resource):
 		parser.add_argument('email', type=str, default=None, required=True)
 		parser.add_argument('first_name', type=str, default=None, required=True)
 		parser.add_argument('last_name', type=str, default=None, required=True)
+		parser.add_argument('is_admin', type=bool, default=None, required=True)
 		args = parser.parse_args()
 		
 		user = User.query.filter(User.id == args.get('id')).first()
@@ -897,6 +905,7 @@ class UpdateUserResource(Resource):
 		user.email = args.get('email')
 		user.first_name = args.get('first_name')
 		user.last_name = args.get('last_name')
+		user.is_admin = args.get('is_admin')
 
 		for show in json.loads(request.data)["show_users"]:
 			showUser = ShowUser.query.filter(ShowUser.id == show["id"]).first()
@@ -911,6 +920,46 @@ class UpdateUserResource(Resource):
 		db.session.commit()
 
 		return "Success", 201
+
+
+class CreateUserResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+		
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('email', type=str, default=None, required=True)
+		parser.add_argument('password', type=str, default=None, required=True)
+		parser.add_argument('first_name', type=str, default=None, required=True)
+		parser.add_argument('last_name', type=str, default=None, required=True)
+		parser.add_argument('is_admin', type=bool, default=None, required=True)
+		args = parser.parse_args()
+		
+		user = User.query.filter(User.email == args.get('email')).first()
+
+		if user is not None:
+			return "USER ALREADY EXISTS", 404
+
+		newUser = User(
+			email = args.get('email'),
+			first_name = args.get('first_name'),
+			last_name = args.get('last_name'),
+			school_id = activeUser.school_id,
+			is_admin = args.get('is_admin')
+		)
+
+		newUser.activated_date = datetime.datetime.now()
+		newUser.set_password(args.get('password'))
+
+		db.session.add(newUser)
+		db.session.commit()
+
+		return "Successfully Created User", 201
 
 
 class GetDatabaseResource(Resource):
@@ -1044,6 +1093,7 @@ api.add_resource(GetDotsWithBufferResource, '/get-dots')
 api.add_resource(UpdateSetResource, '/update-set')
 api.add_resource(UpdateSetsResource, '/update-sets')
 api.add_resource(UpdateUserResource, '/users')
+api.add_resource(CreateUserResource, '/create-user')
 api.add_resource(GetDatabaseResource, '/get-all')
 api.add_resource(UpdateOrCreateSetNameResource, '/update-set-name')
 api.add_resource(UpdateSectionResource, '/update-section')
@@ -1131,7 +1181,7 @@ if __name__ == "__main__":
 					addAllDataFromPDF("Mvt-4.pdf")
 
 					print("\r\nDONE.")
-
+			
 			break
 
 

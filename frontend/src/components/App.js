@@ -33,8 +33,8 @@ function App() {
 						Authorization: `Bearer ${refToken}`,
 					}
 				}).then((response) => {
+					console.log(response.data)
 					if (response.status === 202) {
-						// console.log(response.data)
 						setToken(response.data.access_token);
 						setUserData(response.data.user);
 						setSchoolCode(response.data.school_code);

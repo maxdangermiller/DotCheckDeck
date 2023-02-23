@@ -231,7 +231,11 @@ const Viewer = (props) => {
 
 	// Automatically Grab The Users Info and select them for highlighting
 	useEffect(() => {
-		setUserOptions({...userOptions,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
+		if (props.userData.label !== undefined) {
+			setUserOptions({...userOptions,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
+		} else {
+			setUserOptions({...userOptions,  "highlightUser": null});
+		}
 	}, [props.userData])
 
 	// Check to see if we're in landscape, if not display a "Rotate Please" message
