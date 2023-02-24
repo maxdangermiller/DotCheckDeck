@@ -16,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: cd into frontend
+        run: cd frontend
+
       - name: Set up Node.js version
         uses: actions/setup-node@v1
         with:
@@ -37,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'Production'
+      name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
@@ -51,6 +54,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'DCD-Frontend'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C01F673C65D24EDE837AB8463BB30C41 }}
-          package: .
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_cd4a80dc66164f32b07a56e8cbc32819 }}
+          package: .      package: .
