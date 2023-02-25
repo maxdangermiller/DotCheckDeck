@@ -297,8 +297,9 @@ class SetNameSchema(ma.SQLAlchemyAutoSchema):
 
 class SetSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
-		fields = ("id", "set_numb", "measure", "counts", "setNames", "start_time_code", "end_time_code")
 		model = Set
+		include_fk = True
+		load_instance = True
 	
 	setNames = ma.Nested(SetNameSchema)
 
@@ -657,8 +658,15 @@ class SetUpUserResource(Resource):
 def getSetIndex(sets, middleSet) -> int:
 	for x in range(len(sets)):
 		if sets[x].set_numb == middleSet:
-			return x
+			return sets[x].showIndex
 	return -1
+
+
+def getSetByShowIndex(sets, index):
+	for set in sets:
+		if set.showIndex == index:
+			return set
+	return None
 
 
 def getSectionColor(userObj) -> list:
@@ -690,9 +698,8 @@ class GetDotsWithBufferResource(Resource):
 		if show is None:
 			return "INVALID SCHOOL CODE", 404
 
+		# Get with order
 		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
-
-		# TODO: GET ORDER HERE
 
 		if middleSet == "undefined":
 			middleSet = "1"
@@ -724,7 +731,7 @@ class GetDotsWithBufferResource(Resource):
 
 		for i in range(startIndex, endIndex + 1):
 
-			set = sets[i]
+			set = getSetByShowIndex(sets, i)
 			dots = Dot.query.filter(Dot.set_id == set.id).all()
 			
 			setName = ""
@@ -1188,7 +1195,7 @@ if __name__ == "__main__":
 				show = Show.query.filter().first()
 				sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
 				for set in sets:
-					set.showIndex = set.id
+					set.showIndex = set.id - 1
 
 					db.session.commit()
 
