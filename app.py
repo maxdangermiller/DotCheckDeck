@@ -1181,6 +1181,14 @@ if __name__ == "__main__":
 			
 			break
 
+		if arg == "stuff":
+			show = Show.query.filter().first()
+			sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
+			for set in sets:
+				set.showIndex = set.id
+
+				db.session.commit()
+
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)
