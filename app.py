@@ -521,13 +521,13 @@ class SetListResource(Resource):
 			return "INVALID SHOW CODE", 404
 
 		if setNumb is not None and measure is not None:
-			sets = Set.query.filter(Set.set_numb == setNumb, Set.measure == measure, Set.show_id == show.id).all()
+			sets = Set.query.filter(Set.set_numb == setNumb, Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).all()
 		elif setNumb is not None:
-			sets = Set.query.filter(Set.set_numb == setNumb, Set.show_id == show.id).all()
+			sets = Set.query.filter(Set.set_numb == setNumb, Set.show_id == show.id).order_by(Set.showIndex).all()
 		elif measure is not None:
-			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).all()
+			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).all()
 		else:
-			sets = Set.query.filter(Set.show_id == show.id).all()
+			sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
 
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
