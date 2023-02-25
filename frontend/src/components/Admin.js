@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import AdminAccordionItem from './AdminComponents/AdminAccordionItem';
 import AdminUsersPage from './AdminComponents/UserPage/AdminUsersPage';
 import AdminSectionsPage from './AdminComponents/SectionPage/AdminSectionsPage';
+import getApi from './getApi';
 
 import './Admin.css';
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 const Admin = (props) => {
     const [data, setData] = useState({"school": {}, "sections": [], "sets": [], "shows": [], "users": []});

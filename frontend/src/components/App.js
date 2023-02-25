@@ -9,11 +9,12 @@ import NavBar from './NavBar';
 import Admin from './Admin';
 import AdminTimeline from './AdminComponents/TimelinePage/AdminTimeline';
 import PWAInstructions from './PWAInstructions';
+import getApi from './getApi';
 
 import axios from "axios";
 
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 function App() {
 

@@ -4,11 +4,12 @@ import Canvas from './Canvas'
 import ViewerSideBar from './ViewerSideBar';
 import axios from "axios";
 import { APISetWithDots, DotCordData, DotData } from "./utils/APIClasses";
+import getApi from './getApi';
 
 const SCHOOL_CODE = "12345678";
 
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 // let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
 let audio = new Audio(WINDOW_LOCATION + "/get-audio");

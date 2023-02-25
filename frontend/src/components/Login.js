@@ -3,6 +3,7 @@ import { TextField } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axios from "axios";
 import './Login.css'
+import getApi from './getApi';
 
 const darkTheme = createTheme({
   palette: {
@@ -10,7 +11,7 @@ const darkTheme = createTheme({
   },
 });
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 const Login = (props) => {
 

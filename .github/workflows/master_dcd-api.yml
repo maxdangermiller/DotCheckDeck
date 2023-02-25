@@ -39,12 +39,6 @@ jobs:
           path: |
             . 
             !venv/
-      
-      # Install Java
-      - name: Install Java
-        run: |
-          apt update
-          apt install default-jdk
 
   deploy:
     runs-on: ubuntu-latest
