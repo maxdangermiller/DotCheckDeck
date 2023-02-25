@@ -172,7 +172,7 @@ const Viewer = (props) => {
 					dataBackup[setNumb] = response.data[i];
 				}
 
-				// console.log(dataBackup);
+				console.log(dataBackup, sets);
 				console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
 
 				setData(dataBackup);
