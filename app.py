@@ -690,7 +690,7 @@ class GetDotsWithBufferResource(Resource):
 		if show is None:
 			return "INVALID SCHOOL CODE", 404
 
-		sets = Set.query.filter(Set.show_id == show.id).all()
+		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
 
 		# TODO: GET ORDER HERE
 
@@ -989,7 +989,7 @@ class GetDatabaseResource(Resource):
 		sections = BandSection.query.filter(BandSection.school_id == school.id).all()
 
 		# Get Sets + set names
-		sets = Set.query.filter(Set.school_id == school.id).all()
+		sets = Set.query.filter(Set.school_id == school.id).order_by(Set.showIndex).all()
 
 		return {
 			"school": school_schema.dump(school),
