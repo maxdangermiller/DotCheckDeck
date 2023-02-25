@@ -81,6 +81,7 @@ const ViewerSideBar = (props) => {
                 sets={sets}
                 setSets={setSets}
             />
+            
 
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
                 <div className='flex-row justify-content-center d-flex align-items-center mb-2' style={{height: '30%', width: '100%'}}>
