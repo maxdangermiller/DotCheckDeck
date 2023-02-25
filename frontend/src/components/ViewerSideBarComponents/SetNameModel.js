@@ -1,8 +1,9 @@
 import React from 'react';
 import {Modal, Button} from 'react-bootstrap/';
 import { TextField } from '@mui/material';
+import getApi from '../getApi';
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 const SetNameModel = (props) => {
     const {show, setShow, token, curSetInfo, setCurSetInfo, sets, setSets, ...rest} = props;

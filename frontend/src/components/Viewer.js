@@ -3,10 +3,7 @@ import './Viewer.css';
 import Canvas from './Canvas'
 import ViewerSideBar from './ViewerSideBar';
 import axios from "axios";
-import { APISetWithDots, DotCordData, DotData } from "./utils/APIClasses";
 import getApi from './getApi';
-
-const SCHOOL_CODE = "12345678";
 
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
 const WINDOW_LOCATION = getApi();
@@ -360,6 +357,7 @@ const Viewer = (props) => {
 				curPlayTime={curPlayTime}
 				setCurPlayTime={setCurPlayTime}
 				token={props.token}
+				userData={props.userData}
 			/>
 		</div>
 	);

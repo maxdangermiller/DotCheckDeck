@@ -12,7 +12,7 @@ const ViewerSideBar = (props) => {
         loading, setCurSetNumb, changeCurSetNumb, 
         userOptions, setUserOptions, data,
         audioPlaying, setAudioPlaying, audio, 
-        curPlayTime, setCurPlayTime, token, ...rest 
+        curPlayTime, setCurPlayTime, token, userData, ...rest 
     } = props;
 
     const [showSettings, setShowSettings] = useState(false);
@@ -115,7 +115,11 @@ const ViewerSideBar = (props) => {
             
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{width:"80%"}}>
                 <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => setShowSettings(true)}>Settings</div>
-                <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => openEditSetName()}>Edit</div>
+                {
+                    userData.is_section_leader ?
+                    <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => openEditSetName()}>Edit</div>
+                    : null
+                }
             </div>
         </div>
     );

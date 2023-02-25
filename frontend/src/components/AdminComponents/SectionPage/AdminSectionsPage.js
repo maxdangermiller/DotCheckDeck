@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Table from 'react-bootstrap/Table';
 import AdminEditSection from './AdminEditSection';
+import getApi from '../../getApi';
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 const CELL_STYLE = "flex-row justify-content-center d-flex align-items-center adminTextAlignCenter";
 
 const SORT_ID = 0;
