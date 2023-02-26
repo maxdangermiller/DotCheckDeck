@@ -730,7 +730,6 @@ class GetDotsWithBufferResource(Resource):
 			loggedInUserSection = None
 
 		for i in range(startIndex, endIndex + 1):
-
 			set = getSetByShowIndex(sets, i)
 			dots = Dot.query.filter(Dot.set_id == set.id).all()
 			
