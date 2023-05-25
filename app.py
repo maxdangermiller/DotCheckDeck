@@ -297,8 +297,9 @@ class SetNameSchema(ma.SQLAlchemyAutoSchema):
 
 class SetSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
-		fields = ("id", "set_numb", "measure", "counts", "setNames", "start_time_code", "end_time_code")
 		model = Set
+		include_fk = True
+		load_instance = True
 	
 	setNames = ma.Nested(SetNameSchema)
 
@@ -522,13 +523,13 @@ class SetListResource(Resource):
 			return "INVALID SHOW CODE", 404
 
 		if setNumb is not None and measure is not None:
-			sets = Set.query.filter(Set.set_numb == setNumb, Set.measure == measure, Set.show_id == show.id).all()
+			sets = Set.query.filter(Set.set_numb == setNumb, Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).all()
 		elif setNumb is not None:
-			sets = Set.query.filter(Set.set_numb == setNumb, Set.show_id == show.id).all()
+			sets = Set.query.filter(Set.set_numb == setNumb, Set.show_id == show.id).order_by(Set.showIndex).all()
 		elif measure is not None:
-			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).all()
+			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).all()
 		else:
-			sets = Set.query.filter(Set.show_id == show.id).all()
+			sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
 
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
@@ -658,8 +659,15 @@ class SetUpUserResource(Resource):
 def getSetIndex(sets, middleSet) -> int:
 	for x in range(len(sets)):
 		if sets[x].set_numb == middleSet:
-			return x
+			return sets[x].showIndex
 	return -1
+
+
+def getSetByShowIndex(sets, index):
+	for set in sets:
+		if set.showIndex == index:
+			return set
+	return None
 
 
 def getSectionColor(userObj) -> list:
@@ -691,9 +699,8 @@ class GetDotsWithBufferResource(Resource):
 		if show is None:
 			return "INVALID SCHOOL CODE", 404
 
-		sets = Set.query.filter(Set.show_id == show.id).all()
-
-		# TODO: GET ORDER HERE
+		# Get with order
+		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
 
 		if middleSet == "undefined":
 			middleSet = "1"
@@ -724,8 +731,7 @@ class GetDotsWithBufferResource(Resource):
 			loggedInUserSection = None
 
 		for i in range(startIndex, endIndex + 1):
-
-			set = sets[i]
+			set = getSetByShowIndex(sets, i)
 			dots = Dot.query.filter(Dot.set_id == set.id).all()
 			
 			setName = ""
@@ -994,7 +1000,7 @@ class GetDatabaseResource(Resource):
 			section["set_names"] = set_names_schema.dump(SetName.query.filter(SetName.section_id == section["id"]).all())
 
 		# Get Sets + set names
-		sets = Set.query.filter(Set.school_id == school.id).all()
+		sets = Set.query.filter(Set.school_id == school.id).order_by(Set.showIndex).all()
 
 		return {
 			"school": school_schema.dump(school),
@@ -1220,7 +1226,7 @@ if __name__ == "__main__":
 				with app.app_context():
 
 					# Delete the database
-					# db.drop_all()
+					db.drop_all()
 					db.create_all()
 
 					# Read these dot sheets
@@ -1231,6 +1237,17 @@ if __name__ == "__main__":
 					print("\r\nDONE.")
 			
 			break
+
+		if arg == "stuff":
+			print("Doing stuff!")
+			rebuild = True
+			with app.app_context():
+				show = Show.query.filter().first()
+				sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
+				for set in sets:
+					set.showIndex = set.id - 1
+
+					db.session.commit()
 
 
 	# from GUITest import GUITest

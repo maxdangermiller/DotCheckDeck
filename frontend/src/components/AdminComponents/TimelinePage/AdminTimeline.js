@@ -5,8 +5,9 @@ import PausePlayBtn from './PausePlayBtn';
 import AudioProgressBar from './AudioProgressBar';
 import './AdminTimeline.css';
 import { fontSize } from '@mui/system';
+import getApi from '../../getApi';
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 const PIXELS_PER_SECOND = 10;
 const PIXELS_PER_MS = PIXELS_PER_SECOND / 1000;
 const DEFAULT_LENGTH = 10000;

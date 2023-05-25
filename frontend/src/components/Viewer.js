@@ -4,12 +4,10 @@ import Canvas from './Canvas'
 import SimpleCanvas from './SimpleCanvas'
 import ViewerSideBar from './ViewerSideBar';
 import axios from "axios";
-import { APISetWithDots, DotCordData, DotData } from "./utils/APIClasses";
-
-const SCHOOL_CODE = "12345678";
+import getApi from './getApi';
 
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 // let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
 let audio = new Audio(WINDOW_LOCATION + "/get-audio");
@@ -175,7 +173,7 @@ const Viewer = (props) => {
 					dataBackup[setNumb] = response.data[i];
 				}
 
-				// console.log(dataBackup);
+				console.log(dataBackup, sets);
 				console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
 
 				setData(dataBackup);
@@ -360,6 +358,7 @@ const Viewer = (props) => {
 				curPlayTime={curPlayTime}
 				setCurPlayTime={setCurPlayTime}
 				token={props.token}
+				userData={props.userData}
 			/>
 		</div>
 	);

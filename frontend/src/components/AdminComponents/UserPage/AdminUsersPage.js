@@ -4,8 +4,9 @@ import Boolean from '../Boolean';
 import AdminEditUser from './AdminEditUser';
 import AdminEditShowUser from './AdminEditShowUser';
 import AdminCreateUser from './AdminCreateUser';
+import getApi from '../../getApi';
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 const CELL_STYLE = "flex-row justify-content-center d-flex align-items-center adminTextAlignCenter";
 

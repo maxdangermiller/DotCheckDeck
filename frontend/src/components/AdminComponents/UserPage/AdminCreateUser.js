@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {Modal, Button, FloatingLabel, Form } from 'react-bootstrap/';
+import getApi from '../../getApi';
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 const AdminCreateUser = (props) => {
     const {token, show, setShow, ...rest} = props;

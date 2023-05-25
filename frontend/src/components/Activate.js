@@ -5,6 +5,7 @@ import './Activate.css'
 import SchoolCodePage from './ActivateFormPages/SchoolCodePage';
 import SelectLabelPage from './ActivateFormPages/SelectLabelPage';
 import RegisterPage from './ActivateFormPages/RegisterPage';
+import getApi from './getApi';
 
 const darkTheme = createTheme({
   palette: {
@@ -12,7 +13,7 @@ const darkTheme = createTheme({
   },
 });
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 
 const Activate = (props) => {
 
