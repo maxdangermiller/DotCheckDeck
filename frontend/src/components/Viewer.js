@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './Viewer.css';
 import Canvas from './Canvas'
+import SimpleCanvas from './SimpleCanvas'
 import ViewerSideBar from './ViewerSideBar';
 import axios from "axios";
 import { APISetWithDots, DotCordData, DotData } from "./utils/APIClasses";

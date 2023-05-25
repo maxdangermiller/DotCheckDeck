@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import AdminAccordionItem from './AdminComponents/AdminAccordionItem';
 import AdminUsersPage from './AdminComponents/UserPage/AdminUsersPage';
 import AdminSectionsPage from './AdminComponents/SectionPage/AdminSectionsPage';
+import AdminSetNamePage from './AdminComponents/SetNamePage/AdminSetNamePage';
 
 import './Admin.css';
 
@@ -14,11 +15,17 @@ const Admin = (props) => {
     const { schoolCode, token, ...rest } = props
 
     const getActivePage = () => {
+        console.log(data);
         if (menuIndex === 0) {
             return (<AdminUsersPage token={token} users={data.users} sections={data.sections} shows={data.shows} setUsers={setUsers}/>);
         }
         if (menuIndex === 1) {
             return (<AdminSectionsPage token={token} sections={data.sections} setSections={setSections}/>);
+
+        }
+        if (menuIndex === 2) {
+            return (<AdminSetNamePage token={token} sections={data.sections} setSections={setSections} allData={data}/>);
+
         }
         return null;
     }

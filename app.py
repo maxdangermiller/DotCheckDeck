@@ -305,7 +305,7 @@ class SetSchema(ma.SQLAlchemyAutoSchema):
 
 class ShowSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
-		model = Set
+		model = Show
 		include_fk = True
 		load_instance = True	
 
@@ -321,6 +321,7 @@ class BandSectionSchema(ma.SQLAlchemyAutoSchema):
 		model = BandSection
 		include_fk = True
 		load_instance = True
+		load_relationships = True
 
 	set_names = ma.Nested(SetNameSchema)
 
@@ -987,13 +988,17 @@ class GetDatabaseResource(Resource):
 
 		# Get Sections
 		sections = BandSection.query.filter(BandSection.school_id == school.id).all()
+		sections_data = band_sections_schema.dump(sections)
+		
+		for section in sections_data:
+			section["set_names"] = set_names_schema.dump(SetName.query.filter(SetName.section_id == section["id"]).all())
 
 		# Get Sets + set names
 		sets = Set.query.filter(Set.school_id == school.id).all()
 
 		return {
 			"school": school_schema.dump(school),
-			"sections": band_sections_schema.dump(sections),
+			"sections": sections_data,
 			"sets": sets_schema.dump(sets),
 			"shows": shows_schema.dump(shows),
 			"users": users_schema.dump(users)
@@ -1083,6 +1088,51 @@ class UpdateSectionResource(Resource):
 		return "Updated Successfully!", 201
 
 
+class UpdateSetNameResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if activeUser is None: 
+			return "INVALID AUTHORIZATION", 401
+		
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('set_id', type=int, default=None, required=True, help="You must include the ID of the set")
+		parser.add_argument('show_id', type=int, default=None, required=True, help="You must include the ID of the show")
+		parser.add_argument('section_id', type=int, default=None, required=True, help="You must include the ID of the section")
+		parser.add_argument('name', type=str, default=None, required=True, help="You must include the Name")
+		args = parser.parse_args()
+
+		print(args.get("name"))
+
+		setName = SetName.query.filter(
+			SetName.set_id == args.get("set_id"), 
+			SetName.section_id == args.get("section_id")
+		).first()
+
+		if (setName is None):
+			setName = SetName(
+				school_id=activeUser.school_id, 
+				set_id = args.get("set_id"), 
+				show_id = args.get("show_id"), 
+				section_id = args.get("section_id"), 
+				name = args.get("name")
+			)
+			db.session.add(setName)
+			db.session.commit()
+			return "Created Successfully.", 201
+		else:
+			setName.name = args.get("name")
+			db.session.commit()
+			return "Updated Successfully.", 202
+
+
+
 api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
@@ -1094,6 +1144,7 @@ api.add_resource(CreateUserResource, '/create-user')
 api.add_resource(GetDatabaseResource, '/get-all')
 api.add_resource(UpdateOrCreateSetNameResource, '/update-set-name')
 api.add_resource(UpdateSectionResource, '/update-section')
+api.add_resource(UpdateSetNameResource, '/update-set-name-admin')
 
 
 # For use to build database
