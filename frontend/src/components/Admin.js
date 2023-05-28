@@ -2,11 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import AdminAccordionItem from './AdminComponents/AdminAccordionItem';
 import AdminUsersPage from './AdminComponents/UserPage/AdminUsersPage';
 import AdminSectionsPage from './AdminComponents/SectionPage/AdminSectionsPage';
-<<<<<<< HEAD
 import AdminSetNamePage from './AdminComponents/SetNamePage/AdminSetNamePage';
-=======
 import getApi from './getApi';
->>>>>>> a8cba2d4de3d4b9a68f54b48dc4f188d4f90c3e2
 
 import './Admin.css';
 

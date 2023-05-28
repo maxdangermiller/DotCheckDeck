@@ -24,6 +24,8 @@ const Viewer = (props) => {
 	const [audioPlaying, setAudioPlaying] = useState(false);
 	const [curPlayTime, setCurPlayTime] = useState(0);
 	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+	
+	const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState("");
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
@@ -36,6 +38,23 @@ const Viewer = (props) => {
 	});
 
 	const setInput = useRef(null);
+
+	const getDatabaseVersion = () => {
+		fetch(WINDOW_LOCATION + "/database-version?school_code=" + props.schoolCode + "&token=" + props.token)
+			.then(res => res.json())
+			.then(
+				(result) => {
+					console.log("(getDatabaseVersion) -> ", result.timestamp)
+					setCurDatabaseTimestamp(result.timestamp);
+				},
+				// Note: it's important to handle errors here
+				// instead of a catch() block so that we don't swallow
+				// exceptions from actual bugs in components.
+				(error) => {
+					console.log(error);
+				}
+		);
+	}
 
 	/**
 	 * Determines if the set is buffered and the sets around it are also buffered
@@ -55,7 +74,7 @@ const Viewer = (props) => {
 
 		for(let i = startIndex; i <= endIndex; i++) {
 			// console.log(i + ": " + _data[i])
-			if (_data[i] === undefined) {
+			if (_data[i] === undefined || _data[i].update_timestamp !== curDatabaseTimestamp) {
 				return false;
 			}
 		}
@@ -72,7 +91,7 @@ const Viewer = (props) => {
 		const BUFFER_SIZE = 4;
 		
 		for (let i = 0; i < _sets.length; i++) {
-			if (_data[i] === undefined) {
+			if (_data[i] === undefined || _data[i].update_timestamp !== curDatabaseTimestamp) {
 				let value = i + BUFFER_SIZE;
 				return value < _sets.length ? value : i;
 			}
@@ -117,12 +136,78 @@ const Viewer = (props) => {
 		return string;
 	}
 
+	const checkLocalSets = () => {
+		// Check If Saved
+		// Check Version number?
+		let localSets = localStorage.getItem("localSets");
+		if (localSets !== "" && localSets !== null) {
+			// console.log("USING LOCAL SETS!");
+			// console.log(JSON.parse(localSets));
+			setSets(JSON.parse(localSets));
+			return true;
+		}
+
+		return false;
+	}
+
+	const checkLocalData = () => {
+
+		// Check Version number?
+		// let timestamp = localStorage.getItem("database-timestamp");
+		// console.log(timestamp, curDatabaseTimestamp, timestamp !== curDatabaseTimestamp)
+		// if (timestamp !== curDatabaseTimestamp) { return false; }
+		
+		// Check if Saved
+		let localData = localStorage.getItem("localData");
+		if (localData !== "" && localData !== null) {
+			let parsedData = JSON.parse(localData);
+
+			// Check version number
+			for (let i = 0; i < parsedData.length; i++) {
+				let timestamp = parsedData[i].update_timestamp;
+				if (timestamp !== curDatabaseTimestamp) {
+					// Start UPDATING THOSE SETS
+					return false;
+				}
+			}
+
+			// console.log("Trying to use local Data", parsedData.length, sets.length)
+			if (parsedData.length < sets.length || sets.length === 0) {
+				return false;
+			}
+			console.log("USING LOCAL DATA!");
+			console.log(parsedData);
+			setData(parsedData);
+
+			return true;
+		}
+		return false;
+	}
+
+	const saveLocalData = (newData) => {
+		localStorage.setItem("localData", JSON.stringify(newData));
+		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+	}
+	const saveLocalSets = (newSets) => {
+		localStorage.setItem("localSets", JSON.stringify(newSets));
+		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+	}
+
 	/**
 	 * Calls the API and gets a section of data
 	 * @param {boolean} useBuffer Whether or not to use or throw out the buffer
 	 * @returns void
 	 */
 	const retrievePoints = (useBuffer) => {
+		// Wait until both sets and curDatabaseTimestamp are loaded
+		if (sets.length === 0 || curDatabaseTimestamp === "") {
+			// Stall for time
+			return;
+		} 
+
+		if (checkLocalData()) {
+			return;
+		}
 
 		let useSetIndex = findFirstBufferHole(data, sets);
 		let curSetBuffered = alreadyBuffered(data, curSet);
@@ -173,15 +258,16 @@ const Viewer = (props) => {
 					dataBackup[setNumb] = response.data[i];
 				}
 
-				console.log(dataBackup, sets);
+				// console.log(dataBackup, sets);
 				console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
 
 				setData(dataBackup);
+				saveLocalData(dataBackup);
 
 				setSentRequest(false);
 				if (!curSetBuffered || loading) { setLoading(false); }
 			}).catch((error) => {
-				if (error.response && error.response.status === 401) {
+				if (error.response && error.response.status === 401 || error.response.status === 400) {
 					// console.log(error.response)
 					// console.log(error.response.status)
 					// console.log(error.response.headers)
@@ -193,30 +279,37 @@ const Viewer = (props) => {
 	} 
 
 	useEffect(() => {
+		getDatabaseVersion();
 		retrievePoints(true);
-	}, [curSet, sets])
+	}, [curSet, sets, curDatabaseTimestamp])
 
+	/*
 	useEffect(() => {
+		getDatabaseVersion();
 		retrievePoints(false);
 	}, [dimensions])
+	*/
 
 	// On initial open, call the API and get all of the sets
 	useEffect(() => {
-		fetch(WINDOW_LOCATION + "/sets?school_code=" + props.schoolCode + "&token=" + props.token)
-			.then(res => res.json())
-			.then(
-				(result) => {
-					// console.log(result)
-					setSets(result);
-					setCurSetInfo(result[0]);
-				},
-				// Note: it's important to handle errors here
-				// instead of a catch() block so that we don't swallow
-				// exceptions from actual bugs in components.
-				(error) => {
-					console.log(error);
-				}
-		);
+		if (!checkLocalSets()) {
+			fetch(WINDOW_LOCATION + "/sets?school_code=" + props.schoolCode + "&token=" + props.token)
+				.then(res => res.json())
+				.then(
+					(result) => {
+						// console.log(result)
+						setSets(result);
+						saveLocalSets(result);
+						setCurSetInfo(result[0]);
+					},
+					// Note: it's important to handle errors here
+					// instead of a catch() block so that we don't swallow
+					// exceptions from actual bugs in components.
+					(error) => {
+						console.log(error);
+					}
+			);
+		}
 	}, [])
 
 	useEffect(() => {

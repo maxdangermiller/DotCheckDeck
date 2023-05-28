@@ -233,11 +233,18 @@ class Show(db.Model):
 	code = db.Column(db.String(8), unique=True)
 	name = db.Column(db.String(256))
 
+	# Tracking database updates
+	last_update = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
 		# self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 		self.code = "12345678"
 		return self.code
+
+	def changeUpdateTime(self):
+		print("UPDATE!!!!!!", datetime.datetime.now())
+		self.last_update = datetime.datetime.now()
 
 	def __repr__(self):
 		return f"Show({self.code})"
@@ -525,11 +532,11 @@ class SetListResource(Resource):
 		if setNumb is not None and measure is not None:
 			sets = Set.query.filter(Set.set_numb == setNumb, Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).all()
 		elif setNumb is not None:
-			sets = Set.query.filter(Set.set_numb == setNumb, Set.show_id == show.id).order_by(Set.showIndex).all()
+			sets = Set.query.filter(Set.set_numb == setNumb, Set.show_id == show.id).order_by(Set.showIndex).order_by(Set.showIndex).all()
 		elif measure is not None:
-			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).all()
+			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).order_by(Set.showIndex).all()
 		else:
-			sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
+			sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).order_by(Set.showIndex).all()
 
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
@@ -651,6 +658,11 @@ class SetUpUserResource(Resource):
 		user.set_password(request.json["password"])
 
 		db.session.add(user)
+
+		# There has been a change made to the show's date, 
+		# so we must change the "last update time" var in the show object
+		show.changeUpdateTime()  
+
 		db.session.commit()
 
 		return "Successfully activated user", 201
@@ -758,7 +770,7 @@ class GetDotsWithBufferResource(Resource):
 				r, g, b = getSectionColor(showUserObj)
 
 				dotCords.append({
-					'x': x, 'y': y, 'dot': dot_schema.dump(dot),
+					'dot': dot_schema.dump(dot),
 
 					'counts': set.counts,
 					
@@ -777,7 +789,8 @@ class GetDotsWithBufferResource(Resource):
 				'start_time_code': set.start_time_code,
 				'end_time_code': set.end_time_code,
 				'index': i,
-				'dots': dotCords
+				'dots': dotCords,
+				'update_timestamp': str(show.last_update)
 			})
 		
 		return output
@@ -826,6 +839,10 @@ class UpdateSetResource(Resource):
 		if end_time_code is not None:
 			set.end_time_code = end_time_code
 		
+		# There has been a change made to the show's date, 
+		# so we must change the "last update time" var in the show object
+		show.changeUpdateTime()  
+
 		db.session.commit()
 
 		return "Updated Successfully", 201
@@ -854,6 +871,10 @@ class UpdateSetsResource(Resource):
 			set.end_time_code = _set["end_time_code"]
 
 		
+			# There has been a change made to the show's date, 
+			# so we must change the "last update time" var in the show object
+			show.changeUpdateTime() 
+
 			db.session.commit()
 
 		return "Updated Successfully", 201
@@ -920,6 +941,10 @@ class UpdateUserResource(Resource):
 			showUser.section_id = show["section_id"]
 
 			db.session.commit()
+
+			# There has been a change made to the show's date, 
+			# so we must change the "last update time" var in the show object
+			Show.query.filter(Show.id == showUser.show_id).first().changeUpdateTime()
 		
 		db.session.commit()
 
@@ -1051,10 +1076,15 @@ class UpdateOrCreateSetNameResource(Resource):
 				name = args.get("set_name")
 			)
 			db.session.add(setName)
-			db.session.commit()
 		else:
 			setName.name = args.get("set_name")
-			db.session.commit()
+		
+		# There has been a change made to the show's date, 
+		# so we must change the "last update time" var in the show object
+		Show.query.filter(Show.id == show_id).first().changeUpdateTime()
+
+		db.session.commit()
+
 		return "Done.", 201
 
 
@@ -1089,7 +1119,12 @@ class UpdateSectionResource(Resource):
 		section.color_g = args.get("color_g")
 		section.color_b = args.get("color_b")
 
+		# There has been a change made to the show's date, 
+		# so we must change the "last update time" var in the show object
+		Show.query.filter(Show.id == section.show_id).first().changeUpdateTime()  
+
 		db.session.commit()
+
 
 		return "Updated Successfully!", 201
 
@@ -1130,12 +1165,40 @@ class UpdateSetNameResource(Resource):
 				name = args.get("name")
 			)
 			db.session.add(setName)
+
+			# There has been a change made to the show's date, 
+			# so we must change the "last update time" var in the show object
+			Show.query.filter(Show.id == args.get("show_id")).first().changeUpdateTime()  
+
 			db.session.commit()
 			return "Created Successfully.", 201
 		else:
 			setName.name = args.get("name")
+
+			# There has been a change made to the show's date, 
+			# so we must change the "last update time" var in the show object
+			Show.query.filter(Show.id == args.get("show_id")).first().changeUpdateTime()  
+
 			db.session.commit()
+
 			return "Updated Successfully.", 202
+
+
+class GetLastUpdateResource(Resource):
+	@jwt_required()
+	def get(self):
+		schoolCode = request.args.get('school_code', None) # TODO: Change name to show_code
+
+		# REQUIRE A SCHOOL CODE
+		if schoolCode is None:
+			return "Missing School Code", 404
+
+		# CHECK IF CODE IS VALID
+		show = Show.query.filter(Show.code == schoolCode).first()
+		if show is None:
+			return "INVALID SHOW CODE", 404
+
+		return {"timestamp": str(show.last_update)}, 200
 
 
 
@@ -1151,6 +1214,8 @@ api.add_resource(GetDatabaseResource, '/get-all')
 api.add_resource(UpdateOrCreateSetNameResource, '/update-set-name')
 api.add_resource(UpdateSectionResource, '/update-section')
 api.add_resource(UpdateSetNameResource, '/update-set-name-admin')
+api.add_resource(GetLastUpdateResource, '/database-version')
+
 
 
 # For use to build database
@@ -1237,7 +1302,8 @@ if __name__ == "__main__":
 					print("\r\nDONE.")
 			
 			break
-
+		
+		# Some database configuration, idk what tbh
 		if arg == "stuff":
 			print("Doing stuff!")
 			rebuild = True
@@ -1255,6 +1321,6 @@ if __name__ == "__main__":
 
 	if not rebuild:
 		# Available Externally on LAN
-		# app.run(debug=True, host="0.0.0.0")
+		app.run(debug=True, host="0.0.0.0")
 		# Use Default Config
-		app.run(debug=True)
+		# app.run(debug=True)

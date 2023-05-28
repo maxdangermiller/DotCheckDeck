@@ -24,7 +24,10 @@ const ViewerSideBar = (props) => {
         setTempCurSetInfo(JSON.parse(JSON.stringify(curSetInfo)));
     }
 
-    let setName = data.length > curSet && curSetInfo !== undefined ? curSetInfo["set_name"] : "";
+    let setName = "";
+    if (data.length > curSet && curSetInfo !== undefined && curSetInfo !== null && curSetInfo["set_name"] !== null) {
+        setName = curSetInfo["set_name"];
+    }
 
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
@@ -108,7 +111,7 @@ const ViewerSideBar = (props) => {
                         type="button" 
                         className='fas customViewerSideBarBtn forwardBtn'
                         onClick={() => handelSetBtnControls(curSet + 1)}
-                        disabled={curSet < sets.length - 1 ? false : true}
+                        disabled={sets !== null && curSet < sets.length - 1 ? false : true}
                     >&#xf0a9;</button>
                 </div>
                 

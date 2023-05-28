@@ -1,4 +1,5 @@
 import React, {useRef, useEffect, useState} from 'react'
+import convertDotToCords from './utils/ConvertDotToCords';
 
 const FUTURE_DOT_COLOR = "rgba(0, 100, 0, 0.8)";
 const PREVIOUS_DOT_COLOR = "rgba(100, 0, 0, 0.8)";
@@ -391,11 +392,21 @@ const Canvas = props => {
 
             // Draw Path between previous and current
             if (preDef && curDef && userOptions.drawPath && userOptions.showLastSet) {
-                let x0 = data[curSetIndex - 1].dots[curUserIndex].x
-                let y0 = data[curSetIndex - 1].dots[curUserIndex].y
-
-                let x1 = data[curSetIndex].dots[curUserIndex].x
-                let y1 = data[curSetIndex].dots[curUserIndex].y
+                let cords0 = convertDotToCords(
+                    data[curSetIndex - 1].dots[curUserIndex], 
+                    curDimensions["w"], 
+                    curDimensions["h"]
+                );
+                let x0 = cords0.x
+                let y0 = cords0.y
+                
+                let cords1 = convertDotToCords(
+                    data[curSetIndex].dots[curUserIndex], 
+                    curDimensions["w"], 
+                    curDimensions["h"]
+                );
+                let x1 = cords1.x
+                let y1 = cords1.y
 
                 context.beginPath();
                 context.moveTo(x0, y0);
@@ -408,11 +419,21 @@ const Canvas = props => {
 
             // Draw Path between next and current
             if (nextDef && curDef && userOptions.drawPath && userOptions.showNextSet) {
-                let x0 = data[curSetIndex + 1].dots[curUserIndex].x
-                let y0 = data[curSetIndex + 1].dots[curUserIndex].y
-
-                let x1 = data[curSetIndex].dots[curUserIndex].x
-                let y1 = data[curSetIndex].dots[curUserIndex].y
+                let cords0 = convertDotToCords(
+                    data[curSetIndex + 1].dots[curUserIndex], 
+                    curDimensions["w"], 
+                    curDimensions["h"]
+                );
+                let x0 = cords0.x
+                let y0 = cords0.y
+                
+                let cords1 = convertDotToCords(
+                    data[curSetIndex].dots[curUserIndex], 
+                    curDimensions["w"], 
+                    curDimensions["h"]
+                );
+                let x1 = cords1.x;
+                let y1 = cords1.y;
 
                 context.beginPath();
                 context.moveTo(x0, y0);
@@ -425,8 +446,13 @@ const Canvas = props => {
 
             // Previous point
             if (preDef && userOptions.showLastSet) {
-                let x = data[curSetIndex - 1].dots[curUserIndex].x
-                let y = data[curSetIndex - 1].dots[curUserIndex].y
+                let cords0 = convertDotToCords(
+                    data[curSetIndex - 1].dots[curUserIndex], 
+                    curDimensions["w"], 
+                    curDimensions["h"]
+                );
+                let x = cords0.x
+                let y = cords0.y
 
                 context.beginPath();
                 context.fillStyle = PREVIOUS_DOT_COLOR;
@@ -437,8 +463,13 @@ const Canvas = props => {
 
             // Center point
             if (curDef) {
-                let x = data[curSetIndex].dots[curUserIndex].x
-                let y = data[curSetIndex].dots[curUserIndex].y
+                let cords0 = convertDotToCords(
+                    data[curSetIndex].dots[curUserIndex], 
+                    curDimensions["w"], 
+                    curDimensions["h"]
+                );
+                let x = cords0.x
+                let y = cords0.y
 
                 context.beginPath();
                 context.fillStyle = color;
@@ -456,8 +487,13 @@ const Canvas = props => {
 
             // Next point
             if (nextDef && userOptions.showNextSet) {
-                let x = data[curSetIndex + 1].dots[curUserIndex].x
-                let y = data[curSetIndex + 1].dots[curUserIndex].y
+                let cords0 = convertDotToCords(
+                    data[curSetIndex + 1].dots[curUserIndex], 
+                    curDimensions["w"], 
+                    curDimensions["h"]
+                );
+                let x = cords0.x
+                let y = cords0.y
 
                 context.beginPath();
                 context.fillStyle = FUTURE_DOT_COLOR;
@@ -852,9 +888,12 @@ const Canvas = props => {
             for (let x = 0; x < curSetData.length; x++) {
                 const dot = curSetData[x];
                 newDots.push(dot);
+
+                // NEW IMPLEMENTATION 5/28/23
+                let cords = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
                 
-                let useX = dot.x;
-                let useY = dot.y;
+                let useX = cords.x;
+                let useY = cords.y;
                 
                 // Check if there is a user highlighted
                 if (highlightedUserData !== null) {
@@ -978,10 +1017,13 @@ const Canvas = props => {
                         // Check if this dot is the highlighted User
                         if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
                             let color = getDotColor(dot, true, userOptions.useSectionColors)
+                            let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
+                            let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+                            
                         
                             drawPointAnimation(
-                                lastDot["x"], lastDot["y"], 
-                                dot["x"], dot["y"], 
+                                cords0.x, cords0.y, 
+                                cords1.x, cords1.y, 
                                 counts, curTime, 
                                 color, dot["userLabel"]
                             );
@@ -990,9 +1032,12 @@ const Canvas = props => {
                         // No change needed
                         else {
                             let color = getDotColor(dot, !userOptions.dimOtherUsers, userOptions.useSectionColors);
+                            let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
+                            let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+
                             drawPointAnimation(
-                                lastDot["x"], lastDot["y"], 
-                                dot["x"], dot["y"], 
+                                cords0.x, cords0.y, 
+                                cords1.x, cords1.y, 
                                 counts, curTime, 
                                 color, dot["userLabel"]
                             );
@@ -1002,9 +1047,12 @@ const Canvas = props => {
                     // No change needed
                     else {
                         let color = getDotColor(dot, true, userOptions.useSectionColors);
+                        let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
+                        let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+
                         drawPointAnimation(
-                            lastDot["x"], lastDot["y"], 
-                            dot["x"], dot["y"], 
+                            cords0.x, cords0.y, 
+                            cords1.x, cords1.y, 
                             counts, curTime, 
                             color, dot["userLabel"]
                         );
@@ -1124,10 +1172,11 @@ const Canvas = props => {
 
         // Collision detection between clicked offset and element.
         dots.forEach(function(dot) {
-            if (y > dot["y"] - margin && y < dot["y"] + margin  && x > dot["x"] - margin && x < dot["x"] + margin) {
+            let cords = convertDotToCords(dot, canvasRef.current.width, canvasRef.current.height);
+            if (y > cords.y - margin && y < cords.y + margin  && x > cords.x - margin && x < cords.x + margin) {
                 // alert('This is: ' + dot["userLabel"]);
                 wasOnDot = true;
-                setHoverDot(dot);
+                setHoverDot({...dot, "x": cords.x, "y": cords.y});
             }
         });
 
