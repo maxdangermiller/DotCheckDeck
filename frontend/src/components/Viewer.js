@@ -34,7 +34,8 @@ const Viewer = (props) => {
 		"useSectionColors": true,
 		"showMovementBrackets": false, "highlightUser": null,
 		"moveSpeed": 10, "useActualSetLength": false,
-		"dimOtherUsers": false, "showCollegeHash": true
+		"dimOtherUsers": false, "showCollegeHash": true,
+		"followingUser": false
 	});
 
 	const setInput = useRef(null);
@@ -405,6 +406,18 @@ const Viewer = (props) => {
 		}
 	}
 
+	const setFollowingUser = (value) => {
+		console.log("Setting Following User To: " + value);
+		setUserOptions({...userOptions, "followingUser": value});
+	}
+
+	const getSetFollowingUserBtnColor = () => {
+		if (userOptions.followingUser) {
+			return "#5130b8";
+		}
+		return "#311d6e"; 
+	}
+
 
 	if (!isLandscape) {
 		return (
@@ -453,6 +466,12 @@ const Viewer = (props) => {
 				token={props.token}
 				userData={props.userData}
 			/>
+			<button 
+				type="button" 
+				className='fas followUserBtn'
+				style={{color: getSetFollowingUserBtnColor()}}
+				onClick={() => setFollowingUser(!userOptions.followingUser)}
+			>&#xf059;</button>
 		</div>
 	);
 }

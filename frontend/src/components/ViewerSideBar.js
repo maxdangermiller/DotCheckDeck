@@ -5,6 +5,11 @@ import SetNameModel from './ViewerSideBarComponents/SetNameModel';
 import AudioProgressBar from './AdminComponents/TimelinePage/AudioProgressBar';
 import Spinner from './utils/Spinner';
 
+import leftArrow from '../circle-arrow-left.svg';
+import rightArrow from '../circle-arrow-right.svg';
+import pauseIcon from '../circle-pause.svg';
+import playIcon from '../circle-play.svg';
+
 const ViewerSideBar = (props) => {
     const { 
         curSetInfo, curSetNumb, setInput, 

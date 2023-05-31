@@ -7,8 +7,9 @@ const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
 const CURRENT_DOT_HIGHLIGHT_COLOR = "rgba(0, 0, 255, 0.4)";  // This is the value given if another thing is highlighted
 const HIGHLIGHT_USER_COLOR = "rgb(255, 0, 0)";
 
-const MAX_ZOOM = 4;
+const MAX_ZOOM = 5;
 const MIN_ZOOM = 0.9;
+const FOLLOWING_USER_ZOOM = 5;
 const SCROLL_SENSITIVITY = 0.0005;
 
 const STEPS_TO_5_MAJOR = 2;
@@ -42,6 +43,7 @@ const Canvas = props => {
 
     const [dots, setDots] = useState([]);
     const [hoverDot, setHoverDot] = useState({});
+    const [followDot, setFollowDot] = useState({});
     const [cameraOffset, setCameraOffset] = useState({x: 0, y: 0});
 
     const [cameraZoom, setCameraZoom] = useState(1);
@@ -67,6 +69,7 @@ const Canvas = props => {
         const context = canvas.getContext('2d')
         let frameCount = 0
         let animationFrameId
+        let followDotCords = {x: 0, y: 0};
 
         // Takes the side and line and give the percentage out of 100
         const sideLineRatioConvert = (side, line) => {
@@ -483,6 +486,13 @@ const Canvas = props => {
                 context.textAlign = "center";
                 context.fillText(userLabel, x, y + canvas.height * 0.015);
                 context.closePath();
+
+                if (followDot.dot !== undefined) {
+                    if (userOptions.highlightUser.label === data[curSetIndex].dots[curUserIndex].userLabel) {
+                        followDotCords = {x: x, y: y};
+                        drawUserDialogue(x, y, data[curSetIndex].dots[curUserIndex]);
+                    }
+                }
             }
 
             // Next point
@@ -503,7 +513,7 @@ const Canvas = props => {
             }
         }
 
-        const drawPointAnimation = (x0, y0, x1, y1, counts, count, color, userLabel) => {
+        const drawPointAnimation = (x0, y0, x1, y1, counts, count, color, userLabel, isHighlighted, dot) => {
             // y = mx + b
             if (x1 - x0 !== 0) {
                 const m = (y1 - y0) / (x1 - x0)
@@ -512,12 +522,30 @@ const Canvas = props => {
                 const x = ((x1 - x0) / counts * count) + x0;
                 const y = m * x + b;
 
+
                 drawPoint(x, y, color, userLabel)
+
+                if (isHighlighted) {
+                    followDotCords = {x: x, y: y};
+                    
+                    if (followDot.dot !== undefined) {
+                        drawUserDialogue(x, y, dot);
+                    }
+                }
+
             } else {
                 const x = x0
                 const y = ((y1 - y0) / counts * count) + y0;
 
                 drawPoint(x, y, color, userLabel)
+
+                if (isHighlighted) {
+                    followDotCords = {x: x, y: y};
+
+                    if (followDot.dot !== undefined) {
+                        drawUserDialogue(x, y, dot);
+                    }
+                }
             }
             
         };
@@ -810,6 +838,21 @@ const Canvas = props => {
 
         const doPanAndZoom = (ctx) => {
             if (cameraOffset !== null) {
+                
+                if (followDot.dot !== undefined) {
+                    ctx.translate( canvas.width / 2, canvas.height / 2 )        // Translate to center for zoom
+                    ctx.scale(FOLLOWING_USER_ZOOM, FOLLOWING_USER_ZOOM)                               // Zoom
+                    ctx.translate( -canvas.width / 2, -canvas.height / 2 )      // Go back
+
+                    let newCords = {
+                        x: (canvasRef.current.width / 2) - followDotCords.x, 
+                        y: (canvasRef.current.height / 2) - followDotCords.y
+                    };
+
+                    ctx.translate(newCords.x, newCords.y);
+                    return;
+                }
+
                 ctx.translate( canvas.width / 2, canvas.height / 2 )        // Translate to center for zoom
                 ctx.scale(cameraZoom, cameraZoom)                           // Zoom
                 ctx.translate( -canvas.width / 2, -canvas.height / 2 )      // Go back
@@ -1025,7 +1068,7 @@ const Canvas = props => {
                                 cords0.x, cords0.y, 
                                 cords1.x, cords1.y, 
                                 counts, curTime, 
-                                color, dot["userLabel"]
+                                color, dot["userLabel"], true, dot
                             );
                         }
 
@@ -1039,7 +1082,7 @@ const Canvas = props => {
                                 cords0.x, cords0.y, 
                                 cords1.x, cords1.y, 
                                 counts, curTime, 
-                                color, dot["userLabel"]
+                                color, dot["userLabel"], false, dot
                             );
                         }
                     }
@@ -1054,7 +1097,7 @@ const Canvas = props => {
                             cords0.x, cords0.y, 
                             cords1.x, cords1.y, 
                             counts, curTime, 
-                            color, dot["userLabel"]
+                            color, dot["userLabel"], false, dot
                         );
                     }
                 }
@@ -1153,13 +1196,15 @@ const Canvas = props => {
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
-    }, [draw, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection])
+    }, [draw, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot])
 
     useEffect(() => {
+        setAnimationStartTime(Date.now());
         setIsAnimation(true);
     }, [curSet]);
 
     const dotHover = (event) => {
+        if (followDot.dot !== undefined)  { return; }
 
         let x = (event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft) - translation.x) / translation.s,
             y = (event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop) - translation.y) / translation.s;
@@ -1268,6 +1313,19 @@ const Canvas = props => {
             // console.log(Math.max(tempCameraZoom, MIN_ZOOM))
         }
     }
+
+    useEffect(() => {
+        if (userOptions.followingUser && userOptions.highlightUser !== null) {
+            let userID = userOptions.highlightUser.id;
+            for (let i = 0; i < dots.length; i++) {
+                if (dots[i].userID === userID) {
+                    setFollowDot(dots[i]);
+                }
+            }
+        } else if (!userOptions.followingUser) {
+            setFollowDot({});
+        }
+    }, [userOptions])
 
     return <canvas
         ref={canvasRef}
