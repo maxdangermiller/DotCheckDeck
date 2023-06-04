@@ -1412,7 +1412,43 @@ if __name__ == "__main__":
 					print("\r\nDONE.")
 			
 			break
-		
+
+		if arg == "build" and 'WEBSITE_HOSTNAME' in os.environ:
+			with app.app_context():
+				os.system("apt update")
+				os.system("apt install default-jdk")
+
+				# Delete the database
+				db.drop_all()
+				db.create_all()
+
+				if input("Would you like to create a school with that (y/n)?:  ") != "y":
+					break
+				schoolName = input("School Name: ")
+				schoolEmail = input("School Email: ")
+
+				school = School(name=schoolName, email=schoolEmail)
+				db.session.add(school)
+				db.session.commit()
+
+				if input("Would you like to create an admin account with that (y/n)?") != "y":
+					break
+
+				user = User(
+					school_id = school.id, 
+					email = input("Email: "),
+					first_name = input("First Name: "),
+					last_name = input("Last Name: "),
+					activated_date = datetime.datetime.now()
+				)
+
+				user.set_password(input("Password: "))
+
+				db.session.add(user)
+				db.session.commit()
+
+
+
 		# Some database configuration, idk what tbh
 		if arg == "stuff":
 			print("Doing stuff!")
@@ -1434,3 +1470,10 @@ if __name__ == "__main__":
 		# app.run(debug=True, host="0.0.0.0")
 		# Use Default Config
 		app.run(debug=True)
+
+"""
+AFTER DEPLOY COMMANDS TO INSTALL JAVA
+
+apt update
+apt install default-jdk
+"""
