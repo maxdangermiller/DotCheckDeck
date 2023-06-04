@@ -877,6 +877,10 @@ class GetDotsWithBufferResource(Resource):
 
 				showUserObj = ShowUser.query.filter(ShowUser.id == dot.show_user_id).first()
 				userObj = User.query.filter(User.id == showUserObj.user_id).first()
+				userName = ""
+				if userObj is not None:
+					userName = f"{userObj.first_name} {userObj.last_name}"
+					
 				r, g, b = getSectionColor(showUserObj)
 
 				dotCords.append({
@@ -887,7 +891,7 @@ class GetDotsWithBufferResource(Resource):
 					"r": r, "g": g, "b": b,
 					
 					"userLabel": showUserObj.label, "userID": showUserObj.id,
-					"userName": f"{userObj.first_name} {userObj.last_name}",
+					"userName": userName,
 					"section_id": showUserObj.section_id,
 				})
 			
@@ -1439,7 +1443,8 @@ if __name__ == "__main__":
 					email = input("Email: "),
 					first_name = input("First Name: "),
 					last_name = input("Last Name: "),
-					activated_date = datetime.datetime.now()
+					activated_date = datetime.datetime.now(),
+					is_admin = True
 				)
 
 				user.set_password(input("Password: "))
@@ -1476,4 +1481,8 @@ AFTER DEPLOY COMMANDS TO INSTALL JAVA
 
 apt update
 apt install default-jdk
+apt install software-properties-common
+add-apt-repository ppa:linuxuprising/java
+apt update
+apt install oracle-java11-installer
 """
