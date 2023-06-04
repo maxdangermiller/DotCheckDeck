@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Table from 'react-bootstrap/Table';
 import AdminEditSection from './AdminEditSection';
+import AdminCreateSection from './AdminCreateSection';
 import getApi from '../../getApi';
 
 const WINDOW_LOCATION = getApi();
@@ -19,6 +20,7 @@ const AdminSectionsPage = (props) => {
     const [sortBy, setSortBy] = useState(0);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
     const [showEdit, setShowEdit] = useState(false);
+    const [showCreate, setShowCreate] = useState(false);
     const [curEditSection, setCurEditSection] = useState({});
 
     const openEditSection = (section) => {
@@ -103,6 +105,7 @@ const AdminSectionsPage = (props) => {
     }
 
     return(
+        <>
         <Table striped bordered hover>
             <thead>
                 <tr>
@@ -134,7 +137,18 @@ const AdminSectionsPage = (props) => {
                 setEditData={setCurEditSection}
                 handleSave={handleSave}
             />
+            <AdminCreateSection 
+                show={showCreate}
+                setShow={setShowCreate}
+                token={token}
+            />
         </Table>
+        <button 
+            className="btn btn-success" 
+            style={{bottom: "1vh", left: "1vw", position: "absolute"}}
+            onClick={() => setShowCreate(true)}
+        >Create Section</button>
+        </>
     );
 }
 

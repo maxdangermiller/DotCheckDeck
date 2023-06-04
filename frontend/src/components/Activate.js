@@ -144,7 +144,7 @@ const Activate = (props) => {
                     <SchoolCodePage setSchoolCode={setSchoolCode} />
 
                     : curPage === 1 ?
-                    <p>Are you sure you wish to join "{schoolInfo["name"]}"?</p>
+                    <p>Are you sure you wish to join "{schoolInfo["schoolName"]}'s {schoolInfo["name"]}"?</p>
 
                     : curPage === 2 ?
                     <SelectLabelPage options={schoolInfo["users"]} email={schoolInfo["email"]} userData={userData} setUserData={setUserData}/>

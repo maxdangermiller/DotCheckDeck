@@ -17,6 +17,8 @@ import os
 import sys
 import jwt
 import urllib.parse 
+import string
+import random
 
 import convertHashToCords
 
@@ -169,7 +171,7 @@ class ShowUser(db.Model):
 	# Relationships
 	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 	section_id = db.Column(db.Integer, db.ForeignKey('band_section.id'))
 	dots = db.relationship('Dot', backref='show_user')
 
@@ -231,15 +233,16 @@ class Show(db.Model):
 
 	# Data
 	code = db.Column(db.String(8), unique=True)
-	name = db.Column(db.String(256))
+	name = db.Column(db.String(256), default="NO NAME")
 
 	# Tracking database updates
 	last_update = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
 
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
-		# self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-		self.code = "12345678"
+		# TODO: Make sure this is unique so there isn't an error!
+		self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+		# self.code = "12345678"
 		return self.code
 
 	def changeUpdateTime(self):
@@ -513,6 +516,95 @@ def send_music():
 	return send_from_directory('static', "steampunk.mp3")
 
 
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = ['pdf']
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
+def addShowFileToDatabase(file, school, show):
+	import pdfReader
+
+	stuff = pdfReader.pdfReader(file)
+
+	for dotSheet in stuff:
+		firstShowUser = ShowUser.query.filter(ShowUser.label == dotSheet.label, ShowUser.show_id == show.id).first()
+
+		if firstShowUser is None:
+			# TODO: Creating a new user object for each show user 
+			# will probably cause problems with activate because emails are unique
+			# user = User(school_id = school.id)
+			# db.session.add(user)
+			# db.session.commit()
+
+			showUser = ShowUser(
+				school_id = school.id,
+				show_id = show.id, 
+				user_id = None,
+				symbol=dotSheet.symbol,
+				label = dotSheet.label
+			)
+			db.session.add(showUser)
+			db.session.commit()
+		else:
+			showUser = firstShowUser
+			user = firstShowUser.user
+
+		for dot in dotSheet.dots:
+			if Set.query.filter(Set.set_numb==dot.setNumb, Set.show_id==show.id).first() is None:
+				_set = Set(set_numb=dot.setNumb, measure=dot.measure, counts=dot.counts, school_id=school.id, show_id=show.id)
+				db.session.add(_set)
+				db.session.commit()
+			else:
+				_set = Set.query.filter(Set.set_numb==dot.setNumb, Set.show_id==show.id).first()
+			print(f"Adding dot: '{dot}' to DATABASE [SET {_set.set_numb}]")
+			_dot = Dot(
+				set_id=_set.id, show_user_id=showUser.id, direction=str(dot.direction),
+				line=str(dot.line), steps=float(dot.steps), side=int(dot.side), fb_steps=float(dot.fbSteps),
+				fb_direction=str(dot.fbDirection), use_hash=str(dot.useHash), school_id=school.id, show_id = show.id
+			)
+			db.session.add(_dot)
+			db.session.commit()
+
+
+@app.route('/upload-show', methods=['POST'])
+@jwt_required()
+def upload_file():
+	identity = get_jwt_identity()
+		
+	activeUser = User.query.filter(User.email == identity).first()
+
+	if not activeUser.is_admin:
+		return "INVALID AUTHORIZATION", 401
+	
+	# Get School
+	school = School.query.filter(School.id == activeUser.school_id).first()
+
+	if school is None:
+		return "INVALID SCHOOL", 401
+	
+	# Check Show Name
+	showName = request.form.get("show-name")
+	if showName is None:
+		return "Missing Show Name!", 400
+	
+	# Create new show object
+	show = Show(school_id=school.id, name=showName)
+	show.generateCode()
+	db.session.add(show)
+	db.session.commit()	
+
+	# Check PDFs
+	for fileKey in request.files:
+		file = request.files[fileKey]
+		if len(fileKey) > 8 and fileKey[:8] == "pdf-file" and allowed_file(file.filename):
+			fileLocation = "./showPDFs/" + file.filename
+			file.save(fileLocation)
+			addShowFileToDatabase(fileLocation, school, show)
+
+	return "Success!", 200
+
+
 class SetListResource(Resource):
 	@jwt_required()
 	def get(self):
@@ -571,19 +663,27 @@ class SchoolCodeAuthResource(Resource):
 		if "school_code" not in request.json:
 			return "Missing School Code param", 404
 
-		# Attempt to load the School with that code
+		# Attempt to load the Show with that code
 		show = Show.query.filter(Show.code == request.json['school_code']).first()
 
-		# Check to see if we got a school obj
+		# Check to see if we got a show obj
 		if show is None:
 			return "INVALID SCHOOL CODE", 404
 		
 		school = School.query.filter(School.id == show.school_id).first()
 		
 		users = ShowUser.query.filter(ShowUser.show_id == show.id).all()
+		filteredUsers = []
+		for showUser in users:
+			if showUser.user_id is None:
+				filteredUsers.append(showUser)
+			else:
+				user = User.query.filter(User.id == showUser.user_id).first()
+				if user.activated_date is None:
+					filteredUsers.append(showUser)
 
 		
-		return {"name": school.name, "users": show_users_schema.dump(users), "email": school.email}, 200
+		return {"schoolName": school.name, "name": show.name, "users": show_users_schema.dump(filteredUsers), "email": school.email}, 200
 
 
 # To allow a user to setup their credentials, as by default they cannot login
@@ -645,10 +745,20 @@ class SetUpUserResource(Resource):
 		if len(showUsers) != 1:
 			return "No users found with that school_id and label"
 
-		user = showUsers[0].user
+		# Try and find a matching user
+		user = User.query.filter(User.email == request.json["email"]).first()
+		if user is not None:
+			showUsers[0].user_id = user.id
+			db.session.commit()
 
-		if user.activated_date is not None:
-			return "User has already been activated", 404
+			return "User has already been activated", 200
+		
+		user = User(school_id = show.school_id)
+		db.session.add(user)
+		db.session.commit()
+
+		showUsers[0].user_id = user.id
+		db.session.commit()
 
 		user.email = request.json["email"]
 		user.first_name = request.json["first_name"]

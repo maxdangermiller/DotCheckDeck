@@ -10,6 +10,8 @@ import Admin from './Admin';
 import AdminTimeline from './AdminComponents/TimelinePage/AdminTimeline';
 import PWAInstructions from './PWAInstructions';
 import getApi from './getApi';
+import AdminJoinCodeDisplay from './AdminComponents/AdminJoinCodeDisplay';
+import AdminCreateShow from './AdminComponents/AdminCreateShow';
 
 import axios from "axios";
 
@@ -136,6 +138,17 @@ function App() {
 						? <Navigate to="/" />
 						: <AdminTimeline token={token} schoolCode={schoolCode}/>
 					} />
+					<Route path="/admin-join-code" exact element={
+						token !== "" && token !== undefined && !isAdminAuthorized()
+						? <Navigate to="/" />
+						: <AdminJoinCodeDisplay token={token} schoolCode={schoolCode}/>
+					} />
+					<Route path="/admin-create-show" exact element={
+						token !== "" && token !== undefined && !isAdminAuthorized()
+						? <Navigate to="/" />
+						: <AdminCreateShow token={token} schoolCode={schoolCode}/>
+					} />
+
 					<Route path="*" element={<h1>404, you've been dumb</h1>} />
 				</Routes>
 			</Router>

@@ -3,6 +3,7 @@ import AdminAccordionItem from './AdminComponents/AdminAccordionItem';
 import AdminUsersPage from './AdminComponents/UserPage/AdminUsersPage';
 import AdminSectionsPage from './AdminComponents/SectionPage/AdminSectionsPage';
 import AdminSetNamePage from './AdminComponents/SetNamePage/AdminSetNamePage';
+import AdminShowPage from './AdminComponents/ShowPage/AdminShowPage';
 import getApi from './getApi';
 
 import './Admin.css';
@@ -26,6 +27,10 @@ const Admin = (props) => {
         }
         if (menuIndex === 2) {
             return (<AdminSetNamePage token={token} sections={data.sections} setSections={setSections} allData={data}/>);
+
+        }
+        if (menuIndex === 3) {
+            return (<AdminShowPage token={token} shows={data.shows} setShows={setSections}/>);
 
         }
         return null;

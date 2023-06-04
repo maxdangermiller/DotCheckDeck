@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import Table from 'react-bootstrap/Table';
 import AdminEditSetName from './AdminEditSetName';
 import AdminCreateSetName from './AdminCreateSetName';
+import getApi from '../../getApi';
 
-const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
+const WINDOW_LOCATION = getApi();
 const CELL_STYLE = "flex-row justify-content-center d-flex align-items-center adminTextAlignCenter";
 
 const SORT_ID = 0;
-const SORT_SET = 1;
+const SORT_SET_NUMB = 1;
 const SORT_NAME = 2;
 
 const SORT_UP = 1;
@@ -16,7 +17,7 @@ const SORT_DOWN = -1;
 const AdminSetNamePage = (props) => {
     const {token, sections, setSections, allData, ...rest} = props;
 
-    const [sortBy, setSortBy] = useState(0);
+    const [sortBy, setSortBy] = useState(1);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
     const [showEdit, setShowEdit] = useState(false);
     const [curEdit, setCurEdit] = useState({});
@@ -125,7 +126,7 @@ const AdminSetNamePage = (props) => {
         let useKey = "";
 
         if (sortBy === SORT_ID)     { useKey = "id";    }
-        if (sortBy === SORT_SET)   { useKey = "set_id";  }
+        if (sortBy === SORT_SET_NUMB)   { useKey = "set_id";  }
         if (sortBy === SORT_NAME)  { useKey = "name";  }
 
         return data.sort(function(a, b) {
@@ -166,14 +167,14 @@ const AdminSetNamePage = (props) => {
         <>
         {
             sections.map((section, index) => 
-                <>
-                <h1 key={index + " H"}>{section.name}</h1>
+                <div key={index}>
+                <h1>{section.name}</h1>
 
-                <Table striped bordered hover key={index + "T"}>
+                <Table striped bordered hover>
                     <thead>
                         <tr>
                             <th onClick={() => handelHeaderClick(0)}>#</th>
-                            <th onClick={() => handelHeaderClick(1)}>Section Name</th>
+                            <th onClick={() => handelHeaderClick(1)}>Set Number</th>
                             <th onClick={() => handelHeaderClick(2)}>Set Name</th>
                             <th>Edit</th>
                         </tr>
@@ -181,7 +182,7 @@ const AdminSetNamePage = (props) => {
                     <tbody>
                         {
                             sort(section.set_names).map((setName, index2) => 
-                                <tr key={index2 * index}>
+                                <tr key={index2}>
                                     <td><div className={CELL_STYLE}> {setName.id} </div></td>
                                     <td><div className={CELL_STYLE}> {getSetNumb(setName)} </div></td>
                                     <td><div className={CELL_STYLE}> {setName.name} </div></td>
@@ -192,9 +193,9 @@ const AdminSetNamePage = (props) => {
                             )
                         }
                     </tbody>
-                </Table>
-                <button className='btn btn-success' onClick={(e) => openCreate(section)} key={index + "B"}>Add</button>
-                </>
+                </Table>    
+                <button className='btn btn-success' onClick={(e) => openCreate(section)}>Add</button>
+            </div>
         )}
             <AdminEditSetName
                 show={showEdit}

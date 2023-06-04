@@ -30,6 +30,7 @@ const NavBar = (props) => {
 						<>
 							<Nav.Link href="/admin">Admin</Nav.Link>
 							<Nav.Link href="/admin-timeline">Admin Timeline</Nav.Link>
+							<Nav.Link href="/admin-join-code">Show Join Code</Nav.Link>
 						</>
 						: null
 					}
