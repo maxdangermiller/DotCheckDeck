@@ -869,12 +869,6 @@ class GetDotsWithBufferResource(Resource):
 			dotCords = []
 
 			for dot in dots:
-				x, y = convertHashToCords.convertHashToCords(
-					dot.direction, dot.line, dot.steps,
-					dot.side, dot.fb_steps, dot.fb_direction,
-					dot.use_hash, width=width, height=height
-				)
-
 				showUserObj = ShowUser.query.filter(ShowUser.id == dot.show_user_id).first()
 				userObj = User.query.filter(User.id == showUserObj.user_id).first()
 				userName = ""
