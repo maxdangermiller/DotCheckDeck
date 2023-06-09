@@ -235,6 +235,8 @@ class Show(db.Model):
 	code = db.Column(db.String(8), unique=True)
 	name = db.Column(db.String(256), default="NO NAME")
 
+	is_default = db.Column(db.Boolean, default=True, nullable=False)
+
 	# Tracking database updates
 	last_update = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
 
@@ -248,7 +250,7 @@ class Show(db.Model):
 	def changeUpdateTime(self):
 		print("UPDATE!!!!!!", datetime.datetime.now())
 		self.last_update = datetime.datetime.now()
-
+	
 	def __repr__(self):
 		return f"Show({self.code})"
 
@@ -269,7 +271,6 @@ class School(db.Model):
 	band_sections = db.relationship('BandSection', backref='school')
 	set_names = db.relationship('SetName', backref='school')
 
-	# default_show = db.Column(db.Integer, db.ForeignKey('show.id'))
 
 	# Data
 	name = db.Column(db.String(256))
@@ -421,7 +422,7 @@ def create_token():
 
 		userSchool = School.query.filter(School.id == user.school_id).first()
 		if userSchool is not None:
-			userShow = Show.query.filter(Show.school_id == userSchool.id).first() # TODO: Change from defaulting with the first show
+			userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default).first()
 
 			if userShow is not None:
 				schoolCode = userShow.code
@@ -478,7 +479,7 @@ def get_jwt():
 
 			userSchool = School.query.filter(School.id == user.school_id).first()
 			if userSchool is not None:
-				userShow = Show.query.filter(Show.school_id == userSchool.id).first() # TODO: Change from defaulting with the first show
+				userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default).first()
 
 				if userShow is not None:
 					schoolCode = userShow.code
@@ -909,8 +910,6 @@ class UpdateSetResource(Resource):
 	def post(self):
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
-		show = Show.query.filter(Show.school_id == loggedInUser.school.id).first()
-		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 
 		if not loggedInUser.is_admin:
 			return "Unauthorized", 401
@@ -932,6 +931,7 @@ class UpdateSetResource(Resource):
 		end_time_code = args.get('end_time_code')
 
 		set = Set.query.filter(Set.id == id).first()
+		show = Show.query.filter(Show.school_id == loggedInUser.school.id, Show.id == set.show_id).first()
 
 		if set is None:
 			return "Invalid Set ID", 404
@@ -961,8 +961,6 @@ class UpdateSetsResource(Resource):
 	def post(self):
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
-		show = Show.query.filter(Show.school_id == loggedInUser.school.id).first()
-		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 
 		if not loggedInUser.is_admin:
 			return "Unauthorized", 401
@@ -971,6 +969,7 @@ class UpdateSetsResource(Resource):
 
 		for _set in data["data"]:
 			set = Set.query.filter(Set.id == _set["id"]).first()
+			show = Show.query.filter(Show.school_id == loggedInUser.school.id, Show.id == set.show_id).first()
 
 			set.set_numb = _set["set_numb"]
 			set.measure = _set["measure"]
@@ -1292,6 +1291,44 @@ class UpdateSetNameResource(Resource):
 			return "Updated Successfully.", 202
 
 
+class UpdateShowResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if activeUser is None: 
+			return "INVALID AUTHORIZATION", 401
+		
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+		
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, default=None, required=True, help="You must include the ID of the show")
+		parser.add_argument('code', type=str, default=None, required=True, help="You must include the code for the show")
+		parser.add_argument('name', type=str, default=None, required=True, help="You must include the name of the show")
+		parser.add_argument('is_default', type=bool, default=None, required=True, help="You must include the default status")
+		args = parser.parse_args()
+
+		show = Show.query.filter(Show.id == args.get("id"))
+
+		if show is None:
+			return "Did not find show by that ID", 404
+		
+		show.code = args.get("code")
+		show.name = args.get("name")
+		show.is_default = args.get("is_default")
+
+		# There has been a change made to the show's date, 
+		# so we must change the "last update time" var in the show object
+		show.changeUpdateTime()  
+
+		db.session.commit()
+
+		return "Updated Successfully!", 201
+
+
 class GetLastUpdateResource(Resource):
 	@jwt_required()
 	def get(self):
@@ -1322,6 +1359,7 @@ api.add_resource(GetDatabaseResource, '/get-all')
 api.add_resource(UpdateOrCreateSetNameResource, '/update-set-name')
 api.add_resource(UpdateSectionResource, '/update-section')
 api.add_resource(UpdateSetNameResource, '/update-set-name-admin')
+api.add_resource(UpdateShowResource, '/update-show')
 api.add_resource(GetLastUpdateResource, '/database-version')
 
 
@@ -1449,8 +1487,8 @@ if __name__ == "__main__":
 
 
 		# Some database configuration, idk what tbh
-		if arg == "stuff":
-			print("Doing stuff!")
+		if arg == "fix-show-indicies":
+			print("Configuring Show Indicies!")
 			rebuild = True
 			with app.app_context():
 				show = Show.query.filter().first()
@@ -1458,6 +1496,17 @@ if __name__ == "__main__":
 				for set in sets:
 					set.showIndex = set.id - 1
 
+					db.session.commit()
+				
+		if arg == "stuff":
+			print("Doing Stuff!")
+			rebuild = True
+			with app.app_context():
+				shows = Show.query.filter().all()
+
+				for show in shows:
+					print(f"Changing show: {show} with is default value of: {show.is_default}")
+					show.is_default = False
 					db.session.commit()
 
 
