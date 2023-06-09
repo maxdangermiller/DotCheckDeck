@@ -1148,7 +1148,7 @@ const Canvas = props => {
                     console.log("CAUGHT ERROR")
                 }
             }
-
+            
             // Check to see if we have a new frame (right after an animation)
             else if ((isNewFrame || isRerender) && data[curSet].dots !== undefined) {
                 setDrawInfo(data);

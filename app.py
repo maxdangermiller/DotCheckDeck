@@ -224,11 +224,11 @@ class Show(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
-	show_users = db.relationship('ShowUser', backref='show')
-	sets = db.relationship('Set', backref='show')
-	dots = db.relationship('Dot', backref='show')
-	band_sections = db.relationship('BandSection', backref='show')
-	set_names = db.relationship('SetName', backref='show')
+	show_users = db.relationship('ShowUser', cascade="all,delete", backref='show')
+	sets = db.relationship('Set', cascade="all,delete", backref='show')
+	dots = db.relationship('Dot', cascade="all,delete", backref='show')
+	band_sections = db.relationship('BandSection', cascade="all,delete", backref='show')
+	set_names = db.relationship('SetName', cascade="all,delete", backref='show')
 	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 
 	# Data
@@ -422,7 +422,7 @@ def create_token():
 
 		userSchool = School.query.filter(School.id == user.school_id).first()
 		if userSchool is not None:
-			userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default).first()
+			userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default.desc()).first()
 
 			if userShow is not None:
 				schoolCode = userShow.code
@@ -479,7 +479,7 @@ def get_jwt():
 
 			userSchool = School.query.filter(School.id == user.school_id).first()
 			if userSchool is not None:
-				userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default).first()
+				userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default.desc()).first()
 
 				if userShow is not None:
 					schoolCode = userShow.code
@@ -566,6 +566,14 @@ def addShowFileToDatabase(file, school, show):
 			)
 			db.session.add(_dot)
 			db.session.commit()
+	
+	# Go through and add show indices
+	sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
+	
+	for set in sets:
+		set.showIndex = set.id - 1
+
+		db.session.commit()
 
 
 @app.route('/upload-show', methods=['POST'])
@@ -627,9 +635,9 @@ class SetListResource(Resource):
 		elif setNumb is not None:
 			sets = Set.query.filter(Set.set_numb == setNumb, Set.show_id == show.id).order_by(Set.showIndex).order_by(Set.showIndex).all()
 		elif measure is not None:
-			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).order_by(Set.showIndex).all()
+			sets = Set.query.filter(Set.measure == measure, Set.show_id == show.id).order_by(Set.showIndex).all()
 		else:
-			sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).order_by(Set.showIndex).all()
+			sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
 
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
@@ -782,7 +790,7 @@ class SetUpUserResource(Resource):
 def getSetIndex(sets, middleSet) -> int:
 	for x in range(len(sets)):
 		if sets[x].set_numb == middleSet:
-			return sets[x].showIndex
+			return x
 	return -1
 
 
@@ -806,8 +814,8 @@ class GetDotsWithBufferResource(Resource):
 	@jwt_required()
 	def get(self):
 		schoolCode = request.args.get('school_code', None)
-		width = int(request.args.get('width', 1500))
-		height = int(request.args.get('height', 800))
+		# width = int(request.args.get('width', 1500))
+		# height = int(request.args.get('height', 800))
 		middleSet = request.args.get('set', "1")
 		bufferSize = int(request.args.get('buffer', 4))
 
@@ -854,7 +862,8 @@ class GetDotsWithBufferResource(Resource):
 			loggedInUserSection = None
 
 		for i in range(startIndex, endIndex + 1):
-			set = getSetByShowIndex(sets, i)
+			set = sets[i]
+			print(set)
 			dots = Dot.query.filter(Dot.set_id == set.id).all()
 			
 			setName = ""
@@ -1311,7 +1320,7 @@ class UpdateShowResource(Resource):
 		parser.add_argument('is_default', type=bool, default=None, required=True, help="You must include the default status")
 		args = parser.parse_args()
 
-		show = Show.query.filter(Show.id == args.get("id"))
+		show = Show.query.filter(Show.id == args.get("id")).first()
 
 		if show is None:
 			return "Did not find show by that ID", 404
@@ -1346,6 +1355,28 @@ class GetLastUpdateResource(Resource):
 		return {"timestamp": str(show.last_update)}, 200
 
 
+class GetDefaultJoinCode(Resource):
+	@jwt_required()
+	def get(self):
+		identity = get_jwt_identity()
+
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if activeUser is None: 
+			return "INVALID AUTHORIZATION", 401
+		
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+		
+		show = Show.query.filter(Show.school_id == activeUser.school_id).order_by(Show.is_default.desc()).first()
+
+		if show is None:
+			return "Internal Server Error, could not find any shows that you have access to!", 404
+
+		return {"code": show.code, "name": show.name}
+		
+
+
 
 api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
@@ -1361,6 +1392,7 @@ api.add_resource(UpdateSectionResource, '/update-section')
 api.add_resource(UpdateSetNameResource, '/update-set-name-admin')
 api.add_resource(UpdateShowResource, '/update-show')
 api.add_resource(GetLastUpdateResource, '/database-version')
+api.add_resource(GetDefaultJoinCode, '/default-join-code')
 
 
 
@@ -1487,7 +1519,7 @@ if __name__ == "__main__":
 
 
 		# Some database configuration, idk what tbh
-		if arg == "fix-show-indicies":
+		if arg == "fix-show-indices":
 			print("Configuring Show Indicies!")
 			rebuild = True
 			with app.app_context():

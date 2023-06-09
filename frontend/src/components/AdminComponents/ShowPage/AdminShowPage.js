@@ -20,18 +20,9 @@ const AdminShowPage = (props) => {
 
         for (let i = 0; i < newItems.length; i++) {
             let _item = newItems[i];
-            let foundSetName = false;
 
-            if (_item.id === item.section_id) {
-                for (let ii = 0; ii < _item.set_names.length; ii++) {
-                    if (_item.set_names[ii].id === item.id) {
-                        foundSetName = true;
-                        newItems[i].set_names[ii] = item;
-                    }
-                }
-                if (!foundSetName) {
-                    newItems[i].set_names[newItems[i].set_names.length] = item;
-                }
+            if (_item.id === item.id) {
+                newItems[i] = item;
                 break;
             }
 
@@ -42,7 +33,7 @@ const AdminShowPage = (props) => {
 
     const handleSave = (item) => {
         
-        fetch(WINDOW_LOCATION + '/update-set-name-admin', {
+        fetch(WINDOW_LOCATION + '/update-show', {
             method: 'POST',
             body: JSON.stringify(item),
             headers: {
@@ -57,6 +48,8 @@ const AdminShowPage = (props) => {
                     setShowEdit(false);
 
                     updateItem(item);
+
+                    alert(result)
                 },
                 // Note: it's important to handle errors here
                 // instead of a catch() block so that we don't swallow
@@ -87,6 +80,11 @@ const AdminShowPage = (props) => {
                 setEditData={setCurEdit}
                 handleSave={handleSave}
             />
+            <button 
+                className="btn btn-success" 
+                style={{bottom: "1vh", left: "1vw", position: "absolute"}}
+                onClick={() => {window.location.href = "/admin-create-show"}}
+            >Create Show</button>
         </div>
     );
 }

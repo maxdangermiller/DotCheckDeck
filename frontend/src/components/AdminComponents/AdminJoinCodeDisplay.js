@@ -11,13 +11,11 @@ const AdminJoinCodeDisplay = (props) => {
 
     useState(() => {
         setIsLoading(true);
-        fetch(WINDOW_LOCATION + '/school-code-auth', {
-                method: 'POST',
-                body: JSON.stringify({
-                    school_code: schoolCode,
-                }),
+        fetch(WINDOW_LOCATION + '/default-join-code', {
+                method: 'GET',
                 headers: {
-                    'Content-type': 'application/json; charset=UTF-8'
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
         })
         .then((response) => {
@@ -43,7 +41,7 @@ const AdminJoinCodeDisplay = (props) => {
                 !isLoading ?
                 <>
                     <h1 style={{fontSize:"16vh"}}>{schoolInfo.name}</h1>
-                    <h1 style={{fontSize:"24vh"}}><strong>{schoolCode}</strong></h1>
+                    <h1 style={{fontSize:"24vh"}}><strong>{schoolInfo.code}</strong></h1>
                 </>
                 : <div className="spinner-border" role="status">
                     <span className="visually-hidden">Loading...</span>

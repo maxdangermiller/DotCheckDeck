@@ -160,29 +160,33 @@ const Viewer = (props) => {
 		
 		// Check if Saved
 		let localData = localStorage.getItem("localData");
-		if (localData !== "" && localData !== null) {
-			let parsedData = JSON.parse(localData);
+		try {
+			if (localData !== "" && localData !== null) {
+				let parsedData = JSON.parse(localData);
 
-			// Check version number
-			for (let i = 0; i < parsedData.length; i++) {
-				let timestamp = parsedData[i].update_timestamp;
-				if (timestamp !== curDatabaseTimestamp) {
-					// Start UPDATING THOSE SETS
+				// Check version number
+				for (let i = 0; i < parsedData.length; i++) {
+					let timestamp = parsedData[i].update_timestamp;
+					if (timestamp !== curDatabaseTimestamp) {
+						// Start UPDATING THOSE SETS
+						return false;
+					}
+				}
+
+				// console.log("Trying to use local Data", parsedData.length, sets.length)
+				if (parsedData.length < sets.length || sets.length === 0) {
 					return false;
 				}
-			}
+				console.log("USING LOCAL DATA!");
+				console.log(parsedData);
+				setData(parsedData);
 
-			// console.log("Trying to use local Data", parsedData.length, sets.length)
-			if (parsedData.length < sets.length || sets.length === 0) {
-				return false;
+				return true;
 			}
-			console.log("USING LOCAL DATA!");
-			console.log(parsedData);
-			setData(parsedData);
-
-			return true;
+			return false;
+		} catch {
+			return false;
 		}
-		return false;
 	}
 
 	const saveLocalData = (newData) => {

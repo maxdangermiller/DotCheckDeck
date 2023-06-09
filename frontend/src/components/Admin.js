@@ -30,7 +30,7 @@ const Admin = (props) => {
 
         }
         if (menuIndex === 3) {
-            return (<AdminShowPage token={token} shows={data.shows} setShows={setSections}/>);
+            return (<AdminShowPage token={token} shows={data.shows} setShows={setShows}/>);
 
         }
         return null;
@@ -42,6 +42,10 @@ const Admin = (props) => {
 
     const setSections = (sections) => {
         setData({...data, "sections": sections})
+    }
+
+    const setShows = (shows) => {
+        setData({...data, "shows": shows})
     }
 
     useEffect(() => {
