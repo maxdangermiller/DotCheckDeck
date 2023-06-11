@@ -43,6 +43,10 @@
     padding: 0;
 }
 
+.customViewerIconButton {
+    width: min(8vh, 40px);
+}
+
 .forwardBtn {
     color:#03542e;
 }

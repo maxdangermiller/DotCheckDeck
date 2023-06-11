@@ -1,7 +1,7 @@
 import React from 'react'
 
 const Spinner = (props) => {
-    const {width, height, ...rest} = props;
+    const {width, height} = props;
 
     return (
         <div className="spinner-border" style={{width: width, height: height}} role="status">

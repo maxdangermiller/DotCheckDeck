@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
+import IconButton from '@mui/material/IconButton';
+
 import './ViewerSideBar.css';
 import OptionsModal from './ViewerSideBarComponents/OptionsModal';
 import SetNameModel from './ViewerSideBarComponents/SetNameModel';

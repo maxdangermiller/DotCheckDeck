@@ -25,6 +25,7 @@ const NavBar = (props) => {
 					<Navbar.Brand href="/">
 						<img src={logo} alt="" width="24" height="24" />
 					</Navbar.Brand>
+					<Nav.Link href="/basic">Switch to Basic View</Nav.Link>
 					{
 						isAdminAuthorized() ?
 						<>

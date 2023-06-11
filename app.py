@@ -549,7 +549,6 @@ def addShowFileToDatabase(file, school, show):
 			db.session.commit()
 		else:
 			showUser = firstShowUser
-			user = firstShowUser.user
 
 		for dot in dotSheet.dots:
 			if Set.query.filter(Set.set_numb==dot.setNumb, Set.show_id==show.id).first() is None:
@@ -813,6 +812,7 @@ def getSectionColor(userObj) -> list:
 class GetDotsWithBufferResource(Resource):
 	@jwt_required()
 	def get(self):
+		# TODO: Refactor to show_code
 		schoolCode = request.args.get('school_code', None)
 		# width = int(request.args.get('width', 1500))
 		# height = int(request.args.get('height', 800))
@@ -859,11 +859,11 @@ class GetDotsWithBufferResource(Resource):
 		if showUser is not None:
 			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
 		else:
+			# return "User does not have access to that show", 401
 			loggedInUserSection = None
 
 		for i in range(startIndex, endIndex + 1):
 			set = sets[i]
-			print(set)
 			dots = Dot.query.filter(Dot.set_id == set.id).all()
 			
 			setName = ""
@@ -912,6 +912,56 @@ class GetDotsWithBufferResource(Resource):
 			})
 		
 		return output
+
+
+class GetUserDotsResource(Resource):
+	@jwt_required()
+	def get(self):
+		# TODO: Refactor to show_code
+		showCode = request.args.get('school_code', None)
+
+		# REQUIRE A SHOW CODE
+		if showCode is None:
+			return "Missing School Code", 404
+
+		show = Show.query.filter(Show.code == showCode).first()
+
+		# Make sure show exists
+		if show is None:
+			return "Show doesn't exist with that code", 404
+
+		identity = get_jwt_identity()
+		loggedInUser = User.query.filter(User.email == identity).first()
+
+		if loggedInUser is None:
+			return "Invalid User", 401
+		
+		showUser = ShowUser.query.filter(ShowUser.user_id == loggedInUser.id, ShowUser.show_id == show.id).first()
+
+		if showUser is None:
+			return "User does not have access to that show!", 401
+		
+		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
+
+		dots = list()
+
+		for set in sets:
+			dot = Dot.query.filter(Dot.set_id == set.id, Dot.show_user_id == showUser.id).first()
+					
+			r, g, b = getSectionColor(showUser)
+
+			dots.append({
+				'dot': dot_schema.dump(dot),
+
+				'counts': set.counts,
+				
+				"r": r, "g": g, "b": b,
+				
+				"userLabel": showUser.label, "userID": showUser.id,
+				"section_id": showUser.section_id,
+			})
+		
+		return {"dots": dots}, 200
 
 
 class UpdateSetResource(Resource):
@@ -1127,21 +1177,27 @@ class GetDatabaseResource(Resource):
 		# Get School
 		school = School.query.filter(School.id == activeUser.school_id).first()
 
+		# Get Shows
+		shows = Show.query.filter(Show.school_id == school.id).order_by(Show.is_default.desc()).all()
+
+		if len(shows) == 0:
+			return "NO SHOWS", 404
+
+		# Get Default Show
+		defaultShow = shows[0]
+
 		# Get Users + Show Users
 		users = User.query.filter(User.school_id == activeUser.school_id).all()
 
-		# Get Shows
-		shows = Show.query.filter(Show.school_id == school.id).all()
-
 		# Get Sections
-		sections = BandSection.query.filter(BandSection.school_id == school.id).all()
+		sections = BandSection.query.filter(BandSection.school_id == school.id, BandSection.show_id == defaultShow.id).all()
 		sections_data = band_sections_schema.dump(sections)
 		
 		for section in sections_data:
 			section["set_names"] = set_names_schema.dump(SetName.query.filter(SetName.section_id == section["id"]).all())
 
 		# Get Sets + set names
-		sets = Set.query.filter(Set.school_id == school.id).order_by(Set.showIndex).all()
+		sets = Set.query.filter(Set.school_id == school.id, Set.show_id == defaultShow.id).order_by(Set.showIndex).all()
 
 		return {
 			"school": school_schema.dump(school),
@@ -1382,6 +1438,7 @@ api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
 api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
+api.add_resource(GetUserDotsResource, '/get-dots-user')
 api.add_resource(UpdateSetResource, '/update-set')
 api.add_resource(UpdateSetsResource, '/update-sets')
 api.add_resource(UpdateUserResource, '/users')

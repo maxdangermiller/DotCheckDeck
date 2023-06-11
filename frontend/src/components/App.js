@@ -12,6 +12,7 @@ import PWAInstructions from './PWAInstructions';
 import getApi from './getApi';
 import AdminJoinCodeDisplay from './AdminComponents/AdminJoinCodeDisplay';
 import AdminCreateShow from './AdminComponents/AdminCreateShow';
+import BasicViewer from './BasicViewer';
 
 import axios from "axios";
 
@@ -147,6 +148,11 @@ function App() {
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/" />
 						: <AdminCreateShow token={token} schoolCode={schoolCode}/>
+					} />
+					<Route path="/basic" exact element={
+						token !== "" && token !== undefined && !isAdminAuthorized()
+						? <Navigate to="/" />
+						: <BasicViewer token={token} schoolCode={schoolCode}/>
 					} />
 
 					<Route path="*" element={<h1>404, you've been dumb</h1>} />

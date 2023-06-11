@@ -163,6 +163,12 @@ const AdminSetNamePage = (props) => {
         return "ERROR FINDING SET";
     }
 
+    if (sections.length === 0) {
+        return (
+            <h1>There are no sections defined, you must add sections before editing set names</h1>
+        )
+    }
+
     return(
         <>
         {
