@@ -61,6 +61,9 @@ const Admin = (props) => {
 				// exceptions from actual bugs in components.
 				(error) => {
 					console.log(error);
+                    if (error === "NO SHOWS") {
+                        window.location.href = "admin-create-show";
+                    }
 				}
 		);
 	}, [])
