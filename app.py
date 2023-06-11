@@ -1540,8 +1540,9 @@ if __name__ == "__main__":
 
 		if arg == "build" and 'WEBSITE_HOSTNAME' in os.environ:
 			with app.app_context():
-				os.system("apt update")
-				os.system("apt install default-jdk")
+				if input ("Would you like to install jdk (y/n)?") == "y":
+					os.system("apt update")
+					os.system("apt install default-jdk")
 
 				# Delete the database
 				db.drop_all()
