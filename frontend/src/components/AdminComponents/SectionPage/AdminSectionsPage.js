@@ -30,13 +30,19 @@ const AdminSectionsPage = (props) => {
 
     const updateSection = (section) => {
         let newSections = JSON.parse(JSON.stringify(sections));
+        let found = false;
 
         for (let i = 0; i < newSections.length; i++) {
             if (newSections[i].id === section.id) {
                 for (const key in newSections[i]) {
                     newSections[i][key] = section[key];
                 }
+                found = true;
             }
+        }
+
+        if (!found) {
+            newSections[newSections.length] = section;
         }
 
         setSections(newSections);
@@ -54,6 +60,7 @@ const AdminSectionsPage = (props) => {
             .then(res => res.json())
             .then(
                 (result) => {
+                    console.log(result)
                     setShowEdit(false);
 
                     updateSection(section);
@@ -141,6 +148,7 @@ const AdminSectionsPage = (props) => {
                 show={showCreate}
                 setShow={setShowCreate}
                 token={token}
+                handleSave={handleSave}
             />
         </Table>
         <button 

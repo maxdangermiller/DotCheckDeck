@@ -4,19 +4,7 @@ import logo from '../logo.svg';
 import {Nav,  Navbar, NavDropdown, Container } from 'react-bootstrap';
 
 const NavBar = (props) => {
-    const { token, loggedIn, logout, isAdminAuthorized, ...rest } = props
-
-	const goToEditor = () => {
-		window.location.href = "/";
-	}
-	
-	const goToAdmin = () => {
-		window.location.href = "/admin";
-	}
-	
-	const goToAdminTimeline = () => {
-		window.location.href = "/admin-timeline";
-	}
+    const { token, loggedIn, logout, isAdminAuthorized, isBasic, setIsBasic, ...rest } = props
 
 	return (
 		<Navbar bg="dark" variant="dark" style={{height: "8vh"}}>
@@ -25,7 +13,11 @@ const NavBar = (props) => {
 					<Navbar.Brand href="/">
 						<img src={logo} alt="" width="24" height="24" />
 					</Navbar.Brand>
-					<Nav.Link href="/basic">Switch to Basic View</Nav.Link>
+					{
+						isBasic 
+						? <Nav.Link onClick={() => setIsBasic(!isBasic)} href="#basic">Normal</Nav.Link>
+						: <Nav.Link onClick={() => setIsBasic(!isBasic)} href="#normal">Basic</Nav.Link>
+					}
 					{
 						isAdminAuthorized() ?
 						<>

@@ -954,6 +954,7 @@ class GetUserDotsResource(Resource):
 				'dot': dot_schema.dump(dot),
 
 				'counts': set.counts,
+				'set_numb': set.set_numb,
 				
 				"r": r, "g": g, "b": b,
 				
@@ -1253,7 +1254,7 @@ class UpdateOrCreateSetNameResource(Resource):
 		
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
-		Show.query.filter(Show.id == show_id).first().changeUpdateTime()
+		# Show.query.filter(Show.id == show_id).first().changeUpdateTime()
 
 		db.session.commit()
 
@@ -1430,7 +1431,50 @@ class GetDefaultJoinCode(Resource):
 			return "Internal Server Error, could not find any shows that you have access to!", 404
 
 		return {"code": show.code, "name": show.name}
+
+
+class SetNameListResource(Resource):
+	@jwt_required()
+	def get(self):
+		setNumb = request.args.get('set_id', None)
+		schoolCode = request.args.get('school_code', None) # TODO: Change name to show_code
+
+		# REQUIRE A SCHOOL CODE
+		if schoolCode is None:
+			return "Missing School Code", 404
+
+		# CHECK IF CODE IS VALID
+		show = Show.query.filter(Show.code == schoolCode).first()
+		if show is None:
+			return "INVALID SHOW CODE", 404
+
+		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
+
+		identity = get_jwt_identity()
+		loggedInUser = User.query.filter(User.email == identity).first()
+		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
 		
+		if showUser is not None and showUser.section_id is not None:
+			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
+		else:
+			loggedInUserSection = None
+
+		setsOutput = list()
+
+		for set in sets:
+			setName = "Undefined"
+
+			if loggedInUserSection is not None:
+				setNameObj = SetName.query.filter(SetName.section_id == loggedInUserSection.id, SetName.set_id == set.id).first()
+				if setNameObj is not None:
+					setName = setNameObj.name
+			
+			setsOutput.append({
+				"set_id": set.id,
+				"set_name": setName
+			})
+
+		return setsOutput
 
 
 
@@ -1450,6 +1494,7 @@ api.add_resource(UpdateSetNameResource, '/update-set-name-admin')
 api.add_resource(UpdateShowResource, '/update-show')
 api.add_resource(GetLastUpdateResource, '/database-version')
 api.add_resource(GetDefaultJoinCode, '/default-join-code')
+api.add_resource(SetNameListResource, '/get-set-names')
 
 
 

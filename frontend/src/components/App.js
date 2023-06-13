@@ -24,6 +24,7 @@ function App() {
 	const { token, refToken, setRefToken, removeToken, setToken } = useToken();
 	const [ userData, setUserData ] = useState({});
 	const [ schoolCode, setSchoolCode ] = useState("");
+	const [ isBasic, setIsBasic ] = useState(false);
 
 	useEffect(() => {
 		if (token == null) {
@@ -102,6 +103,8 @@ function App() {
 					loggedIn={token !== "" && token !== undefined} 
 					logout={logout}
 					isAdminAuthorized={isAdminAuthorized}
+					isBasic={isBasic}
+					setIsBasic={setIsBasic}
 				/>
 				{
 					isMobile && !isPWAAdded ?
@@ -112,7 +115,9 @@ function App() {
 					<Route path="/" exact element={
 						token === "" || schoolCode === ""
 						? <Navigate to="/login" />
-						: <Viewer token={token} schoolCode={schoolCode} userData={userData}/>
+						: isBasic
+							? <BasicViewer token={token} schoolCode={schoolCode} />
+							: <Viewer token={token} schoolCode={schoolCode} userData={userData}/>
 					} />
 					<Route path="/activate" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
@@ -148,11 +153,6 @@ function App() {
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/" />
 						: <AdminCreateShow token={token} schoolCode={schoolCode}/>
-					} />
-					<Route path="/basic" exact element={
-						token !== "" && token !== undefined && !isAdminAuthorized()
-						? <Navigate to="/" />
-						: <BasicViewer token={token} schoolCode={schoolCode}/>
 					} />
 
 					<Route path="*" element={<h1>404, you've been dumb</h1>} />

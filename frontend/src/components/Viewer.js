@@ -1,13 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
 import './Viewer.css';
 import Canvas from './Canvas'
 import SimpleCanvas from './SimpleCanvas'
 import ViewerSideBar from './ViewerSideBar';
 import axios from "axios";
 import getApi from './getApi';
+import logo from '../logo.svg';
+import CustomDownloadProgress from './CustomDownloadProgress';
 
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
 const WINDOW_LOCATION = getApi();
+
+const darkTheme = createTheme({
+	palette: {
+	  mode: 'dark',
+	},
+});
+  
 
 // let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
 let audio = new Audio(WINDOW_LOCATION + "/get-audio");
@@ -24,6 +35,9 @@ const Viewer = (props) => {
 	const [audioPlaying, setAudioPlaying] = useState(false);
 	const [curPlayTime, setCurPlayTime] = useState(0);
 	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+
+	const [isDownloading, setIsDownloading] = useState(false);
+	const [downloadingProgress, setDownloadingProgress] = useState(0);
 	
 	const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState("");
 
@@ -92,7 +106,7 @@ const Viewer = (props) => {
 		const BUFFER_SIZE = 4;
 		
 		for (let i = 0; i < _sets.length; i++) {
-			if (_data[i] === undefined || _data[i].update_timestamp !== curDatabaseTimestamp) {
+			if (_data[i] === undefined  || _data[i] === null || _data[i].update_timestamp !== curDatabaseTimestamp) {
 				let value = i + BUFFER_SIZE;
 				return value < _sets.length ? value : i;
 			}
@@ -177,8 +191,8 @@ const Viewer = (props) => {
 				if (parsedData.length < sets.length || sets.length === 0) {
 					return false;
 				}
-				console.log("USING LOCAL DATA!");
-				console.log(parsedData);
+				// console.log("USING LOCAL DATA!");
+				// console.log(parsedData);
 				setData(parsedData);
 
 				return true;
@@ -189,6 +203,16 @@ const Viewer = (props) => {
 		}
 	}
 
+	const getLocalData = () => {
+		try {
+			let localData = localStorage.getItem("localData");
+			let parsedData = JSON.parse(localData);
+			return parsedData;
+		} catch {
+			return [];
+		}
+	}
+
 	const saveLocalData = (newData) => {
 		localStorage.setItem("localData", JSON.stringify(newData));
 		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
@@ -196,6 +220,87 @@ const Viewer = (props) => {
 	const saveLocalSets = (newSets) => {
 		localStorage.setItem("localSets", JSON.stringify(newSets));
 		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+	}
+
+	const downloadPoints = (localData) => {
+		let useSetIndex = findFirstBufferHole(localData, sets);
+
+		// Don't do it again if we've already sent out a request and it's not pressing because it's already buffered
+		// "|| (useSetIndex - 4 >= curSet && useSetIndex + 4 <= curSet)" NOT SURE WHY THIS WAS HERE
+		if (sentRequest) { return; }  
+
+		// If we're buffered then don't worry about calling the API
+		if (useSetIndex === -1) { 
+			setData(localData);
+			setIsDownloading(false); 
+			return; 
+		}
+
+		if (sets.length !== 0 && useSetIndex !== -1) {
+			console.log("Recalculating Points! " + dimensions["w"] + "x" + dimensions["h"]);
+
+			setSentRequest(true);
+
+			// console.log(sets)
+			const url1 = WINDOW_LOCATION + "/get-dots?school_code=" + props.schoolCode 
+				+ "&set=" + sets[useSetIndex]["set_numb"] + 
+				"&width=" + dimensions["w"] + "&height=" + dimensions["h"] + "&token=" + props.token;
+
+			axios({
+				method: "GET",
+				url:url1,
+			}).then((response) => {
+				let dataBackup = localData;
+
+				for (let i = 0; i < response.data.length; i++) {
+					const setNumb = response.data[i]["index"];
+					dataBackup[setNumb] = response.data[i];
+				}
+
+				console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
+
+				setDownloadingProgress(parseInt(dataBackup.length / sets.length * 100));
+				console.log(dataBackup);
+
+				saveLocalData(dataBackup);
+
+				setSentRequest(false);
+				
+				// Recurse
+				downloadPoints(localData);
+			}).catch((error) => {
+				if (error.response && error.response.status === 401 || error.response.status === 400) {
+					// console.log(error.response)
+					// console.log(error.response.status)
+					// console.log(error.response.headers)
+
+					window.location.href = "/login";
+				}
+			})
+		}
+	}
+
+	const retrievePointsNew = (useBuffer) => {
+		// Wait until both sets and curDatabaseTimestamp are loaded
+		if (sets.length === 0 || curDatabaseTimestamp === "") {
+			// Stall for time
+			return;
+		} 
+
+		if (checkLocalData()) {
+			return;
+		}
+
+		if (data.length !== 0) {
+			retrievePoints(useBuffer);
+			return;	
+		}
+
+		// START DOWNLOAD
+		setIsDownloading(true);
+		setDownloadingProgress(0);
+
+		downloadPoints([]);
 	}
 
 	/**
@@ -283,9 +388,40 @@ const Viewer = (props) => {
 		}
 	} 
 
+	const retrieveNewSetNames = () => {
+		if (sets.length === 0) { return; }
+		fetch(WINDOW_LOCATION + "/get-set-names?school_code=" + props.schoolCode + "&token=" + props.token)
+			.then(res => res.json())
+			.then(
+				(result) => {
+					let newSets = sets;
+					let changedSomething = false;
+
+					for (let i = 0; i < result.length; i++) {
+						if (newSets[i].id === result[i].set_id && newSets[i].set_name !== result[i].set_name) {
+							newSets[i].set_name = result[i].set_name;
+							changedSomething = true;
+						}
+					}
+
+					if (changedSomething) {
+						setSets(newSets);
+						saveLocalSets(newSets);
+					}
+				},
+				// Note: it's important to handle errors here
+				// instead of a catch() block so that we don't swallow
+				// exceptions from actual bugs in components.
+				(error) => {
+					console.log(error);
+				}
+		);
+	}
+
 	useEffect(() => {
 		getDatabaseVersion();
-		retrievePoints(true);
+		retrievePointsNew(true);
+		retrieveNewSetNames();
 	}, [curSet, sets, curDatabaseTimestamp])
 
 	/*
@@ -428,6 +564,29 @@ const Viewer = (props) => {
 			<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
 				<h1>Rotate Please</h1>
 			</div>
+		);
+	}
+
+	if (isDownloading) {
+		return (
+			<ThemeProvider theme={darkTheme}><section className="gradient-custom">
+			<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
+				<div className="col-12 col-md-8 col-lg-6 col-xl-5 loginFormHeight">
+					<div className="card bg-dark text-white loginFormHeight" style={{borderRadius: '1rem'}}>
+						<div className="card-body p-5 text-center loginFormTextHeight">
+						<div className="mb-md-5 mt-md-4">
+							<img src={logo} alt="" width="24" height="24" />
+						</div>
+							<div className="mb-md-5 mt-md-4">
+								<h2 className="fw-bold mb-2 text-uppercase">Downloading</h2>
+
+								<CustomDownloadProgress variant="determinate" value={downloadingProgress} />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			</section></ThemeProvider>
 		);
 	}
 

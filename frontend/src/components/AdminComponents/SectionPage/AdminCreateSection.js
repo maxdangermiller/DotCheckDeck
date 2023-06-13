@@ -6,7 +6,7 @@ import { RgbColorPicker } from "react-colorful";
 const WINDOW_LOCATION = getApi();
 
 const AdminCreateSection = (props) => {
-    const {token, show, setShow, ...rest} = props;
+    const {token, show, setShow, handleSave, ...rest} = props;
 
     const [name, setName] = useState("");
     const [colorValue, setColorValue] = useState({r: 0, g: 0, b: 0});
@@ -24,10 +24,6 @@ const AdminCreateSection = (props) => {
 
     const setColor = (value) => {
         setColorValue({r: value.r, g: value.g, b: value.b});
-    }
-
-    const handleSave = () => {
-        
     }
 
     return (
