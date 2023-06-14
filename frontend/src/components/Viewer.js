@@ -559,14 +559,6 @@ const Viewer = (props) => {
 	}
 
 
-	if (!isLandscape) {
-		return (
-			<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
-				<h1>Rotate Please</h1>
-			</div>
-		);
-	}
-
 	if (isDownloading) {
 		return (
 			<ThemeProvider theme={darkTheme}><section className="gradient-custom">
@@ -574,13 +566,13 @@ const Viewer = (props) => {
 				<div className="col-12 col-md-8 col-lg-6 col-xl-5 loginFormHeight">
 					<div className="card bg-dark text-white loginFormHeight" style={{borderRadius: '1rem'}}>
 						<div className="card-body p-5 text-center loginFormTextHeight">
-						<div className="mb-md-5 mt-md-4">
-							<img src={logo} alt="" width="24" height="24" />
-						</div>
-							<div className="mb-md-5 mt-md-4">
-								<h2 className="fw-bold mb-2 text-uppercase">Downloading</h2>
+							<div className='flex-column justify-content-center d-flex align-items-center' style={{height: "100%"}}>
+								<img src={logo} alt="" width="40%" height="40%" />
+								<div className="mb-md-5 mt-md-4">
+									<h2 className="fw-bold mb-2 text-uppercase">Downloading</h2>
 
-								<CustomDownloadProgress variant="determinate" value={downloadingProgress} />
+									<CustomDownloadProgress variant="determinate" value={downloadingProgress} />
+								</div>
 							</div>
 						</div>
 					</div>
@@ -589,6 +581,16 @@ const Viewer = (props) => {
 			</section></ThemeProvider>
 		);
 	}
+
+	if (!isLandscape) {
+		return (
+			<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
+				<h1>Rotate Please</h1>
+				<h2>or switch to basic mode</h2>
+			</div>
+		);
+	}
+
 
 	return (
 		<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">

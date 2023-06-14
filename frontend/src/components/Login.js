@@ -23,29 +23,34 @@ const Login = (props) => {
 
 	const btnClick = (e) => {
 		console.log(WINDOW_LOCATION + "/token")
-		axios({
-			method: "POST",
-			url: WINDOW_LOCATION + "/token",
-			data:{
-				email: email,
-				password: password
-			}
-		}).then((response) => {
-			// console.log(response.data)
-			props.setToken(response.data.access_token);
-			props.setRefToken(response.data.refresh_token);
-			props.setSchoolCode(response.data.school_code);
-			props.setUserData(response.data.user);
-			// window.location.href = "/editor";
-		}).catch((error) => {
-			if (error.response) {
-				console.log(error.response)
-				console.log(error.response.status)
-				console.log(error.response.headers)
-				setShowAlert(true);
-				setAlertText(error.response);
-			}
-		})
+		try {
+
+			axios({
+				method: "POST",
+				url: WINDOW_LOCATION + "/token",
+				data:{
+					email: email,
+					password: password
+				}
+			}).then((response) => {
+				// console.log(response.data)
+				props.setToken(response.data.access_token);
+				props.setRefToken(response.data.refresh_token);
+				props.setSchoolCode(response.data.school_code);
+				props.setUserData(response.data.user);
+				// window.location.href = "/editor";
+			}).catch((error) => {
+				if (error.response) {
+					console.log(error.response)
+					console.log(error.response.status)
+					console.log(error.response.headers)
+					setShowAlert(true);
+					setAlertText(error.response);
+				}
+			})
+		} catch (error) {
+			alert("We encountered an error... please try again")
+		} 
 
 		// setEmail("");
 		// setPassword("");

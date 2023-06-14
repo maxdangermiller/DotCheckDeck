@@ -1584,6 +1584,7 @@ if __name__ == "__main__":
 			break
 
 		if arg == "build" and 'WEBSITE_HOSTNAME' in os.environ:
+			rebuild = True
 			with app.app_context():
 				if input ("Would you like to install jdk (y/n)?") == "y":
 					os.system("apt update")
