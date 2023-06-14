@@ -505,16 +505,24 @@ def logout():
 
 # Serve Images
 @app.route('/get-audio')
+@jwt_required()
 def send_music():
-	# identity = get_jwt_identity()
-	# user = User.query.filter_by(email=identity).first()
+	identity = get_jwt_identity()
+	user = User.query.filter_by(email=identity).first()
 
-	# if user is None: 
-	# 	return "Invalid Token", 401
+	if user is None:
+		return "Unauthorized", 401
+	
+	school = School.query.filter(School.id == user.school_id).first()
 
-	# TODO: GET DYNAMIC SHOW FILE FROM SCHOOL OBJ
+	if school is None:
+		return "School does not exist", 404
+	
+	show = Show.query.filter(Show.school_id == school.id).order_by(Show.is_default.desc()).first()
+	if show is None:
+		return "User has no shows", 404
 
-	return send_from_directory('static', "steampunk.mp3")
+	return send_from_directory(f"static/{show.id}", "audio.mp3")
 
 
 def allowed_file(filename):
@@ -609,6 +617,9 @@ def upload_file():
 			fileLocation = "./showPDFs/" + file.filename
 			file.save(fileLocation)
 			addShowFileToDatabase(fileLocation, school, show)
+		elif len(fileKey) > 8 and fileKey[:8] == "mp3-file" and allowed_file(file.filename):
+			fileLocation = f"./static/{show.id}/audio.mp3"
+			file.save(fileLocation)
 
 	return "Success!", 200
 

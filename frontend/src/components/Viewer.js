@@ -21,7 +21,7 @@ const darkTheme = createTheme({
   
 
 // let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
-let audio = new Audio(WINDOW_LOCATION + "/get-audio");
+// let audio = new Audio(WINDOW_LOCATION + "/get-audio");
 
 const Viewer = (props) => {
 	const [data, setData] = useState([]);
@@ -35,6 +35,7 @@ const Viewer = (props) => {
 	const [audioPlaying, setAudioPlaying] = useState(false);
 	const [curPlayTime, setCurPlayTime] = useState(0);
 	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+	const [audio, setAudio] = useState(new Audio());
 
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [downloadingProgress, setDownloadingProgress] = useState(0);
@@ -451,6 +452,10 @@ const Viewer = (props) => {
 					}
 			);
 		}
+	}, [])
+
+	useEffect(() => {
+		setAudio(new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token));
 	}, [])
 
 	useEffect(() => {
