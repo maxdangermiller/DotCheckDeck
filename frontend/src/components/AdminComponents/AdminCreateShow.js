@@ -9,12 +9,18 @@ const AdminCreateShow = (props) => {
 
     const [showName, setShowName] = useState("");
     const [files, setFiles] = useState([null]);
+    const [audio, setAudio] = useState(null);
 
     const sendFile = () => {
+        if (files.length === 0 || audio === null) {
+            return;
+        }
+
         const formData = new FormData();
         for (let i = 0; i < files.length; i++) {
             formData.append('pdf-file-' + i, files[i]);
         }
+        formData.append('mp3-file', audio);
         formData.append('show-name', showName);
         console.log(files);
 
@@ -65,6 +71,17 @@ const AdminCreateShow = (props) => {
                             multiple
                         />
                     </div>
+                    
+                    <div className="mb-3">
+                        <label htmlFor="showAudio" className="form-label">Choose Show Audio</label>
+                        <input 
+                            className="form-control" 
+                            type="file" 
+                            id="showAudio" 
+                            onChange={(event) => setAudio(event.target.files[0])}
+                        />
+                    </div>
+
                     <button className="btn btn-primary" onClick={() => sendFile()}>Submit</button>
                 </div>
             </div>
