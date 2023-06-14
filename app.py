@@ -1649,11 +1649,6 @@ if __name__ == "__main__":
 	# GUITest(1125, 600)
 
 	if not rebuild:
-		import jdk
-		jdk.install('19')
-		os.environ["JAVA_HOME"] = "$HOME/.jdk/myJavaVersion"
-		os.environ["PATH"] = "$PATH:$JAVA_HOME/bin"
-
 		# Available Externally on LAN
 		# app.run(debug=True, host="0.0.0.0")
 		# Use Default Config
