@@ -52,7 +52,12 @@ const AdminCreateSection = (props) => {
                 <Button variant="secondary" onClick={handleClose}>
                     Close
                 </Button>
-                <Button variant="primary" onClick={(e) => handleSave()}>
+                <Button variant="primary" onClick={(e) => handleSave({
+                    "name": name, 
+                    "color_r": colorValue.r,
+                    "color_g": colorValue.g,
+                    "color_b": colorValue.b
+                })}>
                     Save
                 </Button>
             </Modal.Footer>

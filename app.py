@@ -1286,7 +1286,7 @@ class UpdateSectionResource(Resource):
 			return "INVALID AUTHORIZATION", 401
 
 		parser = reqparse.RequestParser()
-		parser.add_argument('id', type=int, default=None, required=True, help="You must include the ID of the set")
+		parser.add_argument('id', type=int, default=None, required=False, help="You must include the ID of the set")
 		parser.add_argument('name', type=str, default=None, required=True, help="You must include the Name")
 		parser.add_argument('color_r', type=int, default=None, required=True, help="You must include the Color")
 		parser.add_argument('color_g', type=int, default=None, required=True, help="You must include the Color")
@@ -1295,8 +1295,24 @@ class UpdateSectionResource(Resource):
 
 		section = BandSection.query.filter(BandSection.id == args.get("id"), BandSection.school_id == activeUser.school_id).first()
 
-		if section is None:
+		if section is None and args.get("id") is not None:
 			return "Invalid ID", 404
+		elif section is None:
+			show = Show.query.filter(Show.school_id == activeUser.school_id).order_by(Show.is_default.desc()).first()
+
+			if show is None:
+				return "No shows exist with that school!", 404
+
+			section = BandSection(
+				name=args.get("name"),
+				color_r = args.get("color_r"),
+				color_g = args.get("color_g"),
+				color_b = args.get("color_b"),
+				school_id = activeUser.school_id,
+				show_id = show.id
+			)
+
+			db.session.add(section)
 		
 		section.name = args.get("name")
 		section.color_r = args.get("color_r")
