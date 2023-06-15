@@ -10,6 +10,8 @@ import getApi from './getApi';
 import logo from '../logo.svg';
 import CustomDownloadProgress from './CustomDownloadProgress';
 
+import {ReactComponent as FindUserButton} from '../circle-question.svg';
+
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
 const WINDOW_LOCATION = getApi();
 
@@ -638,10 +640,10 @@ const Viewer = (props) => {
 			/>
 			<button 
 				type="button" 
-				className='fas followUserBtn'
+				className='followUserBtn'
 				style={{color: getSetFollowingUserBtnColor()}}
 				onClick={() => setFollowingUser(!userOptions.followingUser)}
-			>&#xf059;</button>
+			><FindUserButton height="100%" fill="currentColor"/></button>
 		</div>
 	);
 }

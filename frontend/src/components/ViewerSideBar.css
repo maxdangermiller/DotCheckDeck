@@ -39,8 +39,9 @@
 .customViewerSideBarBtn {
     background: none;
     border: none; 
-    font-size: min(8vh, 40px); 
+    height: min(8vh, 40px);
     padding: 0;
+    cursor:pointer;
 }
 
 .customViewerIconButton {

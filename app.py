@@ -38,7 +38,7 @@ if 'WEBSITE_HOSTNAME' not in os.environ:
 	# local development, where we'll use environment variables
 	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
 else:
-    # production
+	# production
 	print("Loading config.production from production.py")
 	app.config.from_object('production')
 
@@ -526,9 +526,9 @@ def send_music():
 
 
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = ['pdf']
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+	ALLOWED_EXTENSIONS = ['pdf']
+	return '.' in filename and \
+		   filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 def addShowFileToDatabase(file, school, show):
@@ -714,23 +714,23 @@ class SetUpUserResource(Resource):
 	#   "first_name": "Max", "last_name": "Miller"
 	# }
 	"""
-    fetch('http://127.0.0.1:5000/users/activate', {
-        method: 'POST',
-        body: JSON.stringify({
-            school_code: '12345678',
-            label: 'd7',
-            email: "mmiller5@uhigh.illinoisstate.edu", 
-            password: "Password12345", 
-            first_name: "Max", 
-            last_name: "Miller"
-        }),
-        headers: {
-            'Content-type': 'application/json; charset=UTF-8'
-        }
-        })
-        .then(res => res.json())
-        .then(console.log)
-    """
+	fetch('http://127.0.0.1:5000/users/activate', {
+		method: 'POST',
+		body: JSON.stringify({
+			school_code: '12345678',
+			label: 'd7',
+			email: "mmiller5@uhigh.illinoisstate.edu", 
+			password: "Password12345", 
+			first_name: "Max", 
+			last_name: "Miller"
+		}),
+		headers: {
+			'Content-type': 'application/json; charset=UTF-8'
+		}
+		})
+		.then(res => res.json())
+		.then(console.log)
+	"""
 	def post(self):
 		# TODO: Refactor to "show_code"
 		if "school_code" not in request.json or request.json['school_code'] == "":
@@ -951,6 +951,8 @@ class GetUserDotsResource(Resource):
 
 		if showUser is None:
 			return "User does not have access to that show!", 401
+
+		section = BandSection.query.filter(BandSection.id == showUser.section_id).first()
 		
 		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
 
@@ -961,11 +963,24 @@ class GetUserDotsResource(Resource):
 					
 			r, g, b = getSectionColor(showUser)
 
+			setName = ""
+			if section is not None:
+				setNameObj = SetName.query.filter(
+					SetName.section_id == section.id, 
+					SetName.set_id == set.id
+				).first()
+
+				if setNameObj is not None:
+					setName = setNameObj.name
+
+
 			dots.append({
 				'dot': dot_schema.dump(dot),
 
 				'counts': set.counts,
 				'set_numb': set.set_numb,
+				'set_name': setName,
+				'measure': set.measure,
 				
 				"r": r, "g": g, "b": b,
 				

@@ -7,10 +7,10 @@ import SetNameModel from './ViewerSideBarComponents/SetNameModel';
 import AudioProgressBar from './AdminComponents/TimelinePage/AudioProgressBar';
 import Spinner from './utils/Spinner';
 
-import leftArrow from '../circle-arrow-left.svg';
-import rightArrow from '../circle-arrow-right.svg';
-import pauseIcon from '../circle-pause.svg';
-import playIcon from '../circle-play.svg';
+import {ReactComponent as LeftArrow} from '../circle-arrow-left.svg';
+import {ReactComponent as RightArrow} from '../circle-arrow-right.svg';
+import {ReactComponent as PauseIcon} from '../circle-pause.svg';
+import {ReactComponent as PlayIcon} from '../circle-play.svg';
 
 const ViewerSideBar = (props) => {
     const { 
@@ -105,21 +105,22 @@ const ViewerSideBar = (props) => {
                 </div>
                 <div className='flex-row justify-content-between d-flex align-items-center mb-2' style={{width: "90%"}}>
 
+                    
                     <button 
                         type="button" 
-                        className='fas customViewerSideBarBtn backwardBtn'
+                        className='customViewerSideBarBtn backwardBtn'
                         onClick={() => handelSetBtnControls(curSet - 1)}
                         disabled={curSet > 0 ? false : true}
-                    >&#xf0a8;</button>
+                    ><LeftArrow height="100%" fill="currentColor"/></button>
 
                     <PausePlayBtn isPlaying={audioPlaying} setIsPlaying={setAudioPlaying} className="customViewerPlayPauseBtn"/>
-
+                    
                     <button 
                         type="button" 
-                        className='fas customViewerSideBarBtn forwardBtn'
+                        className='customViewerSideBarBtn forwardBtn'
                         onClick={() => handelSetBtnControls(curSet + 1)}
                         disabled={sets !== null && curSet < sets.length - 1 ? false : true}
-                    >&#xf0a9;</button>
+                    ><RightArrow height="100%" fill="currentColor"/></button>
                 </div>
                 
             </div>
@@ -144,12 +145,17 @@ const PausePlayBtn = (props) => {
     if (isPlaying) {
         return (
             <button 
-                className={'fas customViewerSideBarBtn'} 
+                className="customViewerSideBarBtn"
                 onClick={(e) => setIsPlaying(!isPlaying)}
-            >&#xf28b;</button>
+            ><PauseIcon height="100%" fill="currentColor"/></button>
         );
     }
     return (
-        <button className={'fas customViewerSideBarBtn'} onClick={(e) => setIsPlaying(!isPlaying)}>&#xf144;</button>
+        <button 
+            className='fas customViewerSideBarBtn'
+            onClick={(e) => setIsPlaying(!isPlaying)}
+        >
+            <PlayIcon height="100%" fill="currentColor"/>
+        </button>
     );
 }

@@ -78,11 +78,13 @@ const BasicViewer = (props) => {
                     <li className="list-group-item flex-row justify-content-center d-flex align-items-center" key={index}>
                         <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'20%'}}>
                             <h1>{dotData.set_numb}</h1>
+                            <p><strong>{dotData.set_name}</strong></p>
                         </div>
                         <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'80%'}}>
                             <div className='mb-2'>{getDotText1(dotData.dot)}</div>
                             <div className='mb-2'>{getDotText2(dotData.dot)}</div>
-                            <div className='mb-2'>for {dotData.counts} counts</div>
+                            <div className='mb-2'>For {dotData.counts} counts</div>
+                            <div className='mb-2'>Measures: {dotData.measure}</div>
                         </div>
                     </li>
 

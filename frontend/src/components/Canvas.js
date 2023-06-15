@@ -1,5 +1,6 @@
 import React, {useRef, useEffect, useState} from 'react'
 import convertDotToCords from './utils/ConvertDotToCords';
+import './font.css'
 
 const FUTURE_DOT_COLOR = "rgba(0, 100, 0, 0.8)";
 const PREVIOUS_DOT_COLOR = "rgba(100, 0, 0, 0.8)";
