@@ -379,6 +379,7 @@ show_users_schema = ShowUserSchema(many=True)
 show_schema = ShowSchema()
 shows_schema = ShowSchema(many=True)
 school_schema = SchoolSchema()
+band_section_schema = BandSectionSchema()
 band_sections_schema = BandSectionSchema(many=True)
 set_names_schema = SetNameSchema(many=True)
 
@@ -1662,8 +1663,6 @@ if __name__ == "__main__":
 				db.session.add(user)
 				db.session.commit()
 
-
-
 		# Some database configuration, idk what tbh
 		if arg == "fix-show-indices":
 			print("Configuring Show Indicies!")
@@ -1675,18 +1674,38 @@ if __name__ == "__main__":
 					set.showIndex = set.id - 1
 
 					db.session.commit()
-				
+	
 		if arg == "stuff":
-			print("Doing Stuff!")
+			# Currently builds a file with all the section info because I don't want to have to deal with it.
 			rebuild = True
 			with app.app_context():
-				shows = Show.query.filter().all()
+				show = Show.query.filter().first()
+				sections = BandSection.query.filter(BandSection.show_id == show.id).all()
 
-				for show in shows:
-					print(f"Changing show: {show} with is default value of: {show.is_default}")
-					show.is_default = False
+				with open("section_info.json", "w") as outfile:
+					outfile.write(json.dumps(band_sections_schema.dump(sections), indent=4))
+		
+		if arg == "stuff_load":
+			# Currently builds a file with all the section info because I don't want to have to deal with it.
+			rebuild = True
+			with app.app_context():
+				show = Show.query.filter().first()
+				sections = []
+
+				with open("section_info.json", "r") as inFile:
+					sections = band_section_schema.load(json.load(inFile))
+
+				for s in sections:
+					section = BandSection(
+						name = s.name, 
+						color_r = s.color_r, 
+						color_g = s.color_g,
+						color_b = s.color_b,
+						school_id = show.school_id,
+						show_id = show.id
+					)
+					db.session.add(section)
 					db.session.commit()
-
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)
