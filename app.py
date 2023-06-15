@@ -1693,7 +1693,7 @@ if __name__ == "__main__":
 				sections = []
 
 				with open("section_info.json", "r") as inFile:
-					sections = band_section_schema.load(json.load(inFile))
+					sections = band_sections_schema.load(json.load(inFile))
 
 				for s in sections:
 					section = BandSection(
