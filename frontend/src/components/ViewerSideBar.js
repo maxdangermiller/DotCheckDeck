@@ -152,7 +152,7 @@ const PausePlayBtn = (props) => {
     }
     return (
         <button 
-            className='fas customViewerSideBarBtn'
+            className='customViewerSideBarBtn'
             onClick={(e) => setIsPlaying(!isPlaying)}
         >
             <PlayIcon height="100%" fill="currentColor"/>

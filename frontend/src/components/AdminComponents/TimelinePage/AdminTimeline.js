@@ -6,6 +6,7 @@ import AudioProgressBar from './AudioProgressBar';
 import './AdminTimeline.css';
 import { fontSize } from '@mui/system';
 import getApi from '../../getApi';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 const WINDOW_LOCATION = getApi();
 const PIXELS_PER_SECOND = 10;
@@ -234,7 +235,9 @@ const AdminTimeline = (props) => {
         return (
             <div>
                 <div style={textStyle}>{formatMS(curPlayTime * 1000)}</div>
-                <i style={dialStyle} className="material-icons">&#xe313;</i>
+                <i style={dialStyle}>
+                    <KeyboardArrowDownIcon height="100%"/>
+                </i>
             </div>
         );
         

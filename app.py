@@ -1663,6 +1663,11 @@ if __name__ == "__main__":
 				db.session.add(user)
 				db.session.commit()
 
+		if arg == "set_up" and 'WEBSITE_HOSTNAME' in os.environ:
+			rebuild = True
+			os.system("apt update")
+			os.system("apt install default-jdk")
+		
 		# Some database configuration, idk what tbh
 		if arg == "fix-show-indices":
 			print("Configuring Show Indicies!")

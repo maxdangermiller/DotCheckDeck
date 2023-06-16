@@ -1,16 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {ReactComponent as PauseIcon} from '../../../circle-pause.svg';
+import {ReactComponent as PlayIcon} from '../../../circle-play.svg';
 
 const PausePlayBtn = (props) => {
     const {isPlaying, setIsPlaying, className, ...rest} = props;
 
     if (isPlaying) {
         return (
-
-            <button className={'material-icons playPauseBtn ' + className} onClick={(e) => setIsPlaying(!isPlaying)}>&#xe035;</button>
+            <button 
+                className={"playPauseBtn " + className}
+                onClick={(e) => setIsPlaying(!isPlaying)}
+            ><PauseIcon height="100%" fill="currentColor"/></button>
         );
     }
     return (
-        <button className={'material-icons playPauseBtn ' + className} onClick={(e) => setIsPlaying(!isPlaying)}>&#xe038;</button>
+        <button 
+            className={"playPauseBtn " + className}
+            onClick={(e) => setIsPlaying(!isPlaying)}
+        >
+            <PlayIcon height="100%" fill="currentColor"/>
+        </button>
     );
 }
 
