@@ -618,7 +618,7 @@ def upload_file():
 			fileLocation = "./showPDFs/" + file.filename
 			file.save(fileLocation)
 			addShowFileToDatabase(fileLocation, school, show)
-		elif len(fileKey) > 8 and fileKey[:8] == "mp3-file" and allowed_file(file.filename):
+		elif fileKey == "mp3-file" and allowed_file(file.filename):
 			fileLocation = f"./static/{show.id}/audio.mp3"
 			file.save(fileLocation)
 
