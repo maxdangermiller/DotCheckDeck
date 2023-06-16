@@ -1642,7 +1642,7 @@ if __name__ == "__main__":
 				schoolName = input("School Name: ")
 				schoolEmail = input("School Email: ")
 
-				school = School(name=schoolName, email=schoolEmail)
+				school = School(name=schoolName, email=schoolEmail, is_default=True)
 				db.session.add(school)
 				db.session.commit()
 
