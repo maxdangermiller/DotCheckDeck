@@ -1704,8 +1704,8 @@ if __name__ == "__main__":
 						school_id = show.school_id,
 						show_id = show.id
 					)
-					# db.session.add(section)
-					# db.session.commit()
+					db.session.add(section)
+					db.session.commit()
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)
