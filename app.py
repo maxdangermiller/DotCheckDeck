@@ -1689,6 +1689,8 @@ if __name__ == "__main__":
 
 				with open("section_info.json", "w") as outfile:
 					outfile.write(json.dumps(band_sections_schema.dump(sections), indent=4))
+				with open("set_info.json", "w") as outfile:
+					outfile.write(json.dumps(sets_schema.dump(sections), indent=4))
 		
 		if arg == "stuff_load":
 			# Currently builds a file with all the section info because I don't want to have to deal with it.
@@ -1699,6 +1701,8 @@ if __name__ == "__main__":
 
 				with open("section_info.json", "r") as inFile:
 					sections = json.load(inFile)
+				with open("set_info.json", "r") as inFile:
+					sets = json.load(inFile)
 
 				for s in sections:
 					section = BandSection(
@@ -1711,6 +1715,15 @@ if __name__ == "__main__":
 					)
 					db.session.add(section)
 					db.session.commit()
+
+				for s in sets:
+					set = Set.query.filter(Set.showIndex == s["showIndex"], Set.show_id == show.id).first()
+
+					if set is not None:
+						set.start_time_code = s["start_time_code"]
+						set.end_time_code = s["end_time_code"]
+						db.session.commit()	
+
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)

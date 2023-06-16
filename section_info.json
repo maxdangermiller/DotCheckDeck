@@ -1,112 +1,112 @@
 [
     {
-        "name": "Flutes",
-        "show_id": 1,
+        "set_names": {},
         "id": 1,
-        "color_b": 60,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 196,
         "color_g": 149,
-        "set_names": {},
-        "color_r": 196
+        "color_b": 60,
+        "name": "Flutes"
     },
     {
-        "name": "Clarinets",
-        "show_id": 1,
+        "set_names": {},
         "id": 2,
-        "color_b": 11,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 72,
         "color_g": 138,
-        "set_names": {},
-        "color_r": 72
+        "color_b": 11,
+        "name": "Clarinets"
     },
     {
-        "name": "Bass Clarinet",
-        "show_id": 1,
+        "set_names": {},
         "id": 3,
-        "color_b": 54,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 14,
         "color_g": 104,
-        "set_names": {},
-        "color_r": 14
+        "color_b": 54,
+        "name": "Bass Clarinet"
     },
     {
-        "name": "Alto Saxes",
-        "show_id": 1,
+        "set_names": {},
         "id": 4,
+        "show_id": 1,
+        "school_id": 1,
+        "color_r": 75,
+        "color_g": 12,
         "color_b": 130,
-        "school_id": 1,
-        "color_g": 12,
-        "set_names": {},
-        "color_r": 75
+        "name": "Alto Saxes"
     },
     {
-        "name": "Tenor Sax",
-        "show_id": 1,
+        "set_names": {},
         "id": 5,
-        "color_b": 158,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 144,
         "color_g": 17,
-        "set_names": {},
-        "color_r": 144
+        "color_b": 158,
+        "name": "Tenor Sax"
     },
     {
-        "name": "Trumpets",
-        "show_id": 1,
+        "set_names": {},
         "id": 6,
-        "color_b": 76,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 133,
         "color_g": 12,
-        "set_names": {},
-        "color_r": 133
+        "color_b": 76,
+        "name": "Trumpets"
     },
     {
-        "name": "Trombone",
-        "show_id": 1,
+        "set_names": {},
         "id": 7,
-        "color_b": 25,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 115,
         "color_g": 7,
-        "set_names": {},
-        "color_r": 115
+        "color_b": 25,
+        "name": "Trombone"
     },
     {
-        "name": "Tubas",
-        "show_id": 1,
+        "set_names": {},
         "id": 8,
-        "color_b": 87,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 10,
         "color_g": 125,
-        "set_names": {},
-        "color_r": 10
+        "color_b": 87,
+        "name": "Tubas"
     },
     {
-        "name": "Battery",
-        "show_id": 1,
+        "set_names": {},
         "id": 9,
-        "color_b": 99,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 12,
         "color_g": 28,
-        "set_names": {},
-        "color_r": 12
+        "color_b": 99,
+        "name": "Battery"
     },
     {
-        "name": "Color Guard",
-        "show_id": 1,
+        "set_names": {},
         "id": 10,
-        "color_b": 2,
+        "show_id": 1,
         "school_id": 1,
+        "color_r": 158,
         "color_g": 75,
-        "set_names": {},
-        "color_r": 158
+        "color_b": 2,
+        "name": "Color Guard"
     },
     {
-        "name": "Test",
-        "show_id": 1,
-        "id": 11,
-        "color_b": 101,
-        "school_id": 1,
-        "color_g": 23,
         "set_names": {},
-        "color_r": 58
+        "id": 11,
+        "show_id": 1,
+        "school_id": 1,
+        "color_r": 58,
+        "color_g": 23,
+        "color_b": 101,
+        "name": "Test"
     }
 ]
