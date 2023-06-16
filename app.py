@@ -1693,19 +1693,19 @@ if __name__ == "__main__":
 				sections = []
 
 				with open("section_info.json", "r") as inFile:
-					sections = band_sections_schema.load(json.load(inFile))
+					sections = json.load(inFile)
 
 				for s in sections:
 					section = BandSection(
-						name = s.name, 
-						color_r = s.color_r, 
-						color_g = s.color_g,
-						color_b = s.color_b,
+						name = s["name"], 
+						color_r = s["color_r"], 
+						color_g = s["color_g"],
+						color_b = s["color_b"],
 						school_id = show.school_id,
 						show_id = show.id
 					)
-					db.session.add(section)
-					db.session.commit()
+					# db.session.add(section)
+					# db.session.commit()
 
 	# from GUITest import GUITest
 	# GUITest(1125, 600)
