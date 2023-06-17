@@ -1686,11 +1686,12 @@ if __name__ == "__main__":
 			with app.app_context():
 				show = Show.query.filter().first()
 				sections = BandSection.query.filter(BandSection.show_id == show.id).all()
+				sets = Set.query.filter(Set.show_id == show.id).all()
 
 				with open("section_info.json", "w") as outfile:
 					outfile.write(json.dumps(band_sections_schema.dump(sections), indent=4))
 				with open("set_info.json", "w") as outfile:
-					outfile.write(json.dumps(sets_schema.dump(sections), indent=4))
+					outfile.write(json.dumps(sets_schema.dump(sets), indent=4))
 		
 		if arg == "stuff_load":
 			# Currently builds a file with all the section info because I don't want to have to deal with it.
