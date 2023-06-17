@@ -16,7 +16,7 @@ const UserSectionSelection = (props) => {
     const handleShow = () => setShow(true);
 
     useEffect(() => {
-        if (getShowUser() !== -1) {
+        if (getShowUser() !== undefined && getShowUser().section_id !== null) {
             setShow(false);
             return;
         }
@@ -40,13 +40,13 @@ const UserSectionSelection = (props) => {
         try {
             for (let i = 0; i < userData.show_users.length; i++) {
                 if (userData.show_users[i].show_id === userData.show.id) {
-                    return userData.show_users[i].id;
+                    return userData.show_users[i];
                 }
             }
         } catch (error) {
             
         }
-        return -1;
+        return undefined;
     }
 
     const update = () => {
@@ -54,7 +54,7 @@ const UserSectionSelection = (props) => {
         fetch(WINDOW_LOCATION + '/update-user-section', {
             method: 'POST',
             body: JSON.stringify({
-                id: getShowUser(),
+                id: getShowUser().id,
                 section_id: section.id
             }),
             headers: {
