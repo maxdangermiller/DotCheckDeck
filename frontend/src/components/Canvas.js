@@ -752,6 +752,7 @@ const Canvas = props => {
                 }
                 
                 context.beginPath();
+                context.fillStyle = "black";
                 context.font = canvas.height * 0.05 + 'px serif';
                 context.textBaseline = "middle";
                 context.textAlign = "center";
