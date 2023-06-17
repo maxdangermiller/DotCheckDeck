@@ -1151,6 +1151,7 @@ const Canvas = props => {
                     drawAnimation(_draw);
                 } catch (error) {
                     console.log("CAUGHT ERROR")
+                    console.log(error)
                 }
             }
             
