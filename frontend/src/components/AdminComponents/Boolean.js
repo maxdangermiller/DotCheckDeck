@@ -1,16 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {ReactComponent as Check} from '../../circle-check.svg';
+import {ReactComponent as XMark} from '../../circle-xmark.svg';
 
 const Boolean = (props) => {
     const {state, ...rest} = props;
     
     if (state) {
         return (
-            <i className="material-icons" style={{fontSize: "2rem", color: "green"}}>check_circle</i>
+            <i style={{height: "2rem", color: "green"}}>
+                <Check height="100%" fill="currentColor"/>
+            </i>
         );
     }
 
     return (
-        <i className="material-icons" style={{fontSize: "2rem", color: "red"}}>cancel</i>
+        <i style={{height: "2rem", color: "red"}}>
+            <XMark height="100%" fill="currentColor"/>
+        </i>
     );
 }
 

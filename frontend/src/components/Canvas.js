@@ -384,20 +384,37 @@ const Canvas = props => {
             context.closePath();
         };
 
+        const getMatchingUserDot = (data, index, curDot) => {
+            if (data[index] === undefined || data[index].dots === undefined) { return undefined; }
+            if (curDot === undefined || curDot.userID === undefined) { return undefined; }
+
+            for (let i = 0; i < data[index].dots.length; i++) {
+                if (data[index].dots[i].userID === curDot.userID) {
+                    return data[index].dots[i];
+                }
+            }
+            return undefined;
+        }
+
         const drawHighlightedPoint = (data, curSetIndex, curUserIndex, userOptions, color, userLabel) => {
             // This will draw the previous, current, and next points
             // As well as draw paths if selected
 
             let size = canvas.height * 0.012;
 
-            let preDef = data[curSetIndex - 1]  != undefined && data[curSetIndex - 1].dots[curUserIndex]    != undefined;
+            // let preDef = data[curSetIndex - 1]  != undefined && data[curSetIndex - 1].dots[curUserIndex]    != undefined;
             let curDef = data[curSetIndex]      != undefined && data[curSetIndex].dots[curUserIndex]        != undefined;
-            let nextDef = data[curSetIndex + 1] != undefined && data[curSetIndex + 1].dots[curUserIndex]    != undefined;
+            // let nextDef = data[curSetIndex + 1] != undefined && data[curSetIndex + 1].dots[curUserIndex]    != undefined;
+
+            let preDot = getMatchingUserDot(data, curSetIndex - 1, data[curSetIndex].dots[curUserIndex]);
+            let preDef = preDot !== undefined;
+            let nextDot = getMatchingUserDot(data, curSetIndex + 1, data[curSetIndex].dots[curUserIndex]);
+            let nextDef = nextDot !== undefined;
 
             // Draw Path between previous and current
             if (preDef && curDef && userOptions.drawPath && userOptions.showLastSet) {
                 let cords0 = convertDotToCords(
-                    data[curSetIndex - 1].dots[curUserIndex], 
+                    preDot, 
                     curDimensions["w"], 
                     curDimensions["h"]
                 );
@@ -424,7 +441,7 @@ const Canvas = props => {
             // Draw Path between next and current
             if (nextDef && curDef && userOptions.drawPath && userOptions.showNextSet) {
                 let cords0 = convertDotToCords(
-                    data[curSetIndex + 1].dots[curUserIndex], 
+                    nextDot, 
                     curDimensions["w"], 
                     curDimensions["h"]
                 );
@@ -451,7 +468,7 @@ const Canvas = props => {
             // Previous point
             if (preDef && userOptions.showLastSet) {
                 let cords0 = convertDotToCords(
-                    data[curSetIndex - 1].dots[curUserIndex], 
+                    preDot, 
                     curDimensions["w"], 
                     curDimensions["h"]
                 );
@@ -499,7 +516,7 @@ const Canvas = props => {
             // Next point
             if (nextDef && userOptions.showNextSet) {
                 let cords0 = convertDotToCords(
-                    data[curSetIndex + 1].dots[curUserIndex], 
+                    nextDot, 
                     curDimensions["w"], 
                     curDimensions["h"]
                 );
