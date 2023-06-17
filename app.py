@@ -1681,10 +1681,10 @@ if __name__ == "__main__":
 			
 			break
 
-		if arg == "build" and 'WEBSITE_HOSTNAME' in os.environ:
+		if arg == "build":
 			rebuild = True
 			with app.app_context():
-				if input ("Would you like to install jdk (y/n)?") == "y":
+				if 'WEBSITE_HOSTNAME' in os.environ and input ("Would you like to install jdk (y/n)?") == "y":
 					os.system("apt update")
 					os.system("apt install default-jdk")
 

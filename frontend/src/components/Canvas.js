@@ -988,7 +988,7 @@ const Canvas = props => {
 
         const getMatchingLabel = (data, label) => {
             for (const set in data) {
-                if (set["userLabel"] == label) {
+                if (set["userLabel"] === label) {
                     return set;
                 }
             }

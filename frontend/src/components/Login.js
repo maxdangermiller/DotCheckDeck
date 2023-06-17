@@ -45,11 +45,15 @@ const Login = (props) => {
 					console.log(error.response.status)
 					console.log(error.response.headers)
 					setShowAlert(true);
-					setAlertText(error.response);
+					if (error.response.headers !== undefined) {
+						setAlertText(error.response);
+					}
 				}
 			})
 		} catch (error) {
 			alert("We encountered an error... please try again")
+			setShowAlert(true);
+			setAlertText(error.response);
 		} 
 
 		// setEmail("");

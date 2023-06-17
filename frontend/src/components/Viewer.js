@@ -595,6 +595,13 @@ const Viewer = (props) => {
 			<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
 				<h1>Rotate Please</h1>
 				<h2>or switch to basic mode</h2>
+				<UserSectionSelection 
+					data={data} 
+					curSet={curSet} 
+					schoolCode={props.schoolCode} 
+					token={props.token} 
+					userData={props.userData}
+				/>
 			</div>
 		);
 	}

@@ -31,28 +31,33 @@ function App() {
 			// console.log("Token: " + token);
 			// console.log("Ref Token: " + refToken);
 			if (refToken != null) {
-				axios({
-					method: "POST",
-					url: WINDOW_LOCATION + "/get-token",
-					headers: {
-						Authorization: `Bearer ${refToken}`,
-					}
-				}).then((response) => {
-					console.log(response.data)
-					if (response.status === 202) {
-						setToken(response.data.access_token);
-						setUserData(response.data.user);
-						setSchoolCode(response.data.school_code);
-					}
+				try {
 
-				}).catch((error) => {
-					if (error.response) {
-						// console.log(error.response)
-						// console.log(error.response.status)
-						// console.log(error.response.headers)
-						removeToken();
-					}
-				})
+					axios({
+						method: "POST",
+						url: WINDOW_LOCATION + "/get-token",
+						headers: {
+							Authorization: `Bearer ${refToken}`,
+						}
+					}).then((response) => {
+						console.log(response.data)
+						if (response.status === 202) {
+							setToken(response.data.access_token);
+							setUserData(response.data.user);
+							setSchoolCode(response.data.school_code);
+						}
+	
+					}).catch((error) => {
+						if (error.response) {
+							// console.log(error.response)
+							// console.log(error.response.status)
+							// console.log(error.response.headers)
+							removeToken();
+						}
+					})
+				} catch (error) {
+					alert("We encountered an error! Please try again!")
+				}
 			} else { setToken(""); }
 		}
 	}, [token, refToken]);

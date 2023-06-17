@@ -20,6 +20,11 @@ const UserSectionSelection = (props) => {
             setShow(false);
             return;
         }
+        if (userData.show_users.length === 0) {
+            setShow(false);
+            return;
+        }
+
         fetch(WINDOW_LOCATION + "/get-sections?token=" + token + "&school_code=" + schoolCode)
         .then((response) => {
             if (!response.ok) {
@@ -79,7 +84,7 @@ const UserSectionSelection = (props) => {
     }
 
     const getSectionOptions = () => {
-        if (sections === null || sections.length === 0) { return; }
+        if (sections === null || sections.length === 0) { return []; }
 
         let output = [];
 
