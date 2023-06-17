@@ -987,11 +987,12 @@ const Canvas = props => {
         }
 
         const getMatchingLabel = (data, label) => {
-            for (const set in data) {
-                if (set["userLabel"] === label) {
-                    return set;
+            for (let i = 0; i < data.length; i++) {
+                if (data[i]["userLabel"] === label) {
+                    return data[i];
                 }
             }
+            return undefined;
         }
 
         // Takes data from API, and draws the animation
