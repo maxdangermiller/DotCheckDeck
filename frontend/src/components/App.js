@@ -84,7 +84,7 @@ function App() {
 		}
 
 		if (userData !== undefined && userData["is_admin"] !== undefined) {
-			return userData["is_admin"] || userData["is_section_leader"];
+			return userData["is_admin"];
 		}
 		return false;
 	}
