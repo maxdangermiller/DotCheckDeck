@@ -1052,7 +1052,7 @@ const Canvas = props => {
                     let lastDot = lastSetData[x];
                     
                     if (dot["userID"] !== lastDot["userID"]) { 
-                        console.log("FAIL! Labels don't match between sets in animation. Attempting to fix."); 
+                        // console.log("FAIL! Labels don't match between sets in animation. Attempting to fix."); 
                         lastDot = getMatchingLabel(lastSetData, dot["userID"]);
 
                     }
