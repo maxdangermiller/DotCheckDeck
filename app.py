@@ -677,6 +677,25 @@ class SetListResource(Resource):
 		return setsOutput
 
 
+class GetSectionsResource(Resource):
+	@jwt_required()
+	def get(self):
+		schoolCode = request.args.get('school_code', None) # TODO: Change name to show_code
+
+		# REQUIRE A SCHOOL CODE
+		if schoolCode is None:
+			return "Missing School Code", 404
+		
+		# CHECK IF CODE IS VALID
+		show = Show.query.filter(Show.code == schoolCode).first()
+		if show is None:
+			return "INVALID SHOW CODE", 404
+
+		sections = BandSection.query.filter(BandSection.show_id == show.id).all()
+
+		return band_sections_schema.dump(sections), 200
+
+
 class SchoolCodeAuthResource(Resource):
 	def post(self):
 		# TODO: Refactor to "show_code"
@@ -1143,6 +1162,40 @@ class UpdateUserResource(Resource):
 		db.session.commit()
 
 		return "Success", 201
+	
+
+class UpdateUserSectionResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+		
+		loggedInUser = User.query.filter(User.email == identity).first()
+
+		if loggedInUser is None:
+			return "Invalid User", 401
+		
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, default=None, required=True, help="You must include the ID of the show user")
+		parser.add_argument('section_id', type=str, default=None, required=True)
+		args = parser.parse_args()
+		
+		showUser = ShowUser.query.filter(ShowUser.id == args.get('id')).first()
+
+		if showUser is None:
+			return "INVALID SHOW USER ID", 404
+
+		
+		showUser.section_id = args.get('section_id')
+		db.session.commit()
+
+		# There has been a change made to the show's date, 
+		# so we must change the "last update time" var in the show object
+		Show.query.filter(Show.id == showUser.show_id).first().changeUpdateTime()
+		
+		db.session.commit()
+
+		return "Success", 201
 
 
 class CreateUserResource(Resource):
@@ -1538,6 +1591,8 @@ api.add_resource(UpdateShowResource, '/update-show')
 api.add_resource(GetLastUpdateResource, '/database-version')
 api.add_resource(GetDefaultJoinCode, '/default-join-code')
 api.add_resource(SetNameListResource, '/get-set-names')
+api.add_resource(GetSectionsResource, '/get-sections')
+api.add_resource(UpdateUserSectionResource, '/update-user-section')
 
 
 

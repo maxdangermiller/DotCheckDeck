@@ -11,6 +11,7 @@ import logo from '../logo.svg';
 import CustomDownloadProgress from './CustomDownloadProgress';
 
 import {ReactComponent as FindUserButton} from '../circle-question.svg';
+import UserSectionSelection from './utils/UserSectionSelection';
 
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
 const WINDOW_LOCATION = getApi();
@@ -644,6 +645,14 @@ const Viewer = (props) => {
 				style={{color: getSetFollowingUserBtnColor()}}
 				onClick={() => setFollowingUser(!userOptions.followingUser)}
 			><FindUserButton height="100%" fill="currentColor"/></button>
+
+			<UserSectionSelection 
+				data={data} 
+				curSet={curSet} 
+				schoolCode={props.schoolCode} 
+				token={props.token} 
+				userData={props.userData}
+			/>
 		</div>
 	);
 }
