@@ -548,6 +548,7 @@ const Viewer = (props) => {
 					// sets[i] is currently active
 					if (curSet !== i) {
 						changeCurSet(i);
+						return;
 					}
 				}
 			}

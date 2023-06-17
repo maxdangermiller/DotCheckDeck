@@ -1,4 +1,4 @@
 @font-face {
     font-family: 'ArialBlack';
-    src: local('ArialBlack'), url('../fonts/arial_black_font.ttf') format('ttf');
+    src: local('ArialBlack'), url('../fonts/arial_black_font.ttf') format('truetype');
 }

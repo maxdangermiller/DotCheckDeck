@@ -128,7 +128,7 @@ const Canvas = props => {
             let width = 0;
 
             for (let x = startIndex; x >= MIN_SIZE; x -= DECREASE_INTERVAL) {
-                context.font = x + 'px Arial Black';
+                context.font = x + 'px ArialBlack';
 
                 width = context.measureText(text).width;
                 
@@ -155,7 +155,7 @@ const Canvas = props => {
                     context.textBaseline = "bottom";
                 }
 
-                context.font = 24 + 'px Arial Black';
+                context.font = 24 + 'px ArialBlack';
 
                 let centerX = (x0 - x1) / 2 + x1;
                 let useY = y0 + (MIN_CLEAR * xDirection);
@@ -172,7 +172,7 @@ const Canvas = props => {
                     context.textAlign = "right";
                 }
 
-                context.font = 24 + 'px Arial Black';
+                context.font = 24 + 'px ArialBlack';
 
                 let useX = x0 + (MIN_CLEAR * yDirection);
                 let centerY = (y0 - y1) / 2 + y1;
@@ -306,19 +306,19 @@ const Canvas = props => {
             context.closePath();
 
             context.beginPath();
-            context.font = canvas.height * 0.03 + 'px Arial Black';
+            context.font = canvas.height * 0.03 + 'px ArialBlack';
             context.fillStyle = "black";
             context.textBaseline = "middle";
             context.textAlign = "center";
             context.fillText(dot["userLabel"], x + w * 0.2, y + h * 0.25);
 
             if (dot["userName"] !== "None None") {
-                context.font = canvas.height * 0.015 + 'px Arial Black';
+                context.font = canvas.height * 0.015 + 'px ArialBlack';
 
                 context.fillText(dot["userName"], x + w * 0.65, y + h * 0.25);
                 context.closePath();
             } else {
-                context.font = canvas.height * 0.0125 + 'px Arial Black';
+                context.font = canvas.height * 0.0125 + 'px ArialBlack';
                 context.fillStyle = "red";
 
                 context.fillText("Inactivated", x + w * 0.65, y + h * 0.25);
@@ -377,7 +377,7 @@ const Canvas = props => {
             context.closePath();
 
             context.beginPath();
-            context.font = canvas.height * 0.015 + 'px Arial Black';
+            context.font = canvas.height * 0.015 + 'px ArialBlack';
             context.textBaseline = "middle";
             context.textAlign = "center";
             context.fillText(userLabel, x, y + canvas.height * 0.015);
@@ -482,7 +482,7 @@ const Canvas = props => {
                 context.closePath();
     
                 context.beginPath();
-                context.font = canvas.height * 0.015 + 'px Arial Black';
+                context.font = canvas.height * 0.015 + 'px ArialBlack';
                 context.textBaseline = "middle";
                 context.textAlign = "center";
                 context.fillText(userLabel, x, y + canvas.height * 0.015);
