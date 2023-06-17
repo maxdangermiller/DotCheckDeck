@@ -986,9 +986,9 @@ const Canvas = props => {
             return newDots;
         }
 
-        const getMatchingLabel = (data, label) => {
+        const getMatchingLabel = (data, id) => {
             for (let i = 0; i < data.length; i++) {
-                if (data[i]["userLabel"] === label) {
+                if (data[i]["userID"] === id) {
                     return data[i];
                 }
             }
@@ -1051,11 +1051,11 @@ const Canvas = props => {
                     const dot = curSetData[x];
                     const lastDot = lastSetData[x];
                     
-                    if (dot["userLabel"] !== lastDot["userLabel"]) { 
+                    if (dot["userID"] !== lastDot["userID"]) { 
                         console.log("FAIL! Labels don't match between sets in animation. Attempting to fix."); 
                         console.log(curSetData);
                         console.log(lastSetData);
-                        lastDot = getMatchingLabel(lastSetData, dot["userLabel"]);
+                        lastDot = getMatchingLabel(lastSetData, dot["userID"]);
 
                     }
                     
