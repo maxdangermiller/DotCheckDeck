@@ -1,112 +1,112 @@
 [
     {
-        "set_names": {},
-        "id": 1,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 196,
         "color_g": 149,
-        "color_b": 60,
-        "name": "Flutes"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 196,
+        "school_id": 1,
+        "name": "Flutes",
+        "id": 1,
+        "color_b": 60
     },
     {
-        "set_names": {},
-        "id": 2,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 72,
         "color_g": 138,
-        "color_b": 11,
-        "name": "Clarinets"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 72,
+        "school_id": 1,
+        "name": "Clarinets",
+        "id": 2,
+        "color_b": 11
     },
     {
-        "set_names": {},
-        "id": 3,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 14,
         "color_g": 104,
-        "color_b": 54,
-        "name": "Bass Clarinet"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 14,
+        "school_id": 1,
+        "name": "Bass Clarinet",
+        "id": 3,
+        "color_b": 54
     },
     {
+        "color_g": 12,
         "set_names": {},
-        "id": 4,
         "show_id": 1,
-        "school_id": 1,
         "color_r": 75,
-        "color_g": 12,
-        "color_b": 130,
-        "name": "Alto Saxes"
+        "school_id": 1,
+        "name": "Alto Saxes",
+        "id": 4,
+        "color_b": 130
     },
     {
-        "set_names": {},
-        "id": 5,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 144,
         "color_g": 17,
-        "color_b": 158,
-        "name": "Tenor Sax"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 144,
+        "school_id": 1,
+        "name": "Tenor Sax",
+        "id": 5,
+        "color_b": 158
     },
     {
-        "set_names": {},
-        "id": 6,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 133,
         "color_g": 12,
-        "color_b": 76,
-        "name": "Trumpets"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 133,
+        "school_id": 1,
+        "name": "Trumpets",
+        "id": 6,
+        "color_b": 76
     },
     {
-        "set_names": {},
-        "id": 7,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 115,
         "color_g": 7,
-        "color_b": 25,
-        "name": "Trombone"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 115,
+        "school_id": 1,
+        "name": "Trombone",
+        "id": 7,
+        "color_b": 25
     },
     {
-        "set_names": {},
-        "id": 8,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 10,
         "color_g": 125,
-        "color_b": 87,
-        "name": "Tubas"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 10,
+        "school_id": 1,
+        "name": "Tubas",
+        "id": 8,
+        "color_b": 87
     },
     {
-        "set_names": {},
-        "id": 9,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 12,
         "color_g": 28,
-        "color_b": 99,
-        "name": "Battery"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 12,
+        "school_id": 1,
+        "name": "Battery",
+        "id": 9,
+        "color_b": 99
     },
     {
-        "set_names": {},
-        "id": 10,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 158,
         "color_g": 75,
-        "color_b": 2,
-        "name": "Color Guard"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 158,
+        "school_id": 1,
+        "name": "Color Guard",
+        "id": 10,
+        "color_b": 2
     },
     {
-        "set_names": {},
-        "id": 11,
-        "show_id": 1,
-        "school_id": 1,
-        "color_r": 58,
         "color_g": 23,
-        "color_b": 101,
-        "name": "Test"
+        "set_names": {},
+        "show_id": 1,
+        "color_r": 58,
+        "school_id": 1,
+        "name": "Test",
+        "id": 11,
+        "color_b": 101
     }
 ]
