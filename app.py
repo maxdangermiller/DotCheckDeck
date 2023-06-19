@@ -823,6 +823,12 @@ def getSetIndex(sets, middleSet) -> int:
 			return x
 	return -1
 
+def getSetIndexInData(data, middleSet) -> int:
+	for x in range(len(data)):
+		if data[x]["setNumb"] == middleSet:
+			return x
+	return -1
+
 
 def getSetByShowIndex(sets, index):
 	for set in sets:
@@ -840,110 +846,149 @@ def getSectionColor(userObj) -> list:
 	return userSection.color_r, userSection.color_g, userSection.color_b
 
 
+def getAllDotsWithoutBuffer(schoolCode):
+	# REQUIRE A SCHOOL CODE
+	if schoolCode is None:
+		return "Missing School Code", 404
+
+	# Attempt to load the Show with that code
+	show = Show.query.filter(Show.code == schoolCode).first()
+
+	# Check to see if we got a school obj
+	if show is None:
+		return "INVALID SCHOOL CODE", 404
+
+	# Get with order
+	sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
+
+	# var to store all of the sets
+	output = []
+
+	identity = get_jwt_identity()
+	loggedInUser = User.query.filter(User.email == identity).first()
+	showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
+	
+	if showUser is not None:
+		loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
+	else:
+		# return "User does not have access to that show", 401
+		loggedInUserSection = None
+
+	for set in sets:
+		dots = Dot.query.filter(Dot.set_id == set.id).all()
+		
+		setName = ""
+		if loggedInUserSection is not None:
+			setNameObj = SetName.query.filter(
+				SetName.section_id == loggedInUserSection.id, 
+				SetName.set_id == set.id
+			).first()
+
+			if setNameObj is not None:
+				setName = setNameObj.name
+
+		dotCords = []
+
+		for dot in dots:
+			showUserObj = ShowUser.query.filter(ShowUser.id == dot.show_user_id).first()
+			userObj = User.query.filter(User.id == showUserObj.user_id).first()
+			userName = ""
+			if userObj is not None:
+				userName = f"{userObj.first_name} {userObj.last_name}"
+				
+			r, g, b = getSectionColor(showUserObj)
+
+			dotCords.append({
+				'dot': dot_schema.dump(dot),
+
+				'counts': set.counts,
+				
+				"r": r, "g": g, "b": b,
+				
+				"userLabel": showUserObj.label, "userID": showUserObj.id,
+				"userName": userName,
+				"section_id": showUserObj.section_id,
+			})
+		
+		output.append({
+			'setID': set.id,
+			'setNumb': set.set_numb,
+			'setName': setName,
+			'counts': set.counts,
+			'start_time_code': set.start_time_code,
+			'end_time_code': set.end_time_code,
+			'index': set.showIndex,
+			'dots': dotCords,
+			'update_timestamp': str(show.last_update)
+		})
+	
+	print("SAVING NEW CACHE")
+	with open(f"dot_cache/{show.id}.json", "w") as outfile:
+		json.dump(output, outfile, indent=4)
+
+	return output
+
+
+def getBufferedDots(showCode, middleSet, bufferSize):
+	# REQUIRE A SCHOOL CODE
+	if showCode is None:
+		return "Missing Show Code", 404
+
+	# Attempt to load the Show with that code
+	show = Show.query.filter(Show.code == showCode).first()
+
+	# Check to see if we got a show obj
+	if show is None:
+		return "INVALID SHOW CODE", 404
+	
+	curDatabaseVerison = show.last_update
+
+	try:
+		with open(f"dot_cache/{show.id}.json", "r") as file:
+			data = json.load(file)
+
+			if middleSet == "undefined":
+				middleSet = "1"
+
+			searchSetIndex = getSetIndexInData(data, middleSet)
+
+			if searchSetIndex == -1:
+				print("INVALID MIDDLE SET!")
+				return "INVALID MIDDLE SET PARM", 404
+
+			startIndex = 0
+			endIndex = len(data) - 1
+
+			if searchSetIndex - bufferSize > 0:
+				startIndex  = searchSetIndex - bufferSize
+			if searchSetIndex + bufferSize < len(data):
+				endIndex  = searchSetIndex + bufferSize
+
+			# var to store all of the sets
+			output = []
+			
+			for set in data[startIndex:endIndex + 1]:
+				output.append(set)
+				if set["update_timestamp"] != str(curDatabaseVerison):
+					print("Updating!")
+					return getAllDotsWithoutBuffer(showCode), 200
+			print(len(output))
+				
+			return output, 200
+	except:
+		print("ERROR")
+		return getAllDotsWithoutBuffer(showCode), 200
+
+
 class GetDotsWithBufferResource(Resource):
 	@jwt_required()
 	def get(self):
 		# TODO: Refactor to show_code
 		schoolCode = request.args.get('school_code', None)
-		# width = int(request.args.get('width', 1500))
-		# height = int(request.args.get('height', 800))
 		middleSet = request.args.get('set', "1")
 		bufferSize = int(request.args.get('buffer', 4))
 
-		# REQUIRE A SCHOOL CODE
-		if schoolCode is None:
-			return "Missing School Code", 404
-
-		# Attempt to load the Show with that code
-		show = Show.query.filter(Show.code == schoolCode).first()
-
-		# Check to see if we got a school obj
-		if show is None:
-			return "INVALID SCHOOL CODE", 404
-
-		# Get with order
-		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
-
-		if middleSet == "undefined":
-			middleSet = "1"
-
-		searchSetIndex = getSetIndex(sets, middleSet)
-
-		if searchSetIndex == -1:
-			print("INVALID MIDDLE SET!")
-			return "INVALID MIDDLE SET PARM", 404
-
-		startIndex = 0
-		endIndex = len(sets) - 1
-		if searchSetIndex - bufferSize > 0:
-			startIndex  = searchSetIndex - bufferSize
-		if searchSetIndex + bufferSize < len(sets):
-			endIndex  = searchSetIndex + bufferSize
-
-		# var to store all of the sets
-		output = []
-
-		identity = get_jwt_identity()
-		loggedInUser = User.query.filter(User.email == identity).first()
-		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
-		
-		if showUser is not None:
-			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
-		else:
-			# return "User does not have access to that show", 401
-			loggedInUserSection = None
-
-		for i in range(startIndex, endIndex + 1):
-			set = sets[i]
-			dots = Dot.query.filter(Dot.set_id == set.id).all()
-			
-			setName = ""
-			if loggedInUserSection is not None:
-				setNameObj = SetName.query.filter(
-					SetName.section_id == loggedInUserSection.id, 
-					SetName.set_id == set.id
-				).first()
-
-				if setNameObj is not None:
-					setName = setNameObj.name
-
-			dotCords = []
-
-			for dot in dots:
-				showUserObj = ShowUser.query.filter(ShowUser.id == dot.show_user_id).first()
-				userObj = User.query.filter(User.id == showUserObj.user_id).first()
-				userName = ""
-				if userObj is not None:
-					userName = f"{userObj.first_name} {userObj.last_name}"
-					
-				r, g, b = getSectionColor(showUserObj)
-
-				dotCords.append({
-					'dot': dot_schema.dump(dot),
-
-					'counts': set.counts,
-					
-					"r": r, "g": g, "b": b,
-					
-					"userLabel": showUserObj.label, "userID": showUserObj.id,
-					"userName": userName,
-					"section_id": showUserObj.section_id,
-				})
-			
-			output.append({
-				'setID': set.id,
-				'setNumb': set.set_numb,
-				'setName': setName,
-				'counts': set.counts,
-				'start_time_code': set.start_time_code,
-				'end_time_code': set.end_time_code,
-				'index': i,
-				'dots': dotCords,
-				'update_timestamp': str(show.last_update)
-			})
-		
-		return output
-
+		return getBufferedDots(schoolCode, middleSet, bufferSize)
 
 class GetUserDotsResource(Resource):
 	@jwt_required()
