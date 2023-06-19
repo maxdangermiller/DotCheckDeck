@@ -37,8 +37,9 @@ const RegisterPage = (props) => {
 
     const validateEmail = (input) => {
 		const validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+$/;
+		const validRegex2 = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+$/;
 
-		return input.match(validRegex);
+		return input.match(validRegex) || input.match(validRegex2);
 	}
 
     const setEmail = (value) => {

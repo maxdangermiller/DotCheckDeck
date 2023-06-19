@@ -544,9 +544,9 @@ const Canvas = props => {
                 drawPoint(x, y, color, userLabel)
 
                 if (isHighlighted) {
-                    followDotCords = {x: x, y: y};
-                    
-                    if (followDot.dot !== undefined) {
+                    // console.log(followDot, dot)
+                    if (followDot.dot !== undefined && followDot.userID === dot.userID) {
+                        followDotCords = {x: x, y: y};
                         drawUserDialogue(x, y, dot);
                     }
                 }
@@ -558,9 +558,8 @@ const Canvas = props => {
                 drawPoint(x, y, color, userLabel)
 
                 if (isHighlighted) {
-                    followDotCords = {x: x, y: y};
-
-                    if (followDot.dot !== undefined) {
+                    if (followDot.dot !== undefined && followDot.userID === dot.userID) {
+                        followDotCords = {x: x, y: y};
                         drawUserDialogue(x, y, dot);
                     }
                 }
@@ -1064,6 +1063,8 @@ const Canvas = props => {
                 if (animationDirection !== direction) { setAnimationDirection(direction); }
 
                 // console.log(curSet, lastSetID, curTime + 1 > counts);
+
+                let highlightedUserData = getHighlightedUserData(curSetData, userOptions);
                 
                 for (let x = 0; x < Math.min(curSetData.length, lastSetData.length); x++) {
                     const dot = curSetData[x];
@@ -1077,9 +1078,9 @@ const Canvas = props => {
                     
 
                     // Check if there is a highlighted user
-                    if (_draw.userOptions.highlightUser !== null) {
+                    if (highlightedUserData !== null) {
                         // Check if this dot is the highlighted User
-                        if (_draw.userOptions.highlightUser.label === dot["userLabel"]) {
+                        if (highlightedUserData.userLabel === dot.userLabel) {
                             let color = getDotColor(dot, true, userOptions.useSectionColors)
                             let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
                             let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
@@ -1091,6 +1092,35 @@ const Canvas = props => {
                                 counts, curTime, 
                                 color, dot["userLabel"], true, dot
                             );
+                        }
+
+                        // Check if we're highlighting the section
+                        else if (_draw.userOptions.highlightSection) {
+                            let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
+                            let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+
+                            // Check if this dot is part of the highlighted section
+                            if (highlightedUserData.section_id === dot.section_id) {
+                                let color = getDotColor(dot, true, userOptions.useSectionColors)
+                            
+                                drawPointAnimation(
+                                    cords0.x, cords0.y, 
+                                    cords1.x, cords1.y, 
+                                    counts, curTime, 
+                                    color, dot["userLabel"], true, dot
+                                );
+                            }
+                            // Else dim others 
+                            else {
+                                let color = getDotColor(dot, false, userOptions.useSectionColors)
+
+                                drawPointAnimation(
+                                    cords0.x, cords0.y, 
+                                    cords1.x, cords1.y, 
+                                    counts, curTime, 
+                                    color, dot["userLabel"], true, dot
+                                );
+                            }
                         }
 
                         // No change needed
@@ -1339,8 +1369,10 @@ const Canvas = props => {
     useEffect(() => {
         if (userOptions.followingUser && userOptions.highlightUser !== null) {
             let userID = userOptions.highlightUser.id;
+            console.log(userID)
             for (let i = 0; i < dots.length; i++) {
                 if (dots[i].userID === userID) {
+                    console.log(dots[i])
                     setFollowDot(dots[i]);
                 }
             }

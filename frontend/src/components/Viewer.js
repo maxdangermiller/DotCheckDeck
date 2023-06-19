@@ -473,6 +473,7 @@ const Viewer = (props) => {
 	// Automatically Grab The Users Info and select them for highlighting
 	useEffect(() => {
 		if (props.userData.label !== undefined) {
+			console.log(props.userData)
 			setUserOptions({...userOptions,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
 		} else {
 			setUserOptions({...userOptions,  "highlightUser": null});

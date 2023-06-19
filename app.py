@@ -489,7 +489,7 @@ def get_jwt():
 					if showUser is not None:
 						showString = show_user_schema.dump(showUser)
 
-		response = {"access_token": access_token, "user": mergeJsonDicts(userString, showString), "school_code": schoolCode}
+		response = {"access_token": access_token, "user": mergeJsonDicts(showString, userString), "school_code": schoolCode}
 		# print(response)
 		return response, 202
 	except (RuntimeError, KeyError):
@@ -1148,16 +1148,19 @@ class UpdateUserResource(Resource):
 		for show in json.loads(request.data)["show_users"]:
 			showUser = ShowUser.query.filter(ShowUser.id == show["id"]).first()
 
-			showUser.label = show["label"]
-			showUser.symbol = show["symbol"]
-			showUser.is_section_leader = show["is_section_leader"]
-			showUser.section_id = show["section_id"]
 
+			if showUser.label != show["label"] or showUser.symbol != show["symbol"] or showUser.section_id != show["section_id"]:
+				showUser.label = show["label"]
+				showUser.symbol = show["symbol"]
+				showUser.section_id = show["section_id"]
+
+				# There has been a change made to the show's date, 
+				# so we must change the "last update time" var in the show object
+				Show.query.filter(Show.id == showUser.show_id).first().changeUpdateTime()
+
+			showUser.is_section_leader = show["is_section_leader"]
 			db.session.commit()
 
-			# There has been a change made to the show's date, 
-			# so we must change the "last update time" var in the show object
-			Show.query.filter(Show.id == showUser.show_id).first().changeUpdateTime()
 		
 		db.session.commit()
 
