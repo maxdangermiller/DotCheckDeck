@@ -312,10 +312,20 @@ const Canvas = props => {
             context.textAlign = "center";
             context.fillText(dot["userLabel"], x + w * 0.2, y + h * 0.25);
 
-            if (dot["userName"] !== "None None") {
+            if (dot["userName"] !== "None None" && dot["userName"] !== "") {
                 context.font = canvas.height * 0.015 + 'px ArialBlack';
 
-                context.fillText(dot["userName"], x + w * 0.65, y + h * 0.25);
+                const MAX_LENGTH = 12;
+                if (dot["userName"].length > MAX_LENGTH) {
+                    let split = dot["userName"].split(" ");
+                    let shortenedName = split[0] + " " + split[1][0] + "."
+
+                    context.fillText(dot["userName"].split(" ")[0], x + w * 0.65, y + h * 0.25);
+                    
+                } else {
+                    context.fillText(dot["userName"], x + w * 0.65, y + h * 0.25);
+                }
+
                 context.closePath();
             } else {
                 context.font = canvas.height * 0.0125 + 'px ArialBlack';

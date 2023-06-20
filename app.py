@@ -725,6 +725,25 @@ class SchoolCodeAuthResource(Resource):
 		return {"schoolName": school.name, "name": show.name, "users": show_users_schema.dump(filteredUsers), "email": school.email}, 200
 
 
+def updateBufferWithNewUser(user, showUser, show):
+	data = []
+
+	with open(f"dot_cache/{show.id}.json", "r") as file:
+		data = json.load(file)
+		print(data)
+
+		for set in data:
+			for dot in set["dots"]:
+				if dot["dot"]["show_user_id"] == showUser.id:
+					print("Updating dot: ", set["setID"])
+					dot["userName"] = f"{user.first_name} {user.last_name}"
+					break
+			set["update_timestamp"] = str(show.last_update)
+	
+	with open(f"dot_cache/{show.id}.json", "w") as file: 
+		json.dump(data, file, indent=4)
+
+
 # To allow a user to setup their credentials, as by default they cannot login
 class SetUpUserResource(Resource):
 	# REQUIRES: {
@@ -811,8 +830,9 @@ class SetUpUserResource(Resource):
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
 		show.changeUpdateTime()  
-
 		db.session.commit()
+
+		updateBufferWithNewUser(user, showUsers[0], show)
 
 		return "Successfully activated user", 201
 

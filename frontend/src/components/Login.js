@@ -22,6 +22,7 @@ const Login = (props) => {
 
 
 	const btnClick = (e) => {
+		if (email === "" || password === "") { return; }
 		console.log(WINDOW_LOCATION + "/token")
 		try {
 
@@ -46,7 +47,7 @@ const Login = (props) => {
 					console.log(error.response.headers)
 					setShowAlert(true);
 					if (error.response.headers !== undefined) {
-						setAlertText(error.response);
+						// setAlertText(error.response);
 					}
 				}
 			})
