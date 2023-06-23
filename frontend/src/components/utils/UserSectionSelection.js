@@ -8,7 +8,7 @@ const WINDOW_LOCATION = getApi();
 const UserSectionSelection = (props) => {
     const {data, curSet, schoolCode, token, userData, ...rest} = props;
 
-    const [show, setShow] = useState(true);
+    const [show, setShow] = useState(false);
     const [sections, setSections] = useState(null);
     const [section, setSection] = useState(null);
 
@@ -24,6 +24,8 @@ const UserSectionSelection = (props) => {
             setShow(false);
             return;
         }
+
+        setShow(true);
 
         fetch(WINDOW_LOCATION + "/get-sections?token=" + token + "&school_code=" + schoolCode)
         .then((response) => {

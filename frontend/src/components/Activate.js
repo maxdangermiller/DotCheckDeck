@@ -5,6 +5,7 @@ import './Activate.css'
 import SchoolCodePage from './ActivateFormPages/SchoolCodePage';
 import SelectLabelPage from './ActivateFormPages/SelectLabelPage';
 import RegisterPage from './ActivateFormPages/RegisterPage';
+import TermsPage from './ActivateFormPages/TermsPage';
 import getApi from './getApi';
 
 const darkTheme = createTheme({
@@ -22,6 +23,7 @@ const Activate = (props) => {
     const [schoolCode, setSchoolCode] = useState("");
     const [schoolInfo, setSchoolInfo] = useState("");
     const [userData, setUserData] = useState(null);
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [registrationData, setRegistrationData] = useState({
         "first_name": "", "last_name": "",
         "email": "", "password": "", "password_confirm": "",
@@ -110,7 +112,9 @@ const Activate = (props) => {
             setCurPage(2);
         } else if (curPage === 2 && userData != null) {
             setCurPage(3);
-        } else if (curPage === 3) {
+        } else if (curPage === 3 && agreedToTerms) {
+            setCurPage(4);
+        } else if (curPage === 4) {
             const errors = registrationData.errors;
             if (!errors.first_name_error && !errors.last_name_error && !errors.email_error && !errors.password_errors.any) {
                 // NO ERRORS; SEND REQUEST
@@ -149,6 +153,8 @@ const Activate = (props) => {
                     : curPage === 2 ?
                     <SelectLabelPage options={schoolInfo["users"]} email={schoolInfo["email"]} userData={userData} setUserData={setUserData}/>
                     : curPage === 3 ?
+                    <TermsPage agreedToTerms={agreedToTerms} setAgreedToTerms={setAgreedToTerms}/>
+                    : curPage === 4 ?
                     <RegisterPage userData={userData} registrationData={registrationData} setRegistrationData={setRegistrationData}/>
                     : null
                 }
