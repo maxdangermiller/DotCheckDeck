@@ -728,7 +728,7 @@ class SchoolCodeAuthResource(Resource):
 def updateBufferWithNewUser(user, showUser, show):
 	data = []
 
-	with open(f"dot_cache/{show.id}.json", "r") as file:
+	with open(f"cache/dots/{show.id}.json", "r") as file:
 		data = json.load(file)
 		print(data)
 
@@ -740,7 +740,7 @@ def updateBufferWithNewUser(user, showUser, show):
 					break
 			set["update_timestamp"] = str(show.last_update)
 	
-	with open(f"dot_cache/{show.id}.json", "w") as file: 
+	with open(f"cache/dots/{show.id}.json", "w") as file: 
 		json.dump(data, file, indent=4)
 
 
@@ -843,6 +843,7 @@ def getSetIndex(sets, middleSet) -> int:
 			return x
 	return -1
 
+
 def getSetIndexInData(data, middleSet) -> int:
 	for x in range(len(data)):
 		if data[x]["setNumb"] == middleSet:
@@ -943,7 +944,7 @@ def getAllDotsWithoutBuffer(schoolCode):
 		})
 	
 	print("SAVING NEW CACHE")
-	with open(f"dot_cache/{show.id}.json", "w") as outfile:
+	with open(f"cache/dots/{show.id}.json", "w") as outfile:
 		json.dump(output, outfile, indent=4)
 
 	return output
@@ -961,10 +962,10 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 	if show is None:
 		return "INVALID SHOW CODE", 404
 	
-	curDatabaseVerison = show.last_update
+	curDatabaseVersion = show.last_update
 
 	try:
-		with open(f"dot_cache/{show.id}.json", "r") as file:
+		with open(f"cache/dots/{show.id}.json", "r") as file:
 			data = json.load(file)
 
 			if middleSet == "undefined":
@@ -989,10 +990,9 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 			
 			for set in data[startIndex:endIndex + 1]:
 				output.append(set)
-				if set["update_timestamp"] != str(curDatabaseVerison):
+				if set["update_timestamp"] != str(curDatabaseVersion):
 					print("Updating!")
 					return getAllDotsWithoutBuffer(showCode), 200
-			print(len(output))
 				
 			return output, 200
 	except:
@@ -1009,6 +1009,7 @@ class GetDotsWithBufferResource(Resource):
 		bufferSize = int(request.args.get('buffer', 4))
 
 		return getBufferedDots(schoolCode, middleSet, bufferSize)
+
 
 class GetUserDotsResource(Resource):
 	@jwt_required()
@@ -1357,6 +1358,26 @@ class GetDatabaseResource(Resource):
 		}
 
 
+def updateBufferWithSetName(show, setName):
+	data = []
+
+	with open(f"cache/set-names/{show.id}.json", "r") as file:
+		data = json.load(file)
+		print(data)
+
+		if str(setName.section_id) not in data:
+			return
+
+		for id, section in data.items():
+			for set in section:
+				if id == str(setName.section_id) and set["set_id"] == setName.set_id:
+						set["set_name"] = setName.name
+				set["update_timestamp"] = str(show.last_update)
+	
+	with open(f"cache/set-names/{show.id}.json", "w") as file: 
+		json.dump(data, file, indent=4)
+
+
 class UpdateOrCreateSetNameResource(Resource):
 	@jwt_required()
 	def post(self):
@@ -1403,6 +1424,8 @@ class UpdateOrCreateSetNameResource(Resource):
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
 		# Show.query.filter(Show.id == show_id).first().changeUpdateTime()
+		show = Show.query.filter(Show.id == show_id).first()
+		updateBufferWithSetName(show, setName)
 
 		db.session.commit()
 
@@ -1597,6 +1620,70 @@ class GetDefaultJoinCode(Resource):
 		return {"code": show.code, "name": show.name}
 
 
+def getSetNamesWithoutBuffer(show, showUser):
+	sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
+	sections = BandSection.query.filter(BandSection.show_id == show.id).all()
+
+	# Get the database version so we know what update this is
+	curDatabaseVersion = show.last_update
+
+	output = {}
+
+	
+	for section in sections:
+		setsOutput = list()
+
+		for set in sets:
+			# Set a default name so that the var is defined
+			setName = "Undefined"
+
+			# Get a Set Name if it exists for that section / set
+			setNameObj = SetName.query.filter(SetName.section_id == section.id, SetName.set_id == set.id).first()
+			if setNameObj is not None:
+				setName = setNameObj.name
+			
+			setsOutput.append({
+				"set_id": set.id,
+				"set_name": setName,
+				"update_timestamp": str(curDatabaseVersion)
+			})
+		output[section.id] = setsOutput
+	
+	# SAVING NEW CACHE
+	with open(f"cache/set-names/{show.id}.json", "w") as outfile:
+		json.dump(output, outfile, indent=4)
+
+	return output
+
+
+def getBufferedSetNames(show, showUser):
+	# Get the database version so we know what update this is
+	curDatabaseVersion = show.last_update
+
+	try:
+		with open(f"cache/set-names/{show.id}.json", "r") as file:
+			data = json.load(file)
+
+			# var to store all of the sets
+			output = []
+
+			if str(showUser.section_id) not in data:
+				print("Section doesn't exist!")
+				return getSetNamesWithoutBuffer(show, showUser), 200
+			
+			for setName in data[str(showUser.section_id)]:
+				output.append(setName)
+				if setName["update_timestamp"] != str(curDatabaseVersion):
+					print("Updating!")
+					return getSetNamesWithoutBuffer(show, showUser), 200
+			print(len(output))
+				
+			return output, 200
+	except:
+		print("ERROR")
+		return getSetNamesWithoutBuffer(show, showUser), 200
+
+
 class SetNameListResource(Resource):
 	@jwt_required()
 	def get(self):
@@ -1622,6 +1709,8 @@ class SetNameListResource(Resource):
 			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
 		else:
 			loggedInUserSection = None
+
+		return getBufferedSetNames(show, showUser)
 
 		setsOutput = list()
 

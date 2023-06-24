@@ -291,9 +291,11 @@ const Viewer = (props) => {
 			return;
 		} 
 
+		/*
 		if (checkLocalData()) {
 			return;
 		}
+		*/
 
 		if (data.length !== 0) {
 			retrievePoints(useBuffer);
