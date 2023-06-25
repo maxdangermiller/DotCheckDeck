@@ -321,12 +321,14 @@ class ShowSchema(ma.SQLAlchemyAutoSchema):
 		include_fk = True
 		load_instance = True	
 
+
 class SchoolSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
 		model = School
 		include_fk = True
 		load_instance = True
 		load_relationships = True
+
 
 class BandSectionSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
@@ -463,6 +465,9 @@ def mergeJsonDicts(a, b):
 	return merged_dict
 
 
+@app.route('/api/health', methods=["GET"])
+def health_check():
+	return "Alive and Well.", 200
 
 @app.route('/get-token', methods=["POST"])
 @jwt_required(refresh=True)
