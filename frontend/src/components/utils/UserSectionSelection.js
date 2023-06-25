@@ -8,7 +8,7 @@ const WINDOW_LOCATION = getApi();
 const UserSectionSelection = (props) => {
     const {data, curSet, schoolCode, token, userData, ...rest} = props;
 
-    const [show, setShow] = useState(false);
+    const [show, setShow] = useState(true);
     const [sections, setSections] = useState(null);
     const [section, setSection] = useState(null);
 
