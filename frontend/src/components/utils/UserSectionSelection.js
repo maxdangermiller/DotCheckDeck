@@ -20,6 +20,7 @@ const UserSectionSelection = (props) => {
             setShow(false);
             return;
         }
+        // Check if this is an admin, or a user that's doesn't have a show user
         if (userData.show_users.length === 0) {
             setShow(false);
             return;
@@ -41,7 +42,7 @@ const UserSectionSelection = (props) => {
         .catch((error) => {
             alert(error);
         });
-    }, []);
+    }, [userData]);
 
     const getShowUser = () => {
         try {
