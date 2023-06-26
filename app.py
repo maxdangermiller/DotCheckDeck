@@ -793,11 +793,10 @@ class SetUpUserResource(Resource):
 		# Attempt to load the Show with that code
 		show = Show.query.filter(Show.code == request.json['school_code']).first()
 
-		# Check to see if we got a school obj
+		# Check to see if we got a show obj
 		if show is None:
 			return "INVALID SCHOOL CODE", 404
 		
-
 
 		# Find users that fit the params,
 		# it's possible for multiple users to have the same label so we have to do this for now.
@@ -872,6 +871,48 @@ def getSectionColor(userObj) -> list:
 	return userSection.color_r, userSection.color_g, userSection.color_b
 
 
+def getAllDotInfoForSet(show, set):
+	dots = Dot.query.filter(Dot.set_id == set.id).all()
+		
+	setName = ""
+
+	dotCords = []
+
+	for dot in dots:
+		showUserObj = ShowUser.query.filter(ShowUser.id == dot.show_user_id).first()
+		userObj = User.query.filter(User.id == showUserObj.user_id).first()
+		userName = ""
+		if userObj is not None:
+			userName = f"{userObj.first_name} {userObj.last_name}"
+			
+		r, g, b = getSectionColor(showUserObj)
+
+		dotCords.append({
+			'dot': dot_schema.dump(dot),
+
+			'counts': set.counts,
+			
+			"r": r, "g": g, "b": b,
+			
+			"userLabel": showUserObj.label, "userID": showUserObj.id,
+			"userName": userName,
+			"section_id": showUserObj.section_id,
+		})
+
+	return {
+		'setID': set.id,
+		'setNumb': set.set_numb,
+		'setName': setName,
+		'counts': set.counts,
+		'start_time_code': set.start_time_code,
+		'end_time_code': set.end_time_code,
+		'index': set.showIndex,
+		'dots': dotCords,
+		'update_timestamp': str(show.last_update),
+		'measure': set.measure
+	}
+
+
 def getAllDotsWithoutBuffer(schoolCode):
 	# REQUIRE A SCHOOL CODE
 	if schoolCode is None:
@@ -890,63 +931,8 @@ def getAllDotsWithoutBuffer(schoolCode):
 	# var to store all of the sets
 	output = []
 
-	identity = get_jwt_identity()
-	loggedInUser = User.query.filter(User.email == identity).first()
-	showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
-	
-	if showUser is not None:
-		loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
-	else:
-		# return "User does not have access to that show", 401
-		loggedInUserSection = None
-
 	for set in sets:
-		dots = Dot.query.filter(Dot.set_id == set.id).all()
-		
-		setName = ""
-		if loggedInUserSection is not None:
-			setNameObj = SetName.query.filter(
-				SetName.section_id == loggedInUserSection.id, 
-				SetName.set_id == set.id
-			).first()
-
-			if setNameObj is not None:
-				setName = setNameObj.name
-
-		dotCords = []
-
-		for dot in dots:
-			showUserObj = ShowUser.query.filter(ShowUser.id == dot.show_user_id).first()
-			userObj = User.query.filter(User.id == showUserObj.user_id).first()
-			userName = ""
-			if userObj is not None:
-				userName = f"{userObj.first_name} {userObj.last_name}"
-				
-			r, g, b = getSectionColor(showUserObj)
-
-			dotCords.append({
-				'dot': dot_schema.dump(dot),
-
-				'counts': set.counts,
-				
-				"r": r, "g": g, "b": b,
-				
-				"userLabel": showUserObj.label, "userID": showUserObj.id,
-				"userName": userName,
-				"section_id": showUserObj.section_id,
-			})
-		
-		output.append({
-			'setID': set.id,
-			'setNumb': set.set_numb,
-			'setName': setName,
-			'counts': set.counts,
-			'start_time_code': set.start_time_code,
-			'end_time_code': set.end_time_code,
-			'index': set.showIndex,
-			'dots': dotCords,
-			'update_timestamp': str(show.last_update)
-		})
+		output.append(getAllDotInfoForSet(show, set))
 	
 	print("SAVING NEW CACHE")
 	with open(f"cache/dots/{show.id}.json", "w") as outfile:
@@ -992,17 +978,25 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 
 			# var to store all of the sets
 			output = []
+			changedSomething = False
 			
-			for set in data[startIndex:endIndex + 1]:
-				output.append(set)
-				if set["update_timestamp"] != str(curDatabaseVersion):
-					print("Updating!")
-					return getAllDotsWithoutBuffer(showCode), 200
+			for i in range(startIndex, endIndex + 1):
+				# If it's out of date, then we're gonna screw it (update it)
+				if data[i]["update_timestamp"] != str(curDatabaseVersion):
+					setObj = Set.query.filter(Set.id == data[i]["setID"]).first()
+					data[i] = getAllDotInfoForSet(show, setObj)
+					changedSomething = True
+
+				output.append(data[i])
+			
+			if changedSomething:
+				with open(f"cache/dots/{show.id}.json", "w") as outfile:
+					json.dump(data, outfile, indent=4)
 				
 			return output, 200
 	except:
-		print("ERROR")
-		return getAllDotsWithoutBuffer(showCode), 200
+		print("Error")
+		return getAllDotsWithoutBuffer(showCode)
 
 
 class GetDotsWithBufferResource(Resource):
@@ -1014,6 +1008,52 @@ class GetDotsWithBufferResource(Resource):
 		bufferSize = int(request.args.get('buffer', 4))
 
 		return getBufferedDots(schoolCode, middleSet, bufferSize)
+
+
+def getSetName(setNames, set_id):
+	for setName in setNames:
+		if setName["set_id"] == set_id:
+			return setName["set_name"]
+	
+	return "ERROR"
+
+
+def getBufferedUserDots(show, showUser):
+	curDatabaseVersion = show.last_update
+
+	setNames = getBufferedSetNames(show, showUser)[0]
+
+	try:
+		with open(f"cache/dots/{show.id}.json", "r") as file:
+			data = json.load(file)
+
+			# var to store all of the sets
+			output = []
+			changedSomething = False
+			
+			for set in data:
+				# If it's out of date, then we're gonna screw it (update it)
+				if set["update_timestamp"] != str(curDatabaseVersion):
+					setObj = Set.query.filter(Set.id == set["setID"]).first()
+					set = getAllDotInfoForSet(show, setObj)
+					changedSomething = True
+
+				for dot in set["dots"]:
+					if dot["dot"]["show_user_id"] == showUser.id:
+						dot["set_numb"] = set["setNumb"]
+						dot["set_name"] = getSetName(setNames, set["setID"])
+						dot["measure"] =  set["measure"]
+						output.append(dot)
+						break
+			
+			if changedSomething:
+				with open(f"cache/dots/{show.id}.json", "w") as outfile:
+					json.dump(data, outfile, indent=4)
+				
+			return output
+	except:
+		print("ERROR")
+		return getAllDotsWithoutBuffer(showCode)
 
 
 class GetUserDotsResource(Resource):
@@ -1042,44 +1082,8 @@ class GetUserDotsResource(Resource):
 
 		if showUser is None:
 			return "User does not have access to that show!", 401
-
-		section = BandSection.query.filter(BandSection.id == showUser.section_id).first()
 		
-		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
-
-		dots = list()
-
-		for set in sets:
-			dot = Dot.query.filter(Dot.set_id == set.id, Dot.show_user_id == showUser.id).first()
-					
-			r, g, b = getSectionColor(showUser)
-
-			setName = ""
-			if section is not None:
-				setNameObj = SetName.query.filter(
-					SetName.section_id == section.id, 
-					SetName.set_id == set.id
-				).first()
-
-				if setNameObj is not None:
-					setName = setNameObj.name
-
-
-			dots.append({
-				'dot': dot_schema.dump(dot),
-
-				'counts': set.counts,
-				'set_numb': set.set_numb,
-				'set_name': setName,
-				'measure': set.measure,
-				
-				"r": r, "g": g, "b": b,
-				
-				"userLabel": showUser.label, "userID": showUser.id,
-				"section_id": showUser.section_id,
-			})
-		
-		return {"dots": dots}, 200
+		return {"dots": getBufferedUserDots(show, showUser)}, 200
 
 
 class UpdateSetResource(Resource):
@@ -1716,23 +1720,6 @@ class SetNameListResource(Resource):
 			loggedInUserSection = None
 
 		return getBufferedSetNames(show, showUser)
-
-		setsOutput = list()
-
-		for set in sets:
-			setName = "Undefined"
-
-			if loggedInUserSection is not None:
-				setNameObj = SetName.query.filter(SetName.section_id == loggedInUserSection.id, SetName.set_id == set.id).first()
-				if setNameObj is not None:
-					setName = setNameObj.name
-			
-			setsOutput.append({
-				"set_id": set.id,
-				"set_name": setName
-			})
-
-		return setsOutput
 
 
 
