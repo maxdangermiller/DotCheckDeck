@@ -795,7 +795,7 @@ def sendActivateEmail(user):
 					}
 				]
 			},
-			"senderAddress": "DoNotReply@3559ff51-87bd-43b2-93fc-2e5668c92648.azurecomm.net"
+			"senderAddress": "donotreply@dotcheckdeck.com"
 		}
 
 		email_client.begin_send(message)
