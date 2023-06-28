@@ -34,6 +34,7 @@ const Login = (props) => {
 					password: password
 				}
 			}).then((response) => {
+				setShowAlert(false);
 				// console.log(response.data)
 				props.setToken(response.data.access_token);
 				props.setRefToken(response.data.refresh_token);
@@ -46,8 +47,17 @@ const Login = (props) => {
 					console.log(error.response.status)
 					console.log(error.response.headers)
 					setShowAlert(true);
-					if (error.response.headers !== undefined) {
-						// setAlertText(error.response);
+
+					try {
+						if (error.response.data !== undefined) {
+							if (error.response.data.msg !== undefined) {
+								setAlertText(error.response.data.msg);
+							} else {
+								setAlertText(error.response.data);
+							}
+						}
+					} catch (error) {
+						
 					}
 				}
 			})
@@ -106,7 +116,10 @@ const Login = (props) => {
 			{
 				showAlert ?
 				<div className="alert alert-danger alert-dismissible customAlert" role="alert">
-					<div>Something went wrong! We guess it's possible that we did something wrong, but it's probably on you. {alertText}</div>
+					<div>
+						<strong>Something went wrong! We guess it's possible that we did something wrong, but it's probably on you.</strong> 
+					</div>
+					{alertText}
 					<button className="btn-close" onClick={(e) => setShowAlert(false)}></button>
 				</div>
 				: null

@@ -7,25 +7,42 @@ const WINDOW_LOCATION = getApi();
 const VerifyAccount = (props) => {
     let params = useParams();
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [schoolInfo, setSchoolInfo] = useState("");
+    const [isDone, setIsDone] = useState(false);
 
     useState(() => {
-        setIsLoading(true);
-        fetch(WINDOW_LOCATION + '/verify-account/' + params["enc_id"], {
-                method: 'GET',
-                headers: {
-                    'Content-type': 'application/json; charset=UTF-8',
+        try {
+            fetch(WINDOW_LOCATION + '/verify-account/' + params["enc_id"], {
+                    method: 'GET',
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8',
+                    }
+            })
+            .then((response) => {
+                if (response.status === 200) {
+                    console.log(response);
+                    setIsDone(true);
                 }
-        })
-        .then((response) => {
-            console.log(response);
-        })
-        .catch((error) => {
-            setIsLoading(false);
+                else {
+                    alert("Something went wrong.");
+                }
+            })
+            .catch((error) => {
+                alert(error);
+            });
+        } catch (error) {
             alert(error);
-        });
+        }
     }, []);
+
+    if (!isDone) {
+        return (
+            <div className='flex-column justify-content-center d-flex align-items-center adminFullScreen'>
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className='flex-column justify-content-center d-flex align-items-center adminFullScreen'>

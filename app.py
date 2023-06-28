@@ -410,10 +410,14 @@ def create_token():
 		# user = User(email=email, password=password, name="Max Miller")
 		# db.session.add(user)
 		# db.session.commit()
-		return {"msg": "Wrong email or password"}, 401
+		return  "Wrong email or password", 401
 
 	if not user.check_password(password):
-		return {"msg": "Wrong email or password"}, 401
+		return "Wrong email or password", 401
+
+	# Require User to be verified
+	if user.verified_date is None:
+		return "User email hasn't been verified yet! You must click on the link in your email", 403
 
 	access_token = create_access_token(identity=email)
 	refresh_token = create_refresh_token(identity=email)
@@ -434,9 +438,6 @@ def create_token():
 				showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
 				if showUser is not None:
 					showString = show_user_schema.dump(showUser)
-
-	if user.verified_date is None:
-		sendActivateEmail(user)
 
 	response = {
 		"access_token": access_token, 
@@ -487,6 +488,10 @@ def get_jwt():
 		if user is not None:
 			userString = user_schema.dump(user)
 
+			# Require User to be verified
+			if user.verified_date is None:
+				return "User email hasn't been verified yet!", 403
+
 			userSchool = School.query.filter(School.id == user.school_id).first()
 			if userSchool is not None:
 				userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default.desc()).first()
@@ -498,12 +503,13 @@ def get_jwt():
 					if showUser is not None:
 						showString = show_user_schema.dump(showUser)
 
+
 		response = {"access_token": access_token, "user": mergeJsonDicts(showString, userString), "school_code": schoolCode}
 		# print(response)
 		return response, 202
 	except (RuntimeError, KeyError):
-		# Case where there is not a valid JWT. Just return the original respone
-		return "", 401
+		# Case where there is not a valid JWT. Just return the original response
+		return "There was an error", 401
 
 
 @app.route("/logout", methods=["POST"])
@@ -511,6 +517,24 @@ def logout():
 	response = jsonify({"msg": "logout successful"})
 	unset_jwt_cookies(response)
 	return response
+
+
+@app.route("/send-verify-email", methods=["GET"])
+def sendVerifyAccountEmail():
+	email = request.args.get("email", None)
+
+	loggedInUser = User.query.filter(User.email == email).first()
+
+	if loggedInUser is None:
+		return "Invalid User", 401
+	
+	if loggedInUser.verified_date is not None:
+		return "User has already been verified", 400
+	
+	sendActivateEmail(loggedInUser)
+
+	return "Sent.", 200
+		
 
 
 @app.route("/verify-account/<verify_encrypted_id>", methods=["GET"])
@@ -755,12 +779,9 @@ def updateBufferWithNewUser(user, showUser, show):
 
 	with open(f"cache/dots/{show.id}.json", "r") as file:
 		data = json.load(file)
-		print(data)
-
 		for set in data:
 			for dot in set["dots"]:
 				if dot["dot"]["show_user_id"] == showUser.id:
-					print("Updating dot: ", set["setID"])
 					dot["userName"] = f"{user.first_name} {user.last_name}"
 					break
 			set["update_timestamp"] = str(show.last_update)
@@ -799,6 +820,7 @@ def sendActivateEmail(user):
 		}
 
 		email_client.begin_send(message)
+		print(f"Sent Email to {user.email}")
 	except Exception as ex:
 		print('Exception:')
 		print(ex)
@@ -865,10 +887,7 @@ class SetUpUserResource(Resource):
 		# Try and find a matching user
 		user = User.query.filter(User.email == request.json["email"]).first()
 		if user is not None:
-			showUsers[0].user_id = user.id
-			db.session.commit()
-
-			return "User has already been activated", 200
+			return "User has already been activated, please use the existing user option", 400
 		
 		user = User(school_id = show.school_id)
 		db.session.add(user)
@@ -896,6 +915,50 @@ class SetUpUserResource(Resource):
 		updateBufferWithNewUser(user, showUsers[0], show)
 
 		return "Successfully activated user", 201
+
+
+class AddShowUserResource(Resource):
+	def post(self):
+		email = request.json.get("email", None)
+		password = request.json.get("password", None)
+		showCode = request.json.get("show_code", None)
+		label = request.json.get("label", None)
+
+		user = User.query.filter_by(email=email).first()
+
+		if not user:
+			return  "Wrong email or password", 401
+
+		if not user.check_password(password):
+			return "Wrong email or password", 401
+
+		# Require User to be verified
+		if user.verified_date is None:
+			return "User email hasn't been verified yet! You must click on the link in your email", 403
+		
+		# Attempt to load the Show with that code
+		show = Show.query.filter(Show.code == showCode).first()
+
+		# Check to see if we got a show obj
+		if show is None:
+			return "INVALID SHOW CODE", 404
+		
+		if ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == user.id).first() is not None:
+			return "A label in this show has already been activated to this user!", 400
+
+		# Find users that fit the params,
+		# it's possible for multiple users to have the same label so we have to do this for now.
+		showUsers = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.label == label).all()
+
+		if len(showUsers) > 1:
+			return "Multiple Users found for that query, INTERNAL SERVER ERROR!", 402
+		if len(showUsers) != 1:
+			return "No users found with that show_code and label"
+		
+		showUsers[0].user_id = user.id
+		db.session.commit()
+
+		return "Success", 200
 
 
 def getSetIndex(sets, middleSet) -> int:
@@ -1799,6 +1862,7 @@ api.add_resource(GetDefaultJoinCode, '/default-join-code')
 api.add_resource(SetNameListResource, '/get-set-names')
 api.add_resource(GetSectionsResource, '/get-sections')
 api.add_resource(UpdateUserSectionResource, '/update-user-section')
+api.add_resource(AddShowUserResource, "/add-show-user-to-user")
 
 
 
