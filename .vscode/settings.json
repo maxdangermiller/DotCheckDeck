@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "fernet",
         "jsonify"
     ],
     "appService.showBuildDuringDeployPrompt": false

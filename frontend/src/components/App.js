@@ -13,6 +13,7 @@ import getApi from './getApi';
 import AdminJoinCodeDisplay from './AdminComponents/AdminJoinCodeDisplay';
 import AdminCreateShow from './AdminComponents/AdminCreateShow';
 import BasicViewer from './BasicViewer';
+import VerifyAccount from './utils/VerifyAccount';
 
 import axios from "axios";
 
@@ -26,7 +27,7 @@ function App() {
 	const [ schoolCode, setSchoolCode ] = useState("");
 	const [ isBasic, setIsBasic ] = useState(false);
 
-	useEffect(() => {
+	const refreshToken = () => {
 		if (token == null) {
 			// console.log("Token: " + token);
 			// console.log("Ref Token: " + refToken);
@@ -60,6 +61,10 @@ function App() {
 				}
 			} else { setToken(""); }
 		}
+	}
+
+	useEffect(() => {
+		refreshToken();
 	}, [token, refToken]);
 	
 	const logout = () => {
@@ -158,6 +163,9 @@ function App() {
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/" />
 						: <AdminCreateShow token={token} schoolCode={schoolCode}/>
+					} />
+					<Route path="/activate-account/:enc_id" exact element={
+						<VerifyAccount/>
 					} />
 
 					<Route path="*" element={<h1>404, you've been dumb</h1>} />

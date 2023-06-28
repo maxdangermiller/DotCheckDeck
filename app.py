@@ -12,15 +12,13 @@ from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, u
 	JWTManager, create_refresh_token
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from azure.communication.email import EmailClient
 import json
 import os
 import sys
-import jwt
-import urllib.parse 
 import string
 import random
-
-import convertHashToCords
+from cryptography.fernet import Fernet
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -70,6 +68,8 @@ jwt = JWTManager(app)
 admin = Admin(app, name='Dot Check Deck', template_mode='bootstrap3')
 
 CORS(app)
+
+verify_key = b'm1cfKgmOA07WEUVdK5BJqm2QW5pX5y8ms8aRezyzd3Q='
 
 # flask db migrate -m "message"
 # flask db upgrade
@@ -205,6 +205,7 @@ class User(db.Model):
 	activated_date = db.Column(db.DateTime, default=None, nullable=True)
 	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
 	last_updated = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	verified_date = db.Column(db.DateTime, default=None, nullable=True)
 
 	# Methods
 	def set_password(self, password):
@@ -434,6 +435,9 @@ def create_token():
 				if showUser is not None:
 					showString = show_user_schema.dump(showUser)
 
+	if user.verified_date is None:
+		sendActivateEmail(user)
+
 	response = {
 		"access_token": access_token, 
 		"refresh_token": refresh_token, 
@@ -507,6 +511,22 @@ def logout():
 	response = jsonify({"msg": "logout successful"})
 	unset_jwt_cookies(response)
 	return response
+
+
+@app.route("/verify-account/<verify_encrypted_id>", methods=["GET"])
+def verifyAccount(verify_encrypted_id):
+	fernet = Fernet(verify_key)
+	userID = fernet.decrypt(verify_encrypted_id.encode()).decode()
+
+	user = User.query.filter(User.id == userID).first()
+
+	if user is None:
+		return "USER DOESN'T EXIST!!!", 404
+	
+	user.verified_date = datetime.datetime.now()
+	db.session.commit()
+
+	return "Success", 200
 
 
 # Serve Images
@@ -749,6 +769,41 @@ def updateBufferWithNewUser(user, showUser, show):
 		json.dump(data, file, indent=4)
 
 
+def sendActivateEmail(user):
+	try:
+		fernet = Fernet(verify_key)
+		apiKey = fernet.encrypt(str(user.id).encode()).decode('utf8')
+
+		# Create the EmailClient object that you use to send Email messages.
+		email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
+
+		message = {
+			"content": {
+				"subject": "DOT CHECK DECK - Activate your email!",
+				"plainText": "Hey! We know you aren't going to read this text, but like, everyone writes it so yeah",
+				"html": "<html>" +
+					'<img src="dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />' +
+					"<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>" +
+					f'<a href="dotcheckdeck.com/activate-account/{apiKey}">Activate New Account</a>' +
+				"</html>"
+			},
+			"recipients": {
+				"to": [
+					{
+						"address": user.email,
+						"displayName": f"{user.first_name} {user.last_name}"
+					}
+				]
+			},
+			"senderAddress": "DoNotReply@3559ff51-87bd-43b2-93fc-2e5668c92648.azurecomm.net"
+		}
+
+		email_client.begin_send(message)
+	except Exception as ex:
+		print('Exception:')
+		print(ex)
+
+
 # To allow a user to setup their credentials, as by default they cannot login
 class SetUpUserResource(Resource):
 	# REQUIRES: {
@@ -830,6 +885,8 @@ class SetUpUserResource(Resource):
 		user.set_password(request.json["password"])
 
 		db.session.add(user)
+
+		sendActivateEmail(user)
 
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object

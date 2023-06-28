@@ -320,7 +320,7 @@ const Canvas = props => {
                     let split = dot["userName"].split(" ");
                     let shortenedName = split[0] + " " + split[1][0] + "."
 
-                    context.fillText(dot["userName"].split(" ")[0], x + w * 0.65, y + h * 0.25);
+                    context.fillText(shortenedName, x + w * 0.65, y + h * 0.25);
                     
                 } else {
                     context.fillText(dot["userName"], x + w * 0.65, y + h * 0.25);
