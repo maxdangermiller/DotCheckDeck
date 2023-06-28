@@ -167,6 +167,7 @@ function App() {
 					<Route path="/activate-account/:enc_id" exact element={
 						<VerifyAccount/>
 					} />
+					
 
 					<Route path="*" element={<h1>404, you've been dumb</h1>} />
 				</Routes>
