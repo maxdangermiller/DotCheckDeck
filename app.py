@@ -533,8 +533,7 @@ def sendVerifyAccountEmail():
 	
 	sendActivateEmail(loggedInUser)
 
-	return "Sent.", 200
-		
+	return "Sent.", 200	
 
 
 @app.route("/verify-account/<verify_encrypted_id>", methods=["GET"])

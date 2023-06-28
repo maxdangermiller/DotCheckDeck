@@ -71,16 +71,16 @@ const BasicViewer = (props) => {
 
     return (
         <div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
-            <div className="overflow-auto" style={{minWidth: '60vw', height: '80vh'}}>
+            <div className="overflow-auto" style={{height: '80vh'}}>
             <ul className="list-group">
             {
                 data.dots.map((dotData, index) =>
-                    <li className="list-group-item flex-row justify-content-center d-flex align-items-center" key={index}>
-                        <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'20%'}}>
+                    <li className="list-group-item flex-row justify-content-between d-flex align-items-center" key={index} style={{width:'100%'}}>
+                        <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'30%'}}>
                             <h1>{dotData.set_numb}</h1>
                             <p><strong>{dotData.set_name}</strong></p>
                         </div>
-                        <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'80%'}}>
+                        <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'70%'}}>
                             <div className='mb-2'>{getDotText1(dotData.dot)}</div>
                             <div className='mb-2'>{getDotText2(dotData.dot)}</div>
                             <div className='mb-2'>For {dotData.counts} counts</div>
