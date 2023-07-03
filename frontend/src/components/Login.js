@@ -106,6 +106,7 @@ const Login = (props) => {
 
 								<div>
 									<p className="mb-0">Don't have an account? <a href="/activate" className="text-white-50 fw-bold">Activate New Account</a></p>
+									<p className="mb-0">Forgot your password? <a href="/forgot-password" className="text-white-50 fw-bold">Forgot Password</a></p>
 								</div>
 
 							</div>

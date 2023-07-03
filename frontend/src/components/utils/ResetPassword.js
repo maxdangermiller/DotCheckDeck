@@ -120,14 +120,17 @@ const ResetPassword = (props) => {
                     setIsDone(true);
                 }
                 else {
-                    alert("Something went wrong.");
+                    setShowAlert(true);
+                    setAlertText("Invalid reset password key!");
                 }
             })
             .catch((error) => {
-                alert(error);
+                setShowAlert(true);
+                setAlertText("Invalid reset password key!");
             });
         } catch (error) {
-            alert(error);
+            setShowAlert(true);
+            setAlertText("Invalid reset password key!");
         }
     }, []);
 

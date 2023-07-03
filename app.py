@@ -727,7 +727,7 @@ def remove_forgot_password_code(code) -> bool:
 
 
 @app.route('/send-reset-password-email', methods=["GET"])
-def get_reset_password_key():
+def send_reset_password_email():
 	email = request.args.get("email", None)
 
 	user = User.query.filter(User.email == email).first()

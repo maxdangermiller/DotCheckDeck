@@ -19,14 +19,13 @@ const DRAG_STATE_NONE = 0;
 const DRAG_STATE_LEFT = 1;
 const DRAG_STATE_RIGHT = 2;
 
-let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
-
 const AdminTimeline = (props) => {
     const { schoolCode, token, ...rest } = props
 
     const [curPlayTime, setCurPlayTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [dragInTimeline, setDragInTimeline] = useState(false);
+    const [audio, setAudio] = useState(new Audio());
 
     const [timelineResizeInfo, setTimelineResizeInfo] = useState({ 
         state: DRAG_STATE_NONE,
@@ -73,6 +72,10 @@ const AdminTimeline = (props) => {
 					console.log(error);
 				}
 		);
+	}, [])
+
+    useEffect(() => {
+		setAudio(new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + schoolCode + "&token=" + token));
 	}, [])
 
     const dragStart = (e, index) => {

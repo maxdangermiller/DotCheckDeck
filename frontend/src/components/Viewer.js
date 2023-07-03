@@ -21,10 +21,6 @@ const darkTheme = createTheme({
 	  mode: 'dark',
 	},
 });
-  
-
-// let audio = new Audio("https://arrangerspublishingcompany.com/count_s45/shows/steampunk.mp3");
-// let audio = new Audio(WINDOW_LOCATION + "/get-audio");
 
 const Viewer = (props) => {
 	const [data, setData] = useState([]);
