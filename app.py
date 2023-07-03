@@ -71,6 +71,14 @@ CORS(app)
 
 verify_key = b'm1cfKgmOA07WEUVdK5BJqm2QW5pX5y8ms8aRezyzd3Q='
 
+forgot_password_code_reference = [
+	{
+		'user_id': 1, 
+		'key': b'm3J1zT8k7x1qLIAWav6bh_nUIIogtCvZx1AfaTDd4zk=', 
+		'code': 'gAAAAABkojhltp2_uHsfD434r5wrDOd8PIHTtX5vL1lTIsxMUAWs1kC0DbrdGrLpRucBwy8Av-hWtJNtqkjugcu_G-vSc9LPMw=='
+	}
+]
+
 # flask db migrate -m "message"
 # flask db upgrade
 
@@ -397,8 +405,9 @@ admin.add_view(ModelView(Show, db.session))
 admin.add_view(ModelView(School, db.session))
 
 
-# API
+# FUNCTIONAL API
 
+# This creates a new token on login
 @app.route('/token', methods=["POST"])
 def create_token():
 	email = request.json.get("email", None)
@@ -448,6 +457,7 @@ def create_token():
 	return response
 
 
+# This allows someone to get a new token a refresh it
 @app.route('/refresh-token', methods=["POST"])
 @jwt_required(refresh=True)
 def refresh_expiring_jwts():
@@ -456,6 +466,7 @@ def refresh_expiring_jwts():
 	return jsonify(access_token=access_token)
 
 
+# This takes 2 json dictionaries and merges them
 def mergeJsonDicts(a, b):
 	merged_dict = {}
 
@@ -470,10 +481,13 @@ def mergeJsonDicts(a, b):
 	return merged_dict
 
 
+# This is for Azure to detect if the server is still working
 @app.route('/api/health', methods=["GET"])
 def health_check():
 	return "Alive and Well.", 200
 
+
+# This allows someone to get a new token a refresh it, while also getting all of the data 
 @app.route('/get-token', methods=["POST"])
 @jwt_required(refresh=True)
 def get_jwt():
@@ -512,6 +526,7 @@ def get_jwt():
 		return "There was an error", 401
 
 
+# An endpoint to log a user out, this clears the cookie on the server side and invalidates it
 @app.route("/logout", methods=["POST"])
 def logout():
 	response = jsonify({"msg": "logout successful"})
@@ -519,8 +534,9 @@ def logout():
 	return response
 
 
+# Send an email to a user to verify their account
 @app.route("/send-verify-email", methods=["GET"])
-def sendVerifyAccountEmail():
+def sendVerifyAccountEmailEndpoint():
 	email = request.args.get("email", None)
 
 	loggedInUser = User.query.filter(User.email == email).first()
@@ -531,11 +547,12 @@ def sendVerifyAccountEmail():
 	if loggedInUser.verified_date is not None:
 		return "User has already been verified", 400
 	
-	sendActivateEmail(loggedInUser)
+	sendVerifyEmail(loggedInUser)
 
 	return "Sent.", 200	
 
 
+# Endpoint for verify email that sets the user as verified using an encrypted id of the user
 @app.route("/verify-account/<verify_encrypted_id>", methods=["GET"])
 def verifyAccount(verify_encrypted_id):
 	fernet = Fernet(verify_key)
@@ -552,7 +569,7 @@ def verifyAccount(verify_encrypted_id):
 	return "Success", 200
 
 
-# Serve Images
+# Serve audio for the show
 @app.route('/get-audio')
 @jwt_required()
 def send_music():
@@ -574,12 +591,14 @@ def send_music():
 	return send_from_directory(f"static/{show.id}", "audio.mp3")
 
 
-def allowed_file(filename):
+# Check if a file has a .pdf extension
+def is_pdf(filename):
 	ALLOWED_EXTENSIONS = ['pdf']
 	return '.' in filename and \
 		   filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
+# Take a pdf file and add it to the database
 def addShowFileToDatabase(file, school, show):
 	import pdfReader
 
@@ -632,6 +651,7 @@ def addShowFileToDatabase(file, school, show):
 		db.session.commit()
 
 
+# Endpoint for creating a new show
 @app.route('/upload-show', methods=['POST'])
 @jwt_required()
 def upload_file():
@@ -662,17 +682,145 @@ def upload_file():
 	# Check PDFs
 	for fileKey in request.files:
 		file = request.files[fileKey]
-		if len(fileKey) > 8 and fileKey[:8] == "pdf-file" and allowed_file(file.filename):
+		if len(fileKey) > 8 and fileKey[:8] == "pdf-file" and is_pdf(file.filename):
 			fileLocation = "./showPDFs/" + file.filename
 			file.save(fileLocation)
 			addShowFileToDatabase(fileLocation, school, show)
-		elif fileKey == "mp3-file" and allowed_file(file.filename):
+		elif fileKey == "mp3-file" and is_pdf(file.filename):
 			fileLocation = f"./static/{show.id}/audio.mp3"
 			file.save(fileLocation)
 
 	return "Success!", 200
 
+# FORGOT PASSWORD
 
+def create_forgot_password_code(user) -> str:
+	key = Fernet.generate_key()
+	fernet = Fernet(key)
+	apiKey = fernet.encrypt(str(user.id).encode()).decode('utf8')
+	forgot_password_code_reference.append({
+		"user_id": user.id,
+		"key": key,
+		"code": apiKey
+	})
+
+	return apiKey
+
+def get_forgot_password_user_id(code) -> int:
+	for value in forgot_password_code_reference:
+		if value["code"] == code:
+			return value["user_id"]
+	return -1
+
+def remove_forgot_password_code(code) -> bool:
+	thingy = None
+
+	for value in forgot_password_code_reference:
+		if value["code"] == code:
+			thingy = value
+	
+	if thingy is None:
+		return False
+	
+	forgot_password_code_reference.remove(thingy)
+	return True
+
+
+@app.route('/send-reset-password-email', methods=["GET"])
+def get_reset_password_key():
+	email = request.args.get("email", None)
+
+	user = User.query.filter(User.email == email).first()
+
+	if user is None:
+		return "Invalid User", 401
+	
+	try:
+		apiKey = create_forgot_password_code(user)
+
+		# Create the EmailClient object that you use to send Email messages.
+		email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
+
+		message = {
+			"content": {
+				"subject": "DOT CHECK DECK - Forgot Password!",
+				"plainText": "Hey! We know you aren't going to read this text, but like, everyone writes it so yeah",
+				"html": "<html>" +
+					'<img src="dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />' +
+					"<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>" +
+					f'<a href="dotcheckdeck.com/forgot-password/{apiKey}">Reset Your Password</a>' +
+				"</html>"
+			},
+			"recipients": {
+				"to": [
+					{
+						"address": user.email,
+						"displayName": f"{user.first_name} {user.last_name}"
+					}
+				]
+			},
+			"senderAddress": "donotreply@dotcheckdeck.com"
+		}
+
+		email_client.begin_send(message)
+		print(f"Sent Email to {user.email}")
+
+		return "Sent.", 200
+	except Exception as ex:
+		print('Exception:')
+		print(ex)
+	
+	return "Failed.", 404
+		
+
+@app.route('/reset-password-auth/<encrypted_id>', methods=['GET'])
+def reset_password_auth(encrypted_id):
+	print(forgot_password_code_reference)
+	userID = get_forgot_password_user_id(encrypted_id)
+
+	if userID == -1:
+		return "Invalid Reset Password Key", 401
+
+	user = User.query.filter(User.id == userID).first()
+
+	if user is None:
+		return "Invalid Reset Password Key", 401
+	
+	return "Valid.", 200
+
+
+@app.route('/reset-password', methods=['POST'])
+def reset_password():
+	password = request.json.get("password", None)
+	encrypted_id = request.json.get("encrypted_id", None)
+
+	userID = get_forgot_password_user_id(encrypted_id)
+
+	user = User.query.filter(User.id == userID).first()
+
+	if user is None:
+		return "Invalid Reset Password Key", 401
+	
+	if user.check_password(password):
+		return "You cannot use the same password as the one you're resetting", 400
+	
+	user.set_password(password)
+	db.session.commit()
+
+	# We know this came from an email, so therefore we can say that this is authorized
+	if user.verified_date is None:
+		user.verified_date = datetime.datetime.now()
+		db.session.commit()
+	
+	remove_forgot_password_code(encrypted_id)
+	
+	return "Done.", 200
+
+
+# OBJECT API
+
+
+# List all sets and associated info
 class SetListResource(Resource):
 	@jwt_required()
 	def get(self):
@@ -725,6 +873,7 @@ class SetListResource(Resource):
 		return setsOutput
 
 
+# Get all band sections
 class GetSectionsResource(Resource):
 	@jwt_required()
 	def get(self):
@@ -744,6 +893,7 @@ class GetSectionsResource(Resource):
 		return band_sections_schema.dump(sections), 200
 
 
+# Authorize a school code (used by activate account)
 class SchoolCodeAuthResource(Resource):
 	def post(self):
 		# TODO: Refactor to "show_code"
@@ -773,6 +923,7 @@ class SchoolCodeAuthResource(Resource):
 		return {"schoolName": school.name, "name": show.name, "users": show_users_schema.dump(filteredUsers), "email": school.email}, 200
 
 
+# Find the dots buffer and modify necessary things with the user info
 def updateBufferWithNewUser(user, showUser, show):
 	data = []
 
@@ -789,7 +940,8 @@ def updateBufferWithNewUser(user, showUser, show):
 		json.dump(data, file, indent=4)
 
 
-def sendActivateEmail(user):
+# Send an email to a user to tell them to verify their account
+def sendVerifyEmail(user):
 	try:
 		fernet = Fernet(verify_key)
 		apiKey = fernet.encrypt(str(user.id).encode()).decode('utf8')
@@ -904,7 +1056,7 @@ class SetUpUserResource(Resource):
 
 		db.session.add(user)
 
-		sendActivateEmail(user)
+		sendVerifyEmail(user)
 
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
@@ -916,6 +1068,7 @@ class SetUpUserResource(Resource):
 		return "Successfully activated user", 201
 
 
+# Allows an existing account to add a showUser to their account for a new show
 class AddShowUserResource(Resource):
 	def post(self):
 		email = request.json.get("email", None)
@@ -960,6 +1113,7 @@ class AddShowUserResource(Resource):
 		return "Success", 200
 
 
+# Get the index of a set in an array (that could be in any order) by it's set_name
 def getSetIndex(sets, middleSet) -> int:
 	for x in range(len(sets)):
 		if sets[x].set_numb == middleSet:
@@ -967,6 +1121,7 @@ def getSetIndex(sets, middleSet) -> int:
 	return -1
 
 
+# Get the index of a set in an array (that could be in any order) by it's set_name.
 def getSetIndexInData(data, middleSet) -> int:
 	for x in range(len(data)):
 		if data[x]["setNumb"] == middleSet:
@@ -974,6 +1129,7 @@ def getSetIndexInData(data, middleSet) -> int:
 	return -1
 
 
+# Get the index of a set by the index
 def getSetByShowIndex(sets, index):
 	for set in sets:
 		if set.showIndex == index:
@@ -981,6 +1137,7 @@ def getSetByShowIndex(sets, index):
 	return None
 
 
+# Get the section color for a given user
 def getSectionColor(userObj) -> list:
 	userSection = BandSection.query.filter(BandSection.id == userObj.section_id).first()
 

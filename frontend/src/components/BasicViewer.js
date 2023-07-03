@@ -76,16 +76,16 @@ const BasicViewer = (props) => {
             <ul className="list-group">
             {
                 data.dots.map((dotData, index) =>
-                    <li className="list-group-item flex-row justify-content-between d-flex align-items-center" key={index} style={{width:'100%', height:'14vh'}}>
+                    <li className="list-group-item flex-row justify-content-between d-flex align-items-center" key={index} style={{width:'100%', height:'180px'}}>
                         <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'30%', height:'100%'}}>
-                            <div style={{maxWidth:'100%', height:'60%'}} className='flex-column justify-content-center d-flex align-items-center'>
+                            <div style={{width:'100%', height:'60%'}} className='flex-column justify-content-center d-flex align-items-center'>
                                 <AutoTextSize mode='box'>{dotData.set_numb}</AutoTextSize>
                             </div>
-                            <div style={{maxWidth:'100%', height:'40%'}} className='flex-column justify-content-center d-flex align-items-center'>
-                                <AutoTextSize mode='box'><strong>{dotData.set_name}</strong></AutoTextSize>
+                            <div style={{width:'100%', height:'40%', textAlign:'center'}} className='flex-column justify-content-center d-flex align-items-center'>
+                                <AutoTextSize mode='box'>{dotData.set_name}</AutoTextSize>
                             </div>
                         </div>
-                        <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'70%'}}>
+                        <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'65%'}}>
                             <div className='mb-2'>{getDotText1(dotData.dot)}</div>
                             <div className='mb-2'>{getDotText2(dotData.dot)}</div>
                             <div className='mb-2'>For {dotData.counts} counts</div>

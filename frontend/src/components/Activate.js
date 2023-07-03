@@ -71,43 +71,43 @@ const Activate = (props) => {
 
     const activateUser = (label, email, password, firstName, lastName) => {
         axios({
-                method: 'POST',
-                url: WINDOW_LOCATION + '/users/activate',
-                data: {
-                    school_code: schoolCode,
-                    label: label,
-                    email: email, 
-                    password: password, 
-                    first_name: firstName, 
-                    last_name: lastName
-                },
-                headers: {
-                    'Content-type': 'application/json; charset=UTF-8'
-                }
-            }).then((response) => {
-                setShowAlert(false);
-				console.log(response.data)
-                setCurPage(7);
-			}).catch((error) => {
-				if (error.response) {
-					console.log(error.response)
-					console.log(error.response.status)
-					console.log(error.response.headers)
-					setShowAlert(true);
+            method: 'POST',
+            url: WINDOW_LOCATION + '/users/activate',
+            data: {
+                school_code: schoolCode,
+                label: label,
+                email: email, 
+                password: password, 
+                first_name: firstName, 
+                last_name: lastName
+            },
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8'
+            }
+        }).then((response) => {
+            setShowAlert(false);
+            console.log(response.data)
+            setCurPage(7);
+        }).catch((error) => {
+            if (error.response) {
+                console.log(error.response)
+                console.log(error.response.status)
+                console.log(error.response.headers)
+                setShowAlert(true);
 
-					try {
-						if (error.response.data !== undefined) {
-							if (error.response.data.msg !== undefined) {
-								setAlertText(error.response.data.msg);
-							} else {
-								setAlertText(error.response.data);
-							}
-						}
-					} catch (error) {
-						
-					}
-				}
-			});
+                try {
+                    if (error.response.data !== undefined) {
+                        if (error.response.data.msg !== undefined) {
+                            setAlertText(error.response.data.msg);
+                        } else {
+                            setAlertText(error.response.data);
+                        }
+                    }
+                } catch (error) {
+                    
+                }
+            }
+        });
     }
 
     const loginUser = (email, password, label) => {

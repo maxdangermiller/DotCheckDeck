@@ -14,6 +14,7 @@ import AdminJoinCodeDisplay from './AdminComponents/AdminJoinCodeDisplay';
 import AdminCreateShow from './AdminComponents/AdminCreateShow';
 import BasicViewer from './BasicViewer';
 import VerifyAccount from './utils/VerifyAccount';
+import ResetPassword from './utils/ResetPassword';
 
 import axios from "axios";
 
@@ -166,6 +167,9 @@ function App() {
 					} />
 					<Route path="/activate-account/:enc_id" exact element={
 						<VerifyAccount/>
+					} />
+					<Route path="/forgot-password/:enc_id" exact element={
+						<ResetPassword/>
 					} />
 					
 

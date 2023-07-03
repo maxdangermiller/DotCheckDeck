@@ -7,7 +7,7 @@ const NavBar = (props) => {
     const { token, loggedIn, logout, isAdminAuthorized, isBasic, setIsBasic, ...rest } = props
 
 	return (
-		<Navbar bg="dark" variant="dark" style={{height: "8vh"}}>
+		<Navbar bg="dark" variant="dark" style={{height: "8vh", minHeight: "36px"}}>
 			<Container fluid>
 				<Nav className="ml-auto">
 					<Navbar.Brand href="/">
@@ -23,7 +23,7 @@ const NavBar = (props) => {
 						<>
 							<Nav.Link href="/admin">Admin</Nav.Link>
 							<Nav.Link href="/admin-timeline">Admin Timeline</Nav.Link>
-							<Nav.Link href="/admin-join-code">Show Join Code</Nav.Link>
+							<Nav.Link href="/admin-join-code">Join Code</Nav.Link>
 						</>
 						: null
 					}

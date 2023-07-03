@@ -163,6 +163,7 @@ const Viewer = (props) => {
 			// console.log("USING LOCAL SETS!");
 			// console.log(JSON.parse(localSets));
 			setSets(JSON.parse(localSets));
+			setCurSetInfo(JSON.parse(localSets)[0]);
 			return true;
 		}
 
@@ -442,7 +443,7 @@ const Viewer = (props) => {
 				.then(res => res.json())
 				.then(
 					(result) => {
-						// console.log(result)
+						console.log(result)
 						setSets(result);
 						saveLocalSets(result);
 						setCurSetInfo(result[0]);
