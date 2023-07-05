@@ -4,6 +4,7 @@ import Boolean from '../Boolean';
 import AdminEditUser from './AdminEditUser';
 import AdminEditShowUser from './AdminEditShowUser';
 import AdminCreateUser from './AdminCreateUser';
+import AdminInviteUser from './AdminInviteUser';
 import AdminDeleteUser from './AdminDeleteUser';
 import getApi from '../../getApi';
 
@@ -236,7 +237,7 @@ const AdminUsersPage = (props) => {
                     shows={shows}
                     handleSave={handleSave}
                 />
-                <AdminCreateUser 
+                <AdminInviteUser 
                     show={showCreateUser}
                     setShow={setShowCreateUser}
                     token={token}

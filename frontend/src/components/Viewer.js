@@ -458,18 +458,6 @@ const Viewer = (props) => {
 		setAudio(new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token));
 	}, [])
 
-	// Load last used user options
-	useEffect(() => {
-		try {
-			let localUserOptions = localStorage.getItem("localUserOptions");
-			let parsedData = JSON.parse(localUserOptions);
-			console.log(parsedData);
-			setUserOptions({...userOptions, "dimOtherUsers": parsedData["dimOtherUsers"]});
-		} catch {
-
-		}
-	}, [])
-
 	useEffect(() => {
 		if (audioPlaying) {
 			audio.loop = false;
@@ -481,8 +469,12 @@ const Viewer = (props) => {
 
 	// Automatically Grab The Users Info and select them for highlighting
 	useEffect(() => {
-		let localUserOptions = localStorage.getItem("localUserOptions");
-		let parsedData = JSON.parse(localUserOptions);
+		let parsedData = userOptions;
+		try {
+			let localUserOptions = localStorage.getItem("localUserOptions");
+			parsedData = JSON.parse(localUserOptions);
+		} catch {}
+		
 		if (props.userData.label !== undefined) {
 			console.log(props.userData)
 			setUserOptions({...parsedData,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});

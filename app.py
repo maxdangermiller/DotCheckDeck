@@ -79,6 +79,21 @@ forgot_password_code_reference = [
 	}
 ]
 
+invite_user_code_reference = [
+	{
+		'email': 'mmiller5@ilstu.edu', 
+		'is_admin': True, 
+		'school_id': 1, 
+		'key': b'tPaI-qvguNgg-Ha0pQwQKjamnfEhI4o9gDPN1ky8shI=', 
+		'code': 'gAAAAABkpflSIxncRf0nzYS1mzSvLe5TLIty8xZZsAJ27aLmtXtRfM-rHGadMoKcbjcLiXIt2TQ1_okqLY7PsuZ1sE-J6HgtQhAzsSwgtkOH9ICVROvHUq4='
+	}
+]
+	
+
+# Create the EmailClient object that you use to send Email messages.
+email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
+
+
 # flask db migrate -m "message"
 # flask db upgrade
 
@@ -738,9 +753,6 @@ def send_reset_password_email():
 	try:
 		apiKey = create_forgot_password_code(user)
 
-		# Create the EmailClient object that you use to send Email messages.
-		email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
-
 		message = {
 			"content": {
 				"subject": "DOT CHECK DECK - Forgot Password!",
@@ -945,9 +957,6 @@ def sendVerifyEmail(user):
 	try:
 		fernet = Fernet(verify_key)
 		apiKey = fernet.encrypt(str(user.id).encode()).decode('utf8')
-
-		# Create the EmailClient object that you use to send Email messages.
-		email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
 
 		message = {
 			"content": {
@@ -1614,6 +1623,137 @@ class CreateUserResource(Resource):
 
 		return "Successfully deleted user", 200
 
+# ADMIN INVITE USER
+
+def create_invite_code(email, is_admin, school_id) -> str:
+	key = Fernet.generate_key()
+	fernet = Fernet(key)
+	apiKey = fernet.encrypt(email.encode()).decode('utf8')
+	invite_user_code_reference.append({
+		"email": email,
+		"is_admin": is_admin,
+		"school_id": school_id,
+		"key": key,
+		"code": apiKey
+	})
+
+	return apiKey
+
+def get_invite_data(code):
+	for value in invite_user_code_reference:
+		if value["code"] == code:
+			return value["email"], value["is_admin"], value["school_id"]
+	return "", False, -1
+
+def remove_invite_code(code) -> bool:
+	thingy = None
+
+	for value in invite_user_code_reference:
+		if value["code"] == code:
+			thingy = value
+	
+	if thingy is None:
+		return False
+	
+	invite_user_code_reference.remove(thingy)
+	return True
+
+def sendInviteUserEmail(email, is_admin, school_id):
+	try:
+		apiKey = create_invite_code(email, is_admin, school_id)
+
+		message = {
+			"content": {
+				"subject": "DOT CHECK DECK - Invitation to join!",
+				"plainText": "Hey! We know you aren't going to read this text, but like, everyone writes it so yeah",
+				"html": "<html>" +
+					'<img src="dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />' +
+					"<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>" +
+					f'<a href="dotcheckdeck.com/accept-invitation/{apiKey}">Activate New Account</a>' +
+				"</html>"
+			},
+			"recipients": {
+				"to": [
+					{
+						"address": email,
+						"displayName": "Invited User"
+					}
+				]
+			},
+			"senderAddress": "donotreply@dotcheckdeck.com"
+		}
+
+		email_client.begin_send(message)
+		print(f"Sent Email to {email}")
+	except Exception as ex:
+		print('Exception:')
+		print(ex)
+
+@app.route('/invited-user-auth/<encrypted_key>', methods=['GET'])
+def invited_user_auth(encrypted_key):
+	print(invite_user_code_reference)
+	email, is_admin, school_id = get_invite_data(encrypted_key)
+
+	if school_id == -1:
+		return "Invalid Invitation Key", 401
+	
+	return "Valid.", 200
+
+
+@app.route('/activate-invited-user', methods=['POST'])
+def activateInvitedUser():
+	password = request.json.get("password", None)
+	first_name = request.json.get("first_name", None)
+	last_name = request.json.get("last_name", None)
+	encrypted_key = request.json.get("encrypted_key", None)
+	email, is_admin, school_id = get_invite_data(encrypted_key)
+
+	if not remove_invite_code(encrypted_key):
+		return "Invalid invitation code", 401
+
+	newUser = User(
+		email = email,
+		first_name = first_name,
+		last_name = last_name,
+		school_id = school_id,
+		is_admin = is_admin
+	)
+
+	newUser.activated_date = datetime.datetime.now()
+	newUser.verified_date = datetime.datetime.now()
+	newUser.set_password(password)
+
+	db.session.add(newUser)
+	db.session.commit()
+
+	return "Created User.", 201
+
+
+class InviteUserResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+		
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('email', type=str, default=None, required=True)
+		parser.add_argument('is_admin', type=bool, default=None, required=True)
+		args = parser.parse_args()
+		
+		user = User.query.filter(User.email == args.get('email')).first()
+
+		if user is not None:
+			return "USER ALREADY EXISTS", 404
+		
+		sendInviteUserEmail(args.get('email'), args.get('is_admin'), activeUser.school_id)
+
+		return "Sent.", 200
+
+
 
 class GetDatabaseResource(Resource):
 	@jwt_required()
@@ -2031,6 +2171,7 @@ api.add_resource(UpdateSetResource, '/update-set')
 api.add_resource(UpdateSetsResource, '/update-sets')
 api.add_resource(UpdateUserResource, '/users')
 api.add_resource(CreateUserResource, '/create-user')
+api.add_resource(InviteUserResource, '/invite-user')
 api.add_resource(GetDatabaseResource, '/get-all')
 api.add_resource(UpdateOrCreateSetNameResource, '/update-set-name')
 api.add_resource(UpdateSectionResource, '/update-section')
