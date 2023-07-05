@@ -50,7 +50,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'bfvgjubwirvbwiruevwiulhreoiheiuvbuq'
 app.config['JWT_TOKEN_LOCATION'] = ["headers", "query_string"]
 app.config["JWT_SECRET_KEY"] = "uvjnwiruviuwfvbkswbnekjqbnkjubniurniofjqewainion"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_QUERY_STRING_NAME"] = "token"
 
@@ -1590,6 +1590,29 @@ class CreateUserResource(Resource):
 		db.session.commit()
 
 		return "Successfully Created User", 201
+
+	@jwt_required()
+	def delete(self):
+		identity = get_jwt_identity()
+		
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=str, default=None, required=True)
+		args = parser.parse_args()
+
+		user = User.query.filter(User.id == args.get('id')).first()
+
+		if user is None:
+			return "User doesn't exist", 404
+		
+		db.session.delete(user)
+		db.session.commit()
+
+		return "Successfully deleted user", 200
 
 
 class GetDatabaseResource(Resource):

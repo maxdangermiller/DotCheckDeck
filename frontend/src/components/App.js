@@ -131,6 +131,11 @@ function App() {
 							? <BasicViewer token={token} schoolCode={schoolCode} />
 							: <Viewer token={token} schoolCode={schoolCode} userData={userData}/>
 					} />
+					<Route path="/activate/:join_code" exact element={
+						token !== "" && token !== undefined && schoolCode !== ""
+						? <Navigate to="/" />
+						: <Activate setToken={setToken} setRefToken={setRefToken}/>
+					} />
 					<Route path="/activate" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
 						? <Navigate to="/" />

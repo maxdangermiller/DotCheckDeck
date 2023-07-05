@@ -6,6 +6,16 @@ import {Nav,  Navbar, NavDropdown, Container } from 'react-bootstrap';
 const NavBar = (props) => {
     const { token, loggedIn, logout, isAdminAuthorized, isBasic, setIsBasic, ...rest } = props
 
+	const getViewerOptions = () => {
+		if (window.location.pathname !== "/") {
+			return <></>
+		}
+		if (isBasic) {
+			return <Nav.Link onClick={() => setIsBasic(!isBasic)} href="#basic">Normal</Nav.Link>;
+		}
+		return <Nav.Link onClick={() => setIsBasic(!isBasic)} href="#normal">Basic</Nav.Link>;
+	}
+
 	return (
 		<Navbar bg="dark" variant="dark" style={{height: "8vh", minHeight: "36px"}}>
 			<Container fluid>
@@ -13,11 +23,7 @@ const NavBar = (props) => {
 					<Navbar.Brand href="/">
 						<img src={logo} alt="" width="24" height="24" />
 					</Navbar.Brand>
-					{
-						isBasic 
-						? <Nav.Link onClick={() => setIsBasic(!isBasic)} href="#basic">Normal</Nav.Link>
-						: <Nav.Link onClick={() => setIsBasic(!isBasic)} href="#normal">Basic</Nav.Link>
-					}
+					{getViewerOptions()}
 					{
 						isAdminAuthorized() ?
 						<>

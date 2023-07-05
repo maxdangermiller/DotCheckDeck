@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import QRCode from "react-qr-code";
 import getApi from '../getApi';
 
 const WINDOW_LOCATION = getApi();
@@ -35,13 +36,19 @@ const AdminJoinCodeDisplay = (props) => {
         });
     }, []);
 
+    console.log(window.location);
+
     return (
         <div className='flex-column justify-content-center d-flex align-items-center adminFullScreen'>
             {
                 !isLoading ?
                 <>
                     <h1 style={{fontSize:"16vh"}}>{schoolInfo.name}</h1>
-                    <h1 style={{fontSize:"24vh"}}><strong>{schoolInfo.code}</strong></h1>
+                    <QRCode 
+                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                        value={window.location.origin + "/activate/" + schoolInfo.code} 
+                    />
+                    <h1 style={{fontSize:"12vh"}}><strong>{schoolInfo.code}</strong></h1>
                 </>
                 : <div className="spinner-border" role="status">
                     <span className="visually-hidden">Loading...</span>

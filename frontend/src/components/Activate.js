@@ -1,4 +1,5 @@
-import React, { useState} from 'react';
+import React, { useEffect, useState} from 'react';
+import { useParams } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import './Activate.css'
 import axios from "axios";
@@ -22,10 +23,11 @@ const darkTheme = createTheme({
 const WINDOW_LOCATION = getApi();
 
 const Activate = (props) => {
-
+    const {join_code} = useParams();
+    console.log(join_code)
     const [curPage, setCurPage] = useState(0);
 	const [isLoading, setIsLoading] = useState(false);
-    const [schoolCode, setSchoolCode] = useState("");
+    const [schoolCode, setSchoolCode] = useState(join_code !== undefined ? join_code : "");
     const [schoolInfo, setSchoolInfo] = useState("");
     const [userData, setUserData] = useState(null);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -156,36 +158,41 @@ const Activate = (props) => {
 
     const checkSchoolCode = () => {
         setIsLoading(true);
-        fetch(WINDOW_LOCATION + '/school-code-auth', {
-                method: 'POST',
-                body: JSON.stringify({
-                    school_code: schoolCode,
-                }),
-                headers: {
-                    'Content-type': 'application/json; charset=UTF-8'
+        try {
+            fetch(WINDOW_LOCATION + '/school-code-auth', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        school_code: schoolCode,
+                    }),
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8'
+                    }
+            })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('INVALID SCHOOL CODE');
                 }
-        })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error('INVALID SCHOOL CODE');
-            }
-            return response.json();
-        })
-        .then((data) => {
-            console.log(data);
+                return response.json();
+            })
+            .then((data) => {
+                console.log(data);
+                setIsLoading(false);
+                setCurPage(curPage + 1);
+                setSchoolInfo(data)
+            })
+            .catch((error) => {
+                setIsLoading(false);
+                setShowAlert(true);
+                setAlertText("INVALID SCHOOL CODE");
+            });
+        } catch (error) {
             setIsLoading(false);
-            setCurPage(curPage + 1);
-            setSchoolInfo(data)
-        })
-        .catch((error) => {
-            setIsLoading(false);
-            alert(error);
-        });
+                setShowAlert(true);
+                setAlertText("INVALID SCHOOL CODE");
+        }
     }
 
-	const btnClick = (e) => {
-		e.preventDefault()
-
+	const btnClick = () => {
         // Code page
         if (curPage === 0) {
             checkSchoolCode();
@@ -293,6 +300,13 @@ const Activate = (props) => {
         return <div>You shouldn't have made it to this page....</div>;
     }
 
+    useEffect(() => {
+        if (join_code !== undefined && curPage === 0) {
+            btnClick()
+        }
+    }, [])
+
+
 	return(
 		<ThemeProvider theme={darkTheme}><section className="gradient-custom">
 			<div className="container py-5 h-100" style={{width: "100%"}}>
@@ -326,7 +340,7 @@ const Activate = (props) => {
                                     </button>
                                     : null
                                 }
-                            <button className="btn btn-outline-light btn-lg px-5" type="submit" onClick={e => btnClick(e)}>Continue</button>
+                            <button className="btn btn-outline-light btn-lg px-5" type="submit" onClick={e => btnClick()}>Continue</button>
 							</div>
 						</div>
 					</div>

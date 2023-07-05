@@ -58,6 +58,7 @@ const SetNameModel = (props) => {
             </Modal.Header>
             <Modal.Body>
                 <TextField value={setName} onChange={(e) => setSetName(e.target.value)} label="Name" />
+                <p>Please make it short to make sure everyone will be able to see the whole name!</p>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose}>

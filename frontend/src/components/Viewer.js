@@ -458,6 +458,18 @@ const Viewer = (props) => {
 		setAudio(new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token));
 	}, [])
 
+	// Load last used user options
+	useEffect(() => {
+		try {
+			let localUserOptions = localStorage.getItem("localUserOptions");
+			let parsedData = JSON.parse(localUserOptions);
+			console.log(parsedData);
+			setUserOptions({...userOptions, "dimOtherUsers": parsedData["dimOtherUsers"]});
+		} catch {
+
+		}
+	}, [])
+
 	useEffect(() => {
 		if (audioPlaying) {
 			audio.loop = false;
@@ -469,11 +481,13 @@ const Viewer = (props) => {
 
 	// Automatically Grab The Users Info and select them for highlighting
 	useEffect(() => {
+		let localUserOptions = localStorage.getItem("localUserOptions");
+		let parsedData = JSON.parse(localUserOptions);
 		if (props.userData.label !== undefined) {
 			console.log(props.userData)
-			setUserOptions({...userOptions,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
+			setUserOptions({...parsedData,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
 		} else {
-			setUserOptions({...userOptions,  "highlightUser": null});
+			setUserOptions({...parsedData,  "highlightUser": null});
 		}
 	}, [props.userData])
 
@@ -487,6 +501,11 @@ const Viewer = (props) => {
 		window.addEventListener('resize', handleResize)
 		window.addEventListener('orientationchange', handleResize)
 	}, [])
+
+	const setUserOptionsFunc = (data) => {
+		localStorage.setItem("localUserOptions", JSON.stringify(data));
+		setUserOptions(data);
+	}
 
 	// This is passed to the Canvas and is called to get the data for drawing
 	const draw = () => {
@@ -635,7 +654,7 @@ const Viewer = (props) => {
 				setCurSetNumb={setCurSetNumb}
 				changeCurSetNumb={changeCurSetNumb}
 				userOptions={userOptions}
-				setUserOptions={setUserOptions}
+				setUserOptions={setUserOptionsFunc}
 				data={data}
 				audioPlaying={audioPlaying}
 				setAudioPlaying={setAudioPlaying}

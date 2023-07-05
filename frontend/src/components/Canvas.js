@@ -1006,7 +1006,7 @@ const Canvas = props => {
                 }
             }
 
-            if (drawBracket.useX !== null) {
+            if (drawBracket.useX !== null && followDot.dot === undefined) {
                 drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot);
             }
 

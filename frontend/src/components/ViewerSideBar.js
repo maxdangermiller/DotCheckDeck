@@ -38,7 +38,7 @@ const ViewerSideBar = (props) => {
 
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
-            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "35vh"}}>
+            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "35vh", width: "100%"}}>
                 <h1 className='viewerSideBarHeader'>Current Set:</h1>
                 {
                     !loading ?
@@ -57,8 +57,8 @@ const ViewerSideBar = (props) => {
                 {
                     // Add Other conditions here
                     !loading && curSetInfo !== null ?
-                    <div>
-                        <h1 className='centerText'><strong>Name:</strong> {setName}</h1>
+                    <div style={{width: "100%"}}>
+                        <h1 className='centerText' style={{textOverflow: "ellipsis"}}><strong>Name:</strong> {setName}</h1>
                         <h1 className='centerText'><strong>Measure:</strong> {curSetInfo["measure"]}</h1>
                         <h1 className='centerText'><strong>Total Counts:</strong> 0</h1>
                         <h1 className='centerText'><strong>Counts:</strong> {curSetInfo["counts"]}</h1>

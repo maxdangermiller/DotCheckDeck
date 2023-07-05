@@ -4,6 +4,7 @@ import Boolean from '../Boolean';
 import AdminEditUser from './AdminEditUser';
 import AdminEditShowUser from './AdminEditShowUser';
 import AdminCreateUser from './AdminCreateUser';
+import AdminDeleteUser from './AdminDeleteUser';
 import getApi from '../../getApi';
 
 const WINDOW_LOCATION = getApi();
@@ -28,6 +29,7 @@ const AdminUsersPage = (props) => {
     const [showEditUser, setShowEditUser] = useState(false);
     const [showEditShowUser, setShowEditShowUser] = useState(false);
     const [showCreateUser, setShowCreateUser] = useState(false);
+    const [showDeleteUser, setShowDeleteUser] = useState(false);
     const [editUserData, setEditUserData] = useState({});
     const [sortBy, setSortBy] = useState(0);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
@@ -45,6 +47,7 @@ const AdminUsersPage = (props) => {
         setEditUserData(JSON.parse(JSON.stringify(user)));
         setShowEditUser(true);
         setShowEditShowUser(false);
+        setShowDeleteUser(false);
     }
 
     const openEditShowUser = (user) => {
@@ -52,6 +55,15 @@ const AdminUsersPage = (props) => {
         setEditUserData(JSON.parse(JSON.stringify(user)));
         setShowEditUser(false);
         setShowEditShowUser(true);
+        setShowDeleteUser(false);
+    }
+
+    const openDeleteUser = (user) => {
+        // "JSON.parse(JSON.stringify(person))" Are there for deep copying 
+        setEditUserData(JSON.parse(JSON.stringify(user)));
+        setShowEditUser(false);
+        setShowEditShowUser(false);
+        setShowDeleteUser(true);
     }
 
     const getAllShowUserLabels = (user) => {
@@ -179,6 +191,7 @@ const AdminUsersPage = (props) => {
                     <th onClick={() => handelHeaderClick(8)}>Last Updated</th>
                     <th>Edit</th>
                     <th>Edit Show Users</th>
+                    <th>Delete</th>
                 </tr>
             </thead>
             <tbody>
@@ -199,6 +212,9 @@ const AdminUsersPage = (props) => {
                             </div></td>
                             <td><div className={CELL_STYLE}> 
                                 <button className='btn btn-primary' onClick={(e) => openEditShowUser(user)}>Edit</button> 
+                            </div></td>
+                            <td><div className={CELL_STYLE}> 
+                                <button className='btn btn-danger' onClick={(e) => openDeleteUser(user)}>Delete</button> 
                             </div></td>
                         </tr> 
                 )
@@ -223,6 +239,12 @@ const AdminUsersPage = (props) => {
                 <AdminCreateUser 
                     show={showCreateUser}
                     setShow={setShowCreateUser}
+                    token={token}
+                />
+                <AdminDeleteUser 
+                    show={showDeleteUser}
+                    setShow={setShowDeleteUser}
+                    user={editUserData}
                     token={token}
                 />
                 
