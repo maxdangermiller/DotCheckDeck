@@ -1,6 +1,7 @@
 .ViewerFullScreen {
   width: 100vw;
   height: 92vh;
+  height: var( — app-height) * 0.92;
   overflow: hidden!important;
   
 }
@@ -8,6 +9,7 @@
 .canvasDivClass {
   width: 80vw;
   height: 92vh;
+  height: var( — app-height) * 0.92;
   border-style: solid;
   border-width: 5px;
 }
