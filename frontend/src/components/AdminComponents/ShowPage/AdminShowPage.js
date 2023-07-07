@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AdminEditShow from './AdminEditShow';
+import AdminAddPDF from './AdminAddPDF';
 import getApi from '../../getApi';
 
 const WINDOW_LOCATION = getApi();
@@ -9,6 +10,8 @@ const AdminShowPage = (props) => {
 
     const [showEdit, setShowEdit] = useState(false);
     const [curEdit, setCurEdit] = useState({});
+    const [showAddPDF, setShowAddPDF] = useState({});
+    const [addPDFData, setAddPDFData] = useState({});
 
     const openEdit = (item) => {
         setCurEdit(item);
@@ -79,6 +82,15 @@ const AdminShowPage = (props) => {
                 editData={curEdit}
                 setEditData={setCurEdit}
                 handleSave={handleSave}
+                setShowAddPDF={setShowAddPDF}
+                setAddPDFData={setAddPDFData}
+            />
+            <AdminAddPDF 
+                show={showAddPDF}
+                setShow={setShowAddPDF}
+                editData={addPDFData}
+                setEditData={setAddPDFData}
+                token={token}
             />
             <button 
                 className="btn btn-success" 

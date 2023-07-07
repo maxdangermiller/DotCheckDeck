@@ -707,6 +707,49 @@ def upload_file():
 
 	return "Success!", 200
 
+
+# Endpoint for adding dots to an existing show
+@app.route('/upload-dot-sheet', methods=['POST'])
+@jwt_required()
+def upload_dot_sheet():
+	identity = get_jwt_identity()
+		
+	activeUser = User.query.filter(User.email == identity).first()
+
+	if not activeUser.is_admin:
+		return "INVALID AUTHORIZATION", 401
+	
+	# Get School
+	school = School.query.filter(School.id == activeUser.school_id).first()
+
+	if school is None:
+		return "INVALID SCHOOL", 401
+	
+	# Check Show Name
+	showID = request.form.get("show-id")
+	if showID is None:
+		return "Missing Show ID!", 400
+	
+	# Create new show object
+	show = Show.query.filter(Show.school_id==school.id, Show.id == showID).first()
+
+	if show is None:
+		return "Invalid Show ID", 400
+
+	# Check PDFs
+	for fileKey in request.files:
+		file = request.files[fileKey]
+		if len(fileKey) > 8 and fileKey[:8] == "pdf-file" and is_pdf(file.filename):
+			fileLocation = "./showPDFs/" + file.filename
+			file.save(fileLocation)
+			addShowFileToDatabase(fileLocation, school, show)
+		elif fileKey == "mp3-file" and is_pdf(file.filename):
+			fileLocation = f"./static/{show.id}/audio.mp3"
+			file.save(fileLocation)
+
+	return "Success!", 200
+
+
 # FORGOT PASSWORD
 
 def create_forgot_password_code(user) -> str:
@@ -2187,7 +2230,6 @@ api.add_resource(AddShowUserResource, "/add-show-user-to-user")
 
 
 # For use to build database
-# TODO: Move to an API call
 def addAllDataFromPDF(file):
 	import pdfReader
 

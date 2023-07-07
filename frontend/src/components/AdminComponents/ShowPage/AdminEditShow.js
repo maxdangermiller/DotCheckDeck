@@ -3,7 +3,7 @@ import {Modal, Button, FloatingLabel, Form } from 'react-bootstrap/';
 import {Switch, FormControlLabel, FormGroup} from '@mui/material/';
 
 const AdminEditShow = (props) => {
-    const {show, setShow, editData, setEditData, handleSave, ...rest} = props;
+    const {show, setShow, editData, setEditData, handleSave, setShowAddPDF, setAddPDFData, ...rest} = props;
 
     const setName = (value) => {
         setEditData({...editData,  "name": value});
@@ -63,6 +63,9 @@ const AdminEditShow = (props) => {
 
             </Modal.Body>
             <Modal.Footer>
+                <Button variant="success" onClick={(e) => {setShowAddPDF(true); setAddPDFData(editData); handleClose();}}>
+                    Add PDF to Show
+                </Button>
                 <Button variant="secondary" onClick={handleClose}>
                     Close
                 </Button>
