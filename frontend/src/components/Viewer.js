@@ -473,7 +473,17 @@ const Viewer = (props) => {
 		try {
 			let localUserOptions = localStorage.getItem("localUserOptions");
 			parsedData = JSON.parse(localUserOptions);
-		} catch {}
+		} catch {
+			setUserOptions({
+				"showNextSet": false, "showLastSet": false, "drawPath": false,
+				"highlightSection": false,
+				"useSectionColors": true,
+				"showMovementBrackets": false, "highlightUser": null,
+				"moveSpeed": 10, "useActualSetLength": false,
+				"dimOtherUsers": false, "showCollegeHash": true,
+				"followingUser": false
+			});
+		}
 		
 		if (props.userData.label !== undefined) {
 			console.log(props.userData)

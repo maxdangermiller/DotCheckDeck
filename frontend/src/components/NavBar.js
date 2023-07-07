@@ -21,7 +21,7 @@ const NavBar = (props) => {
 			<Container fluid>
 				<Nav className="ml-auto">
 					<Navbar.Brand href="/">
-						<img src={logo} alt="" width="24" height="24" />
+						<img src={logo} alt="" height="30px" width="30px"/>
 					</Navbar.Brand>
 					{getViewerOptions()}
 					{
@@ -33,6 +33,7 @@ const NavBar = (props) => {
 						</>
 						: null
 					}
+					<Nav.Link href="/about">About Us</Nav.Link>
 				</Nav>
 				<Nav className="mr-auto">
 					{

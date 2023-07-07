@@ -17,6 +17,7 @@ import VerifyAccount from './utils/VerifyAccount';
 import ResetPassword from './utils/ResetPassword';
 import ForgotPassword from './utils/ForgotPassword';
 import AcceptInvitation from './utils/AcceptInvitation';
+import AboutPage from './AboutPage';
 
 import axios from "axios";
 
@@ -183,6 +184,9 @@ function App() {
 					} />
 					<Route path="/accept-invitation/:enc_key" exact element={
 						<AcceptInvitation/>
+					} />
+					<Route path="/about" exact element={
+						<AboutPage/>
 					} />
 					
 
