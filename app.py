@@ -704,7 +704,7 @@ def upload_file():
 			fileLocation = "./showPDFs/" + file.filename
 			file.save(fileLocation)
 			addShowFileToDatabase(fileLocation, school, show)
-		elif fileKey == "mp3-file" and is_pdf(file.filename):
+		elif fileKey == "mp3-file" and file.filename.rsplit('.', 1)[1] == ".mp3":
 			fileLocation = f"./static/{show.id}/audio.mp3"
 			file.save(fileLocation)
 
