@@ -95,13 +95,17 @@ const ViewerSideBar = (props) => {
 
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
                 <div className='flex-row justify-content-center d-flex align-items-center mb-2' style={{height: '30%', width: '100%'}}>
-                    <AudioProgressBar 
-                        curPlayTime={curPlayTime} 
-                        setCurPlayTime={setCurPlayTime} 
-                        audio={audio} 
-                        isPlaying={audioPlaying} 
-                        setIsPlaying={setAudioPlaying}
-                    />
+                    {
+                        audio !== null                   
+                        ? <AudioProgressBar 
+                            curPlayTime={curPlayTime} 
+                            setCurPlayTime={setCurPlayTime} 
+                            audio={audio} 
+                            isPlaying={audioPlaying} 
+                            setIsPlaying={setAudioPlaying}
+                        />
+                        : null
+                    }
                 </div>
                 <div className='flex-row justify-content-between d-flex align-items-center mb-2' style={{width: "90%"}}>
 

@@ -22,6 +22,8 @@ const darkTheme = createTheme({
 	},
 });
 
+let audio = null;
+
 const Viewer = (props) => {
 	const [data, setData] = useState([]);
 	const [curSet, setCurSet]  = useState(0);
@@ -32,9 +34,9 @@ const Viewer = (props) => {
 	const [loading, setLoading] = useState(false);
 	const [sentRequest, setSentRequest] = useState(false);
 	const [audioPlaying, setAudioPlaying] = useState(false);
-	const [curPlayTime, setCurPlayTime] = useState(0);
+	const [curPlayTime, setCurPlayTime] = useState(20000);
 	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
-	const [audio, setAudio] = useState(new Audio());
+	// const [audio, setAudio] = useState(null);
 
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [downloadingProgress, setDownloadingProgress] = useState(0);
@@ -155,15 +157,29 @@ const Viewer = (props) => {
 		// Check If Saved
 		// Check Version number?
 		let localSets = localStorage.getItem("localSets");
-		if (localSets !== "" && localSets !== null) {
-			// console.log("USING LOCAL SETS!");
-			// console.log(JSON.parse(localSets));
-			setSets(JSON.parse(localSets));
-			setCurSetInfo(JSON.parse(localSets)[0]);
-			return true;
-		}
+		try {
+			if (localSets !== "" && localSets !== null) {
+				let parsedSets = JSON.parse(localSets);
 
-		return false;
+				// Check version number
+				for (let i = 0; i < parsedSets.length; i++) {
+					let timestamp = parsedSets[i].update_timestamp;
+					if (timestamp !== curDatabaseTimestamp) {
+						// Start UPDATING THOSE SETS
+						return false;
+					}
+				}
+				// console.log("USING LOCAL DATA!");
+				// console.log(parsedData);
+				setSets(parsedSets);
+				setCurSetInfo(parsedSets[0]);
+
+				return true;
+			}
+			return false;
+		} catch {
+			return false;
+		}
 	}
 
 	const checkLocalData = () => {
@@ -301,6 +317,7 @@ const Viewer = (props) => {
 		setDownloadingProgress(0);
 
 		downloadPoints([]);
+
 	}
 
 	/**
@@ -454,10 +471,12 @@ const Viewer = (props) => {
 	}, [])
 
 	useEffect(() => {
-		setAudio(new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token));
+		audio = new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token);
+		audio.load();
 	}, [])
 
 	useEffect(() => {
+		if (audio === null) { return; }
 		if (audioPlaying) {
 			audio.loop = false;
 			audio.play();
@@ -526,11 +545,11 @@ const Viewer = (props) => {
 
 	const handelSetBtnControls = (x) => {
 		if (x >= 0 && x < sets.length && !loading) {
-			if (audioPlaying) {
-				audio.currentTime = sets[x]["start_time_code"] / 1000;
-				setCurPlayTime(sets[x]["start_time_code"] / 1000);
-			} else {
+			if (!audioPlaying) {
 				changeCurSet(x);
+			} 
+
+			if (audio !== null) {
 				audio.currentTime = sets[x]["start_time_code"] / 1000;
 				setCurPlayTime(sets[x]["start_time_code"] / 1000);
 			}
@@ -553,9 +572,10 @@ const Viewer = (props) => {
 	}
 
 	const getAudioSyncedSet = () => {
+		if (audio === null) { return; }
 		let msElapsed = audio.currentTime * 1000;
 
-		// console.log(secsElapsed);
+		// console.log(msElapsed);
 
 		for (let i = 0; i < sets.length; i++) {
 			if (sets[i]["start_time_code"] !== null && sets[i]["end_time_code"] !== null) {
@@ -563,6 +583,7 @@ const Viewer = (props) => {
 				let endTime = sets[i]["end_time_code"];
 
 				if(msElapsed >= startTime && msElapsed < endTime) {
+					// console.log("Setting " + sets[i].set_numb + " to cur set (syncing with audio)")
 					// sets[i] is currently active
 					if (curSet !== i) {
 						changeCurSet(i);

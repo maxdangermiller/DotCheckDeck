@@ -35,7 +35,7 @@ const AudioProgressBar = (props) => {
         clearInterval(intervalRef.current);
     
         intervalRef.current = setInterval(() => {
-            if (audio.ended) {
+            if (audio.ended || !isPlaying) {
                 // Do nothing
             } else {
                 setCurPlayTime(audio.currentTime);
