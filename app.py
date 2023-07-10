@@ -1,5 +1,5 @@
 from email.policy import default
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, session, abort, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
@@ -410,14 +410,37 @@ band_sections_schema = BandSectionSchema(many=True)
 set_names_schema = SetNameSchema(many=True)
 
 
-admin.add_view(ModelView(Dot, db.session))
-admin.add_view(ModelView(SetName, db.session))
-admin.add_view(ModelView(Set, db.session))
-admin.add_view(ModelView(ShowUser, db.session))
-admin.add_view(ModelView(User, db.session))
-admin.add_view(ModelView(BandSection, db.session))
-admin.add_view(ModelView(Show, db.session))
-admin.add_view(ModelView(School, db.session))
+class SecureModelView(ModelView):
+	def is_accessible(self):
+		if "logged_in" in session:
+			return True
+		abort(403)
+
+
+admin.add_view(SecureModelView(Dot, db.session))
+admin.add_view(SecureModelView(SetName, db.session))
+admin.add_view(SecureModelView(Set, db.session))
+admin.add_view(SecureModelView(ShowUser, db.session))
+admin.add_view(SecureModelView(User, db.session))
+admin.add_view(SecureModelView(BandSection, db.session))
+admin.add_view(SecureModelView(Show, db.session))
+admin.add_view(SecureModelView(School, db.session))
+
+@app.route('/admin-logout', methods=["GET"])
+def admin_logout():
+	session.clear()
+	return redirect("/admin-login")
+
+@app.route('/admin-login', methods=["GET", "POST"])
+def admin_login():
+	if request.method == "POST":
+		email = request.form.get("email")
+		password = request.form.get("password")
+		if email == "max@benmiller.com" and password == "n@wq461$RJ7tQ$YC^TzW":
+			session["logged_in"] = True
+			return redirect("/admin")
+		return render_template("login.html", failed=True)
+	return render_template("login.html")
 
 
 # FUNCTIONAL API
@@ -602,6 +625,8 @@ def send_music():
 	show = Show.query.filter(Show.school_id == school.id).order_by(Show.is_default.desc()).first()
 	if show is None:
 		return "User has no shows", 404
+
+	print(show.id)
 
 	return send_from_directory(f"static/{show.id}", "audio.mp3")
 

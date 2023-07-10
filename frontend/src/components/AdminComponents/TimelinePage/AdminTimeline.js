@@ -307,7 +307,7 @@ const AdminTimeline = (props) => {
                         />
                         : dragInTimeline && index === dragItem.current ?
                         <AdminTimelineObj 
-                            width="6vw"
+                            width="60px"
                             height="100%" 
                             value={setData.set_numb} 
                             key={setData.id}
@@ -332,7 +332,7 @@ const AdminTimeline = (props) => {
                     data.map((setData, index) => 
                         !isInTimeline(setData) || (!dragInTimeline && index === dragItem.current) ?
                         <AdminTimelineObj 
-                            width="6vw"
+                            width="60px"
                             height="100%" 
                             value={setData.set_numb} 
                             key={setData.id}

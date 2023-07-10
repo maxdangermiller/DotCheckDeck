@@ -74,7 +74,7 @@ const AdminTimelineObj = (props) => {
 
     return(
         <div 
-            className='col adminTimelineObj' 
+            className='adminTimelineObj' 
             onDragStart={(e) => dragStart(e, index)} 
             onDragEnd={(e) => dragEnd(e)} 
             onMouseMove={(e) => checkForEdgeHover(e)}
