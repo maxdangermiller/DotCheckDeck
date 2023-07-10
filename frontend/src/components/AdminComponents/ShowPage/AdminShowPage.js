@@ -10,7 +10,7 @@ const AdminShowPage = (props) => {
 
     const [showEdit, setShowEdit] = useState(false);
     const [curEdit, setCurEdit] = useState({});
-    const [showAddPDF, setShowAddPDF] = useState({});
+    const [showAddPDF, setShowAddPDF] = useState(false);
     const [addPDFData, setAddPDFData] = useState({});
 
     const openEdit = (item) => {

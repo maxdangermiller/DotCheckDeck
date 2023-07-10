@@ -1273,7 +1273,7 @@ const Canvas = props => {
 
         // console.log(x / translation.s, y / translation.s, translation);
 
-        const margin = canvasRef.current.height * 0.006;
+        const margin = Math.max(canvasRef.current.height, canvasRef.current.width) * 0.006;
 
         let wasOnDot = false;
 

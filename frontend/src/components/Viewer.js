@@ -238,14 +238,13 @@ const Viewer = (props) => {
 		}
 
 		if (sets.length !== 0 && useSetIndex !== -1) {
-			console.log("Recalculating Points! " + dimensions["w"] + "x" + dimensions["h"]);
+			console.log("Recalculating Points! ");
 
 			setSentRequest(true);
 
 			// console.log(sets)
 			const url1 = WINDOW_LOCATION + "/get-dots?school_code=" + props.schoolCode 
-				+ "&set=" + sets[useSetIndex]["set_numb"] + 
-				"&width=" + dimensions["w"] + "&height=" + dimensions["h"] + "&token=" + props.token;
+				+ "&set=" + sets[useSetIndex]["set_numb"] + "&token=" + props.token;
 
 			axios({
 				method: "GET",

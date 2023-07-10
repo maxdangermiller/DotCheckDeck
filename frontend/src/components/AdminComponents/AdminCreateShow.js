@@ -10,9 +10,10 @@ const AdminCreateShow = (props) => {
     const [showName, setShowName] = useState("");
     const [files, setFiles] = useState([null]);
     const [audio, setAudio] = useState(null);
+    const [sentRequest, setSentRequest] = useState(false);
 
     const sendFile = () => {
-        if (files.length === 0 || audio === null) {
+        if (files.length === 0 || audio === null || sentRequest) {
             return;
         }
 
@@ -24,6 +25,8 @@ const AdminCreateShow = (props) => {
         formData.append('show-name', showName);
         console.log(files);
 
+        setSentRequest(true);
+
         axios({
             method: "POST",
             url: WINDOW_LOCATION + "/upload-show",
@@ -33,7 +36,9 @@ const AdminCreateShow = (props) => {
                 'Authorization': 'Bearer ' + token
             }
         }).then((response) => {
+            setSentRequest(false);
             console.log(response.data)
+            window.location.href = "/admin";
         }).catch((error) => {
             if (error.response) {
                 console.log(error.response)
@@ -82,7 +87,13 @@ const AdminCreateShow = (props) => {
                         />
                     </div>
 
-                    <button className="btn btn-primary" onClick={() => sendFile()}>Submit</button>
+                    {
+                        !sentRequest
+                        ? <button className="btn btn-primary" onClick={() => sendFile()}>Submit</button>
+                        : <div className="spinner-border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

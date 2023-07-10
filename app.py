@@ -660,10 +660,13 @@ def addShowFileToDatabase(file, school, show):
 	# Go through and add show indices
 	sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
 	
-	for set in sets:
-		set.showIndex = set.id - 1
+	index = 0
 
+	for set in sets:
+		set.showIndex = index
 		db.session.commit()
+
+		index += 1
 
 
 # Endpoint for creating a new show
@@ -743,9 +746,13 @@ def upload_dot_sheet():
 			fileLocation = "./showPDFs/" + file.filename
 			file.save(fileLocation)
 			addShowFileToDatabase(fileLocation, school, show)
-		elif fileKey == "mp3-file" and is_pdf(file.filename):
-			fileLocation = f"./static/{show.id}/audio.mp3"
-			file.save(fileLocation)
+
+	# There has been a change made to the show's date, 
+	# so we must change the "last update time" var in the show object
+	show.changeUpdateTime()  
+	db.session.commit()
+
+	getAllDotsWithoutBuffer(show.code)
 
 	return "Success!", 200
 

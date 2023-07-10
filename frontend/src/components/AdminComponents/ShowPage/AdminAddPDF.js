@@ -9,9 +9,10 @@ const WINDOW_LOCATION = getApi();
 const AdminAddPDF = (props) => {
     const {show, setShow, editData, setEditData, token, ...rest} = props;
     const [files, setFiles] = useState([null]);
+    const [sentRequest, setSentRequest] = useState(false);
 
     const handleSave = () => {
-        if (files.length === 0 || files[0] === null) {
+        if (files.length === 0 || files[0] === null || sentRequest) {
             return;
         }
 
@@ -22,6 +23,8 @@ const AdminAddPDF = (props) => {
         formData.append('show-id', editData.id);
         console.log(files);
 
+        setSentRequest(true);
+
         axios({
             method: "POST",
             url: WINDOW_LOCATION + "/upload-dot-sheet",
@@ -31,7 +34,12 @@ const AdminAddPDF = (props) => {
                 'Authorization': 'Bearer ' + token
             }
         }).then((response) => {
-            console.log(response.data)
+            console.log(response.data);
+            setShow(false);
+            setSentRequest(false);
+            if (response.status !== 200) {
+                alert(response.data)
+            }
         }).catch((error) => {
             if (error.response) {
                 console.log(error.response)
@@ -75,7 +83,13 @@ const AdminAddPDF = (props) => {
                     Close
                 </Button>
                 <Button variant="primary" onClick={(e) => handleSave()}>
-                    Save
+                    {
+                        !sentRequest
+                        ? "Save"
+                        : <div className="spinner-border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                        </div>
+                    }
                 </Button>
             </Modal.Footer>
         </Modal>

@@ -18,6 +18,7 @@ import ResetPassword from './utils/ResetPassword';
 import ForgotPassword from './utils/ForgotPassword';
 import AcceptInvitation from './utils/AcceptInvitation';
 import AboutPage from './AboutPage';
+import Page404 from './utils/Page404';
 
 import axios from "axios";
 
@@ -190,7 +191,7 @@ function App() {
 					} />
 					
 
-					<Route path="*" element={<h1>404, you've been dumb</h1>} />
+					<Route path="*" element={<Page404 />} />
 				</Routes>
 			</Router>
 		);
