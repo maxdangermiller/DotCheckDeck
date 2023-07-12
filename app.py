@@ -18,6 +18,7 @@ import os
 import sys
 import string
 import random
+import math
 from cryptography.fernet import Fernet
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -97,6 +98,9 @@ email_client = EmailClient.from_connection_string("endpoint=https://email-parent
 # flask db migrate -m "message"
 # flask db upgrade
 
+def generateUpdateCode() -> int:
+	return random.randint(0, math.pow(2, 31) - 1)
+
 class Dot(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 
@@ -114,6 +118,11 @@ class Dot(db.Model):
 	fb_steps = db.Column(db.Float)
 	fb_direction = db.Column(db.String(16))
 	use_hash = db.Column(db.String(32))
+
+	# Timestamps
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"Dot({self.show_user_id} ->{self.id})"
@@ -133,6 +142,11 @@ class SetName(db.Model):
 
 	# Data
 	name = db.Column(db.String(32), default="default")
+
+	# Timestamps
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"SetName({self.name})"
@@ -159,6 +173,11 @@ class Set(db.Model):
 	end_time_code = db.Column(db.Integer)
 	showIndex = db.Column(db.Integer, nullable=False, default=-1)
 
+	# Timestamps
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+
 	def __repr__(self):
 		return f"Set({self.set_numb})"
 
@@ -181,6 +200,11 @@ class BandSection(db.Model):
 	color_g = db.Column(db.Integer)
 	color_b = db.Column(db.Integer)
 
+	# Timestamps
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+
 	def __repr__(self):
 		return f"BandSection({self.name})"
 
@@ -202,6 +226,11 @@ class ShowUser(db.Model):
 	symbol = db.Column(db.String(16))
 	label = db.Column(db.String(16))
 	is_section_leader = db.Column(db.Boolean, default=False)
+
+	# Timestamps
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"ShowUser({self.symbol}{self.label})"
@@ -262,7 +291,7 @@ class Show(db.Model):
 	is_default = db.Column(db.Boolean, default=True, nullable=False)
 
 	# Tracking database updates
-	last_update = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_update = db.Column(db.Integer, default=0, nullable=False)
 
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
@@ -272,8 +301,9 @@ class Show(db.Model):
 		return self.code
 
 	def changeUpdateTime(self):
-		print("UPDATE!!!!!!", datetime.datetime.now())
-		self.last_update = datetime.datetime.now()
+		newUpdateCode = random.randint(0, math.pow(2, 31) - 1)
+		print("UPDATE!!!!!!", newUpdateCode)
+		self.last_update = newUpdateCode
 	
 	def __repr__(self):
 		return f"Show({self.code})"
