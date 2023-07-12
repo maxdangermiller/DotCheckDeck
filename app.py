@@ -120,9 +120,9 @@ class Dot(db.Model):
 	use_hash = db.Column(db.String(32))
 
 	# Timestamps
-	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"Dot({self.show_user_id} ->{self.id})"
@@ -144,9 +144,9 @@ class SetName(db.Model):
 	name = db.Column(db.String(32), default="default")
 
 	# Timestamps
-	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"SetName({self.name})"
@@ -174,9 +174,9 @@ class Set(db.Model):
 	showIndex = db.Column(db.Integer, nullable=False, default=-1)
 
 	# Timestamps
-	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"Set({self.set_numb})"
@@ -201,9 +201,9 @@ class BandSection(db.Model):
 	color_b = db.Column(db.Integer)
 
 	# Timestamps
-	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"BandSection({self.name})"
@@ -228,9 +228,9 @@ class ShowUser(db.Model):
 	is_section_leader = db.Column(db.Boolean, default=False)
 
 	# Timestamps
-	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 
 	def __repr__(self):
@@ -488,10 +488,10 @@ def create_token():
 		# user = User(email=email, password=password, name="Max Miller")
 		# db.session.add(user)
 		# db.session.commit()
-		return  "Wrong email or password", 401
+		return  "Wrong email or password. You may need to create an account, press activate in the top right corner", 401
 
 	if not user.check_password(password):
-		return "Wrong email or password", 401
+		return "Wrong email or password. You may need to create an account, press activate in the top right corner", 401
 
 	# Require User to be verified
 	if user.verified_date is None:
@@ -863,11 +863,17 @@ def send_reset_password_email():
 			"content": {
 				"subject": "DOT CHECK DECK - Forgot Password!",
 				"plainText": "Hey! We know you aren't going to read this text, but like, everyone writes it so yeah",
-				"html": "<html>" +
-					'<img src="dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />' +
-					"<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>" +
-					f'<a href="dotcheckdeck.com/forgot-password/{apiKey}">Reset Your Password</a>' +
-				"</html>"
+				"html": f"""\
+					<!DOCTYPE html>
+					<html>
+						<head></head>
+						<body>
+							<img src="https://dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />
+							<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>
+							<a href="https://dotcheckdeck.com/forgot-password/{apiKey}">Reset Your Password</a>
+						</body>
+					</html>
+				"""
 			},
 			"recipients": {
 				"to": [
@@ -1068,11 +1074,17 @@ def sendVerifyEmail(user):
 			"content": {
 				"subject": "DOT CHECK DECK - Activate your email!",
 				"plainText": "Hey! We know you aren't going to read this text, but like, everyone writes it so yeah",
-				"html": "<html>" +
-					'<img src="dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />' +
-					"<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>" +
-					f'<a href="dotcheckdeck.com/activate-account/{apiKey}">Activate New Account</a>' +
-				"</html>"
+				"html": f"""\
+					<!DOCTYPE html>
+					<html>
+						<head></head>
+						<body>
+							<img src="https://dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />
+							<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>
+							<a href="https://dotcheckdeck.com/activate-account/{apiKey}">Activate New Account</a>
+						</body>
+					</html>
+				"""
 			},
 			"recipients": {
 				"to": [
@@ -1087,6 +1099,49 @@ def sendVerifyEmail(user):
 
 		email_client.begin_send(message)
 		print(f"Sent Email to {user.email}")
+	except Exception as ex:
+		print('Exception:')
+		print(ex)
+
+
+def notifyAdminOfNewUser(school_id:int, added_user:User):
+	users = User.query.filter(User.school_id == school_id, User.is_admin == True).all()
+
+	emails = list()
+
+	for user in users:
+		emails.append({
+			"address": user.email,
+			"displayName": f"{user.first_name} {user.last_name}"
+		})
+	
+	try:
+
+		message = {
+			"content": {
+				"subject": "DOT CHECK DECK - Admin Notification!",
+				"plainText": "A new user has just been added!",
+				"html": f"""\
+					<!DOCTYPE html>
+					<html>
+						<head></head>
+						<body>
+							<img src="https://dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />
+							<p>A New User Has Just Been activated</p>
+							<p><strong>User:</strong> {added_user.first_name} {added_user.last_name}</p>
+							<p><strong>Email:</strong> {added_user.email}</p>
+							<p><strong>Date:</strong> {added_user.created_date}</p>
+						</body>
+					</html>
+				"""
+			},
+			"recipients": {
+				"to": emails
+			},
+			"senderAddress": "donotreply@dotcheckdeck.com"
+		}
+
+		email_client.begin_send(message)
 	except Exception as ex:
 		print('Exception:')
 		print(ex)
@@ -1172,6 +1227,7 @@ class SetUpUserResource(Resource):
 		db.session.add(user)
 
 		sendVerifyEmail(user)
+		notifyAdminOfNewUser(show.school_id, user)
 
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
@@ -1772,11 +1828,17 @@ def sendInviteUserEmail(email, is_admin, school_id):
 			"content": {
 				"subject": "DOT CHECK DECK - Invitation to join!",
 				"plainText": "Hey! We know you aren't going to read this text, but like, everyone writes it so yeah",
-				"html": "<html>" +
-					'<img src="dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />' +
-					"<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>" +
-					f'<a href="dotcheckdeck.com/accept-invitation/{apiKey}">Activate New Account</a>' +
-				"</html>"
+				"html": f"""\
+					<!DOCTYPE html>
+					<html>
+						<head></head>
+						<body>
+							<img src="https://dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />
+							<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>
+							<a href="https://dotcheckdeck.com/accept-invitation/{apiKey}">Activate New Account</a>
+						</body>
+					</html>
+				"""
 			},
 			"recipients": {
 				"to": [
@@ -2481,9 +2543,11 @@ if __name__ == "__main__":
 
 	if not rebuild:
 		# Available Externally on LAN
-		# app.run(debug=True, host="0.0.0.0")
+		if 'WEBSITE_HOSTNAME' not in os.environ:
+			app.run(debug=True, host="0.0.0.0")
 		# Use Default Config
-		app.run(debug=True)
+		else:
+			app.run(debug=True)
 
 """
 AFTER DEPLOY COMMANDS TO INSTALL JAVA

@@ -24,7 +24,6 @@ const WINDOW_LOCATION = getApi();
 
 const Activate = (props) => {
     const {join_code} = useParams();
-    console.log(join_code)
     const [curPage, setCurPage] = useState(0);
 	const [isLoading, setIsLoading] = useState(false);
     const [schoolCode, setSchoolCode] = useState(join_code !== undefined ? join_code : "");

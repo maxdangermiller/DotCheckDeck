@@ -73,7 +73,7 @@ const RegisterPage = (props) => {
 		// Validate length
 		errors.length = value.length < 8;
 
-		if (!(errors.letter || errors.capital || errors.number || errors.length) && registrationData.errors.password_errors.any) {
+		if (!(errors.letter || errors.capital || errors.number || errors.length)) {
 			errors.any = false;
 		} else {
             errors.any = true;
