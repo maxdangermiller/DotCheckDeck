@@ -120,9 +120,9 @@ class Dot(db.Model):
 	use_hash = db.Column(db.String(32))
 
 	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"Dot({self.show_user_id} ->{self.id})"
@@ -144,9 +144,9 @@ class SetName(db.Model):
 	name = db.Column(db.String(32), default="default")
 
 	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"SetName({self.name})"
@@ -174,9 +174,9 @@ class Set(db.Model):
 	showIndex = db.Column(db.Integer, nullable=False, default=-1)
 
 	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"Set({self.set_numb})"
@@ -201,9 +201,9 @@ class BandSection(db.Model):
 	color_b = db.Column(db.Integer)
 
 	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
 
 	def __repr__(self):
 		return f"BandSection({self.name})"
@@ -228,9 +228,10 @@ class ShowUser(db.Model):
 	is_section_leader = db.Column(db.Boolean, default=False)
 
 	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+	# created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	# last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	# last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+
 
 	def __repr__(self):
 		return f"ShowUser({self.symbol}{self.label})"
