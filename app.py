@@ -21,6 +21,8 @@ import random
 import math
 from cryptography.fernet import Fernet
 
+from cache import regions, CacheableMixin, query_callable
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__, static_folder='client/build', static_url_path='')
@@ -95,13 +97,18 @@ invite_user_code_reference = [
 email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
 
 
+# flask db init
 # flask db migrate -m "message"
 # flask db upgrade
 
 def generateUpdateCode() -> int:
 	return random.randint(0, math.pow(2, 31) - 1)
 
-class Dot(db.Model):
+class Dot(CacheableMixin, db.Model):
+	cache_label = "dot"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
@@ -131,7 +138,11 @@ class Dot(db.Model):
 		return f"Dot({self.show_user_id} ->{self.id})"
 
 
-class SetName(db.Model):
+class SetName(CacheableMixin, db.Model):
+	cache_label = "set_name"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
@@ -155,7 +166,11 @@ class SetName(db.Model):
 		return f"SetName({self.name})"
 
 
-class Set(db.Model):
+class Set(CacheableMixin, db.Model):
+	cache_label = "set"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
@@ -185,7 +200,11 @@ class Set(db.Model):
 		return f"Set({self.set_numb})"
 
 
-class BandSection(db.Model):
+class BandSection(CacheableMixin, db.Model):
+	cache_label = "band_section"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
@@ -212,7 +231,11 @@ class BandSection(db.Model):
 		return f"BandSection({self.name})"
 
 
-class ShowUser(db.Model):
+class ShowUser(CacheableMixin, db.Model):
+	cache_label = "show_user"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
@@ -240,7 +263,11 @@ class ShowUser(db.Model):
 		return f"ShowUser({self.symbol}{self.label})"
 
 
-class User(db.Model):
+class User(CacheableMixin, db.Model):
+	cache_label = "user"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
@@ -274,7 +301,11 @@ class User(db.Model):
 		return f"User({self.email})"
 
 
-class Show(db.Model):
+class Show(CacheableMixin, db.Model):
+	cache_label = "show"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
@@ -293,6 +324,7 @@ class Show(db.Model):
 
 	# Tracking database updates
 	last_update = db.Column(db.Integer, default=0, nullable=False)
+	last_set_name_update = db.Column(db.Integer, default=0, nullable=True)
 
 	# GENERATE CODE!!!
 	def generateCode(self) -> str:
@@ -302,9 +334,14 @@ class Show(db.Model):
 		return self.code
 
 	def changeUpdateTime(self):
-		newUpdateCode = random.randint(0, math.pow(2, 31) - 1)
+		newUpdateCode = generateUpdateCode()
 		print("UPDATE!!!!!!", newUpdateCode)
 		self.last_update = newUpdateCode
+	
+	def changeSetNameUpdateTime(self):
+		newUpdateCode = generateUpdateCode()
+		print("UPDATE!!!!!!", newUpdateCode)
+		self.last_set_name_update = newUpdateCode
 	
 	def __repr__(self):
 		return f"Show({self.code})"
@@ -313,7 +350,11 @@ class Show(db.Model):
 		return f"Show({self.code})"
 
 
-class School(db.Model):
+class School(CacheableMixin, db.Model):
+	cache_label = "school"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
@@ -448,14 +489,19 @@ class SecureModelView(ModelView):
 		abort(403)
 
 
+class ShowModelView(SecureModelView):
+	form_excluded_columns = ('dots', )
+
+
 admin.add_view(SecureModelView(Dot, db.session))
 admin.add_view(SecureModelView(SetName, db.session))
 admin.add_view(SecureModelView(Set, db.session))
 admin.add_view(SecureModelView(ShowUser, db.session))
 admin.add_view(SecureModelView(User, db.session))
 admin.add_view(SecureModelView(BandSection, db.session))
-admin.add_view(SecureModelView(Show, db.session))
+admin.add_view(ShowModelView(Show, db.session))
 admin.add_view(SecureModelView(School, db.session))
+
 
 @app.route('/admin-logout', methods=["GET"])
 def admin_logout():
@@ -1578,7 +1624,6 @@ class UpdateSetResource(Resource):
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
 		show.changeUpdateTime()  
-
 		db.session.commit()
 
 		return "Updated Successfully", 201
@@ -1716,7 +1761,9 @@ class UpdateUserSectionResource(Resource):
 
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
-		Show.query.filter(Show.id == showUser.show_id).first().changeUpdateTime()
+		show = Show.query.filter(Show.id == showUser.show_id).first().changeUpdateTime()
+
+		updateBufferWithNewUser(loggedInUser, showUser, show)
 		
 		db.session.commit()
 
@@ -2039,8 +2086,9 @@ class UpdateOrCreateSetNameResource(Resource):
 		
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
-		# Show.query.filter(Show.id == show_id).first().changeUpdateTime()
 		show = Show.query.filter(Show.id == show_id).first()
+		show.changeSetNameUpdateTime()
+
 		updateBufferWithSetName(show, setName)
 
 		db.session.commit()
@@ -2125,7 +2173,7 @@ class UpdateSetNameResource(Resource):
 		parser.add_argument('name', type=str, default=None, required=True, help="You must include the Name")
 		args = parser.parse_args()
 
-		print(args.get("name"))
+		show = Show.query.filter(Show.id == args.get("show_id")).first()
 
 		setName = SetName.query.filter(
 			SetName.set_id == args.get("set_id"), 
@@ -2144,18 +2192,21 @@ class UpdateSetNameResource(Resource):
 
 			# There has been a change made to the show's date, 
 			# so we must change the "last update time" var in the show object
-			Show.query.filter(Show.id == args.get("show_id")).first().changeUpdateTime()  
-
+			show.changeSetNameUpdateTime()  
 			db.session.commit()
+
+			updateBufferWithSetName(show, setName)
+
 			return "Created Successfully.", 201
 		else:
 			setName.name = args.get("name")
 
 			# There has been a change made to the show's date, 
 			# so we must change the "last update time" var in the show object
-			Show.query.filter(Show.id == args.get("show_id")).first().changeUpdateTime()  
-
+			show.changeSetNameUpdateTime()
 			db.session.commit()
+
+			updateBufferWithSetName(show, setName)
 
 			return "Updated Successfully.", 202
 
