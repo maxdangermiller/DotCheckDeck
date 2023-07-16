@@ -18,7 +18,7 @@ const BasicViewer = (props) => {
 			.then(res => res.json())
 			.then(
 				(result) => {
-					console.log("(getDatabaseVersion) -> ", result.set_name_timestamp)
+					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
 					setCurDatabaseTimestamp(result.timestamp);
                     setCurDatabaseSNTimestamp(result.set_name_timestamp)
 				},
@@ -38,16 +38,17 @@ const BasicViewer = (props) => {
 		try {
 			if (localData !== "" && localData !== null) {
 				let parsedData = JSON.parse(localData);
+                console.log(parsedData);
 
 				// Check version number
-				for (let i = 0; i < parsedData.length; i++) {
-					let timestamp = parsedData[i].timestamp;
+				for (let i = 0; i < parsedData.dots.length; i++) {
+					let timestamp = parsedData.dots[i].timestamp;
 					if (timestamp !== curDatabaseTimestamp) {
 						// Start UPDATING THOSE SETS
 						return false;
 					}
                     // Check set name timestamp
-                    let snTimestamp = parsedData[i].set_name_timestamp;
+                    let snTimestamp = parsedData.dots[i].set_name_timestamp;
                     if (snTimestamp !== curDatabaseSNTimestamp) {
                         return false;
                     }
