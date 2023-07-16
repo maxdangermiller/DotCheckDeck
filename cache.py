@@ -225,7 +225,10 @@ class Cache(object):
         """
         flush the given key from dogpile.cache
         """
-        self.regions[self.label].delete(key)
+        try:
+            self.regions[self.label].delete(key)
+        except:
+            print("CACHE DOESN'T EXIST")
 
 
     @memoize
