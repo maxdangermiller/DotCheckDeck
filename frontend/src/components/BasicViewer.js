@@ -9,24 +9,88 @@ const BasicViewer = (props) => {
     const {token, schoolCode, ...rest} = props;
 
     const [data, setData] = useState(undefined);
+    const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState("");
+    const [curDatabaseSNTimestamp, setCurDatabaseSNTimestamp] = useState("");
+
+    
+    useEffect(() => {
+        fetch(WINDOW_LOCATION + "/database-version?school_code=" + props.schoolCode + "&token=" + props.token)
+			.then(res => res.json())
+			.then(
+				(result) => {
+					console.log("(getDatabaseVersion) -> ", result.set_name_timestamp)
+					setCurDatabaseTimestamp(result.timestamp);
+                    setCurDatabaseSNTimestamp(result.set_name_timestamp)
+				},
+				// Note: it's important to handle errors here
+				// instead of a catch() block so that we don't swallow
+				// exceptions from actual bugs in components.
+				(error) => {
+					console.log(error);
+				}
+		);
+    }, []);
+
+
+	const checkLocalData = () => {
+		// Check if Saved
+		let localData = localStorage.getItem("local-basic-data");
+		try {
+			if (localData !== "" && localData !== null) {
+				let parsedData = JSON.parse(localData);
+
+				// Check version number
+				for (let i = 0; i < parsedData.length; i++) {
+					let timestamp = parsedData[i].timestamp;
+					if (timestamp !== curDatabaseTimestamp) {
+						// Start UPDATING THOSE SETS
+						return false;
+					}
+                    // Check set name timestamp
+                    let snTimestamp = parsedData[i].set_name_timestamp;
+                    if (snTimestamp !== curDatabaseSNTimestamp) {
+                        return false;
+                    }
+				}
+
+				// console.log("USING LOCAL DATA!");
+				// console.log(parsedData);
+				setData(parsedData);
+
+				return true;
+			}
+			return false;
+		} catch {
+			return false;
+		}
+	}
+
+	const saveLocalData = (newData) => {
+		localStorage.setItem("local-basic-data", JSON.stringify(newData));
+		localStorage.setItem("basic-database-timestamp", curDatabaseTimestamp);
+		localStorage.setItem("basic-sn-database-timestamp", curDatabaseSNTimestamp);
+	}
 
 
     useEffect(() => {
-        const url = WINDOW_LOCATION + "/get-dots-user?school_code=" + schoolCode + "&token=" + token;
-
-        axios({
-            method: "GET",
-            url:url,
-        }).then((response) => {
-            console.log(response.data);
-            setData(response.data)
-        }).catch((error) => {
-            console.log(error)
-            if (error.response && error.response.status === 401 || error.response.status === 400) {
-                // window.location.href = "/login";
-            }
-		})
-    }, [])
+        if (!checkLocalData()) {
+            const url = WINDOW_LOCATION + "/get-dots-user?school_code=" + schoolCode + "&token=" + token;
+    
+            axios({
+                method: "GET",
+                url:url,
+            }).then((response) => {
+                console.log(response.data);
+                saveLocalData(response.data)
+                setData(response.data)
+            }).catch((error) => {
+                console.log(error)
+                if (error.response && error.response.status === 401 || error.response.status === 400) {
+                    // window.location.href = "/login";
+                }
+            })
+        }
+    }, [curDatabaseTimestamp, curDatabaseSNTimestamp])
 
     if (data === undefined) {
         return (

@@ -97,6 +97,7 @@ invite_user_code_reference = [
 email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
 
 
+# flask db revision --rev-id e39d16e62810
 # flask db init
 # flask db migrate -m "message"
 # flask db upgrade
@@ -1489,7 +1490,7 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 			return output, 200
 	except:
 		print("Error")
-		return getAllDotsWithoutBuffer(showCode)
+		return getAllDotsWithoutBuffer(show.code)
 
 
 class GetDotsWithBufferResource(Resource):
@@ -1536,6 +1537,8 @@ def getBufferedUserDots(show, showUser):
 						dot["set_numb"] = set["setNumb"]
 						dot["set_name"] = getSetName(setNames, set["setID"])
 						dot["measure"] =  set["measure"]
+						dot["timestamp"] = str(show.last_update)
+						dot["set_name_timestamp"] = str(show.last_set_name_update)
 						output.append(dot)
 						break
 			
@@ -2035,7 +2038,7 @@ def updateBufferWithSetName(show, setName):
 			for set in section:
 				if id == str(setName.section_id) and set["set_id"] == setName.set_id:
 						set["set_name"] = setName.name
-				set["update_timestamp"] = str(show.last_update)
+				set["update_timestamp"] = str(show.last_set_name_update)
 	
 	with open(f"cache/set-names/{show.id}.json", "w") as file: 
 		json.dump(data, file, indent=4)
@@ -2263,7 +2266,7 @@ class GetLastUpdateResource(Resource):
 		if show is None:
 			return "INVALID SHOW CODE", 404
 
-		return {"timestamp": str(show.last_update)}, 200
+		return {"timestamp": str(show.last_update), "set_name_timestamp": str(show.last_set_name_update)}, 200
 
 
 class GetDefaultJoinCode(Resource):
@@ -2292,7 +2295,7 @@ def getSetNamesWithoutBuffer(show, showUser):
 	sections = BandSection.query.filter(BandSection.show_id == show.id).all()
 
 	# Get the database version so we know what update this is
-	curDatabaseVersion = show.last_update
+	curDatabaseVersion = show.last_set_name_update
 
 	output = {}
 
@@ -2325,7 +2328,7 @@ def getSetNamesWithoutBuffer(show, showUser):
 
 def getBufferedSetNames(show, showUser):
 	# Get the database version so we know what update this is
-	curDatabaseVersion = show.last_update
+	curDatabaseVersion = show.last_set_name_update
 
 	try:
 		with open(f"cache/set-names/{show.id}.json", "r") as file:
@@ -2343,7 +2346,7 @@ def getBufferedSetNames(show, showUser):
 				if setName["update_timestamp"] != str(curDatabaseVersion):
 					print("Updating!")
 					return getSetNamesWithoutBuffer(show, showUser), 200
-			print(len(output))
+			# print(len(output))
 				
 			return output, 200
 	except:
