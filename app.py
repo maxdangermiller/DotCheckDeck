@@ -1105,7 +1105,7 @@ def updateBufferWithNewUser(user, showUser, show):
 				if dot["dot"]["show_user_id"] == showUser.id:
 					dot["userName"] = f"{user.first_name} {user.last_name}"
 					break
-			set["update_timestamp"] = str(show.last_update)
+			set["update_timestamp"] = show.last_update
 	
 	with open(f"cache/dots/{show.id}.json", "w") as file: 
 		json.dump(data, file, indent=4)
@@ -1402,7 +1402,7 @@ def getAllDotInfoForSet(show, set):
 		'end_time_code': set.end_time_code,
 		'index': set.showIndex,
 		'dots': dotCords,
-		'update_timestamp': str(show.last_update),
+		'update_timestamp': show.last_update,
 		'measure': set.measure
 	}
 
@@ -1476,7 +1476,7 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 			
 			for i in range(startIndex, endIndex + 1):
 				# If it's out of date, then we're gonna screw it (update it)
-				if data[i]["update_timestamp"] != str(curDatabaseVersion):
+				if data[i]["update_timestamp"] != curDatabaseVersion:
 					setObj = Set.query.filter(Set.id == data[i]["setID"]).first()
 					data[i] = getAllDotInfoForSet(show, setObj)
 					changedSomething = True
@@ -1527,7 +1527,7 @@ def getBufferedUserDots(show, showUser):
 			
 			for set in data:
 				# If it's out of date, then we're gonna screw it (update it)
-				if set["update_timestamp"] != str(curDatabaseVersion):
+				if set["update_timestamp"] != curDatabaseVersion:
 					setObj = Set.query.filter(Set.id == set["setID"]).first()
 					set = getAllDotInfoForSet(show, setObj)
 					changedSomething = True
@@ -1537,8 +1537,8 @@ def getBufferedUserDots(show, showUser):
 						dot["set_numb"] = set["setNumb"]
 						dot["set_name"] = getSetName(setNames, set["setID"])
 						dot["measure"] =  set["measure"]
-						dot["timestamp"] = str(show.last_update)
-						dot["set_name_timestamp"] = str(show.last_set_name_update)
+						dot["timestamp"] = show.last_update
+						dot["set_name_timestamp"] = show.last_set_name_update
 						output.append(dot)
 						break
 			
@@ -2266,7 +2266,7 @@ class GetLastUpdateResource(Resource):
 		if show is None:
 			return "INVALID SHOW CODE", 404
 
-		return {"timestamp": str(show.last_update), "set_name_timestamp": str(show.last_set_name_update)}, 200
+		return {"timestamp": show.last_update, "set_name_timestamp": show.last_set_name_update}, 200
 
 
 class GetDefaultJoinCode(Resource):
@@ -2315,7 +2315,7 @@ def getSetNamesWithoutBuffer(show, showUser):
 			setsOutput.append({
 				"set_id": set.id,
 				"set_name": setName,
-				"update_timestamp": str(curDatabaseVersion)
+				"update_timestamp": curDatabaseVersion
 			})
 		output[section.id] = setsOutput
 	
@@ -2343,7 +2343,7 @@ def getBufferedSetNames(show, showUser):
 			
 			for setName in data[str(showUser.section_id)]:
 				output.append(setName)
-				if setName["update_timestamp"] != str(curDatabaseVersion):
+				if setName["update_timestamp"] != curDatabaseVersion:
 					print("Updating!")
 					return getSetNamesWithoutBuffer(show, showUser), 200
 			# print(len(output))

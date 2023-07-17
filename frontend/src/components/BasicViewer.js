@@ -9,8 +9,8 @@ const BasicViewer = (props) => {
     const {token, schoolCode, ...rest} = props;
 
     const [data, setData] = useState(undefined);
-    const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState("");
-    const [curDatabaseSNTimestamp, setCurDatabaseSNTimestamp] = useState("");
+    const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState(-1);
+    const [curDatabaseSNTimestamp, setCurDatabaseSNTimestamp] = useState(-1);
 
     
     useEffect(() => {

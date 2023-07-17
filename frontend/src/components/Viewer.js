@@ -23,6 +23,7 @@ const darkTheme = createTheme({
 });
 
 let audio = null;
+let lastCheckedVersionTime = 0;
 
 const Viewer = (props) => {
 	const [data, setData] = useState([]);
@@ -41,7 +42,8 @@ const Viewer = (props) => {
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [downloadingProgress, setDownloadingProgress] = useState(0);
 	
-	const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState("");
+	const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState();
+	const [curDatabaseSNTimestamp, setCurDatabaseSNTimestamp] = useState(-1);
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
@@ -57,12 +59,18 @@ const Viewer = (props) => {
 	const setInput = useRef(null);
 
 	const getDatabaseVersion = () => {
+		// If we just updated less than 30 seconds ago, don't update
+		let curTime = (new Date()).getTime();
+		if (curTime - lastCheckedVersionTime <= 30000) { return; }
+
 		fetch(WINDOW_LOCATION + "/database-version?school_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
 				(result) => {
-					console.log("(getDatabaseVersion) -> ", result.timestamp)
+					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
 					setCurDatabaseTimestamp(result.timestamp);
+                    setCurDatabaseSNTimestamp(result.set_name_timestamp)
+					lastCheckedVersionTime = curTime;
 				},
 				// Note: it's important to handle errors here
 				// instead of a catch() block so that we don't swallow
@@ -405,26 +413,66 @@ const Viewer = (props) => {
 		}
 	} 
 
+	const updateSetNames = (setNames) => {
+		let newSets = sets;
+		let changedSomething = false;
+
+		for (let i = 0; i < setNames.length; i++) {
+			if (newSets[i].id === setNames[i].set_id && newSets[i].set_name !== setNames[i].set_name) {
+				newSets[i].set_name = setNames[i].set_name;
+				changedSomething = true;
+			}
+		}
+
+		if (changedSomething) {
+			setSets(newSets);
+			saveLocalSets(newSets);
+		}
+	}
+
+	const checkLocalSetNames = () => {
+		// Check if Saved
+		let localData = localStorage.getItem("local-set-name-data");
+		try {
+			if (localData !== "" && localData !== null) {
+				let parsedData = JSON.parse(localData);
+
+				// Check version number
+				for (let i = 0; i < parsedData.length; i++) {
+					let timestamp = parsedData[i].update_timestamp;
+					if (timestamp !== curDatabaseSNTimestamp) {
+						// Start UPDATING THOSE SET NAMES
+						return false;
+					}
+				}
+
+				// console.log("Trying to use local Data", parsedData.length, sets.length)
+				if (parsedData.length < sets.length || sets.length === 0) {
+					return false;
+				}
+				updateSetNames(parsedData);
+
+				return true;
+			}
+			return false;
+		} catch {
+			return false;
+		}
+	}
+
+	const saveLocalSetNames = (newData) => {
+		localStorage.setItem("local-set-name-data", JSON.stringify(newData));
+	}
+
 	const retrieveNewSetNames = () => {
 		if (sets.length === 0) { return; }
+		if (checkLocalSetNames()) { return; }
 		fetch(WINDOW_LOCATION + "/get-set-names?school_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
 				(result) => {
-					let newSets = sets;
-					let changedSomething = false;
-
-					for (let i = 0; i < result.length; i++) {
-						if (newSets[i].id === result[i].set_id && newSets[i].set_name !== result[i].set_name) {
-							newSets[i].set_name = result[i].set_name;
-							changedSomething = true;
-						}
-					}
-
-					if (changedSomething) {
-						setSets(newSets);
-						saveLocalSets(newSets);
-					}
+					saveLocalSetNames(result);
+					updateSetNames(result);
 				},
 				// Note: it's important to handle errors here
 				// instead of a catch() block so that we don't swallow
@@ -470,6 +518,7 @@ const Viewer = (props) => {
 		}
 	}, [])
 
+	// Get audio!
 	useEffect(() => {
 		audio = new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token);
 		audio.load();
