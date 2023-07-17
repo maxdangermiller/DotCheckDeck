@@ -1,3 +1,5 @@
+# Taken from: https://gist.github.com/j178/345e7151e9c8133c778857601096745f
+
 import functools
 import hashlib
 

@@ -214,6 +214,7 @@ const Viewer = (props) => {
 
 				// console.log("Trying to use local Data", parsedData.length, sets.length)
 				if (parsedData.length < sets.length || sets.length === 0) {
+					setData(parsedData);
 					return false;
 				}
 				// console.log("USING LOCAL DATA!");
