@@ -494,6 +494,10 @@ class ShowModelView(SecureModelView):
 	form_excluded_columns = ('dots', )
 
 
+class SchoolModelView(SecureModelView):
+	form_excluded_columns = ('users', 'show_users', 'sets', 'dots', 'band_sections', 'set_names')
+
+
 admin.add_view(SecureModelView(Dot, db.session))
 admin.add_view(SecureModelView(SetName, db.session))
 admin.add_view(SecureModelView(Set, db.session))
@@ -501,7 +505,7 @@ admin.add_view(SecureModelView(ShowUser, db.session))
 admin.add_view(SecureModelView(User, db.session))
 admin.add_view(SecureModelView(BandSection, db.session))
 admin.add_view(ShowModelView(Show, db.session))
-admin.add_view(SecureModelView(School, db.session))
+admin.add_view(SchoolModelView(School, db.session))
 
 
 @app.route('/admin-logout', methods=["GET"])
