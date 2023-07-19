@@ -42,7 +42,7 @@ const Viewer = (props) => {
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [downloadingProgress, setDownloadingProgress] = useState(0);
 	
-	const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState();
+	const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState(-1);
 	const [curDatabaseSNTimestamp, setCurDatabaseSNTimestamp] = useState(-1);
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
@@ -248,7 +248,12 @@ const Viewer = (props) => {
 		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
 	}
 
-	const downloadPoints = (localData) => {
+	const downloadPoints = (localData, depth) => {
+		if (depth >= 20) {
+			console.log("REACHED MAX DEPTH!")
+			return; 
+		}
+
 		let useSetIndex = findFirstBufferHole(localData, sets);
 
 		// Don't do it again if we've already sent out a request and it's not pressing because it's already buffered
@@ -292,7 +297,7 @@ const Viewer = (props) => {
 				setSentRequest(false);
 				
 				// Recurse
-				downloadPoints(localData);
+				downloadPoints(dataBackup, depth + 1);
 			}).catch((error) => {
 				if (error.response && error.response.status === 401 || error.response.status === 400) {
 					// console.log(error.response)

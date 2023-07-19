@@ -60,7 +60,7 @@ const ViewerSideBar = (props) => {
                     <div style={{width: "100%"}}>
                         <h1 className='centerText' style={{textOverflow: "ellipsis"}}><strong>Name:</strong> {setName}</h1>
                         <h1 className='centerText'><strong>Measure:</strong> {curSetInfo["measure"]}</h1>
-                        <h1 className='centerText'><strong>Total Counts:</strong> 0</h1>
+                        <h1 className='centerText'><strong>Total Counts:</strong> {curSetInfo["total_counts"]}</h1>
                         <h1 className='centerText'><strong>Counts:</strong> {curSetInfo["counts"]}</h1>
                     </div> :
                     <div>

@@ -185,9 +185,11 @@ class Set(CacheableMixin, db.Model):
 	set_numb = db.Column(db.String(8), nullable=False)
 	measure = db.Column(db.String(16))
 	counts = db.Column(db.Integer, nullable=False)
+	total_counts = db.Column(db.Integer, nullable=True, default=0)
 	start_time_code = db.Column(db.Integer)
 	end_time_code = db.Column(db.Integer)
 	showIndex = db.Column(db.Integer, nullable=False, default=-1)
+	notes = db.Column(db.String(256), nullable=True, default="")
 
 	# Timestamps
 	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
@@ -282,6 +284,7 @@ class User(CacheableMixin, db.Model):
 	last_name = db.Column(db.String(64))
 
 	is_admin = db.Column(db.Boolean, default=False)
+	send_admin_email = db.Column(db.Boolean, default=False)
 
 	activated_date = db.Column(db.DateTime, default=None, nullable=True)
 	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
@@ -1402,6 +1405,7 @@ def getAllDotInfoForSet(show, set):
 		'setNumb': set.set_numb,
 		'setName': setName,
 		'counts': set.counts,
+		'total_counts': set.total_counts,
 		'start_time_code': set.start_time_code,
 		'end_time_code': set.end_time_code,
 		'index': set.showIndex,
