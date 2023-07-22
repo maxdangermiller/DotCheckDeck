@@ -4,6 +4,7 @@ import AdminUsersPage from './AdminComponents/UserPage/AdminUsersPage';
 import AdminSectionsPage from './AdminComponents/SectionPage/AdminSectionsPage';
 import AdminSetNamePage from './AdminComponents/SetNamePage/AdminSetNamePage';
 import AdminShowPage from './AdminComponents/ShowPage/AdminShowPage';
+import AdminSetsPage from './AdminComponents/SetPage/AdminSetsPage';
 import getApi from './getApi';
 
 import './Admin.css';
@@ -30,6 +31,10 @@ const Admin = (props) => {
 
         }
         if (menuIndex === 3) {
+            return (<AdminSetsPage token={token} sets={data.sets} setSets={setSets} />);
+
+        }
+        if (menuIndex === 4) {
             return (<AdminShowPage token={token} shows={data.shows} setShows={setShows}/>);
 
         }
@@ -42,6 +47,10 @@ const Admin = (props) => {
 
     const setSections = (sections) => {
         setData({...data, "sections": sections})
+    }
+
+    const setSets = (sections) => {
+        setData({...data, "sets": sections})
     }
 
     const setShows = (shows) => {
@@ -87,8 +96,9 @@ const Admin = (props) => {
                             <a className={getActiveClassName(0)} onClick={(e) => setMenuIndex(0)}>Users</a>
                             <a className={getActiveClassName(1)} onClick={(e) => setMenuIndex(1)}>Sections</a>
                             <a className={getActiveClassName(2)} onClick={(e) => setMenuIndex(2)}>Set Names</a>
-                            <a className={getActiveClassName(3)} onClick={(e) => setMenuIndex(3)}>Show Settings</a>
-                            <a className={getActiveClassName(4)} onClick={(e) => setMenuIndex(4)}>School Settings</a>
+                            <a className={getActiveClassName(3)} onClick={(e) => setMenuIndex(3)}>Sets</a>
+                            <a className={getActiveClassName(4)} onClick={(e) => setMenuIndex(4)}>Show Settings</a>
+                            <a className={getActiveClassName(5)} onClick={(e) => setMenuIndex(5)}>School Settings</a>
                            
                         </nav>
                     </nav>

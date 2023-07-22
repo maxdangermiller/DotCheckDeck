@@ -753,7 +753,14 @@ def addShowFileToDatabase(file, school, show):
 
 		for dot in dotSheet.dots:
 			if Set.query.filter(Set.set_numb==dot.setNumb, Set.show_id==show.id).first() is None:
-				_set = Set(set_numb=dot.setNumb, measure=dot.measure, counts=dot.counts, school_id=school.id, show_id=show.id)
+				_set = Set(
+					set_numb=dot.setNumb, 
+					measure=dot.measure, 
+					counts=dot.counts, 
+					total_counts=dot.counts, 
+					school_id=school.id, 
+					show_id=show.id
+				)
 				db.session.add(_set)
 				db.session.commit()
 			else:
@@ -1604,16 +1611,20 @@ class UpdateSetResource(Resource):
 		parser.add_argument('set_numb', type=str, default=None)
 		parser.add_argument('measure', type=str, default=None)
 		parser.add_argument('counts', type=str, default=None)
-		parser.add_argument('start_time_code', type=str, default=None)
-		parser.add_argument('end_time_code', type=str, default=None)
+		parser.add_argument('total_counts', type=int, default=None)
+		parser.add_argument('start_time_code', type=int, default=None)
+		parser.add_argument('end_time_code', type=int, default=None)
+		parser.add_argument('notes', type=str, default=None)
 		args = parser.parse_args()
 
 		id = args.get('id')
 		setNumb = args.get('set_numb')
 		measure = args.get('measure')
 		counts = args.get('counts')
+		total_counts = args.get('total_counts')
 		start_time_code = args.get('start_time_code')
 		end_time_code = args.get('end_time_code')
+		notes = args.get('notes')
 
 		set = Set.query.filter(Set.id == id).first()
 		show = Show.query.filter(Show.school_id == loggedInUser.school.id, Show.id == set.show_id).first()
@@ -1627,10 +1638,14 @@ class UpdateSetResource(Resource):
 			set.measure = measure
 		if counts is not None:
 			set.counts = counts
+		if total_counts is not None:
+			set.total_counts = total_counts
 		if start_time_code is not None:
 			set.start_time_code = start_time_code
 		if end_time_code is not None:
 			set.end_time_code = end_time_code
+		if notes is not None:
+			set.notes = notes
 		
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
@@ -2551,6 +2566,19 @@ if __name__ == "__main__":
 				sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
 				for set in sets:
 					set.showIndex = set.id - 1
+
+					db.session.commit()
+	
+		# Some database configuration, idk what tbh
+		if arg == "fix-things":
+			print("Configuring Show Indicies!")
+			rebuild = True
+			with app.app_context():
+				show = Show.query.filter().first()
+				sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
+				for set in sets:
+					set.notes = ""
+					set.total_counts = set.counts
 
 					db.session.commit()
 	
