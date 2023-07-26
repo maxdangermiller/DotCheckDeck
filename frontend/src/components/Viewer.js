@@ -24,6 +24,7 @@ const darkTheme = createTheme({
 
 let audio = null;
 let lastCheckedVersionTime = 0;
+const MIN_TIMESTAMP_INTERVAL = 30000;  // 30 seconds
 
 const Viewer = (props) => {
 	const [data, setData] = useState([]);
@@ -59,9 +60,9 @@ const Viewer = (props) => {
 	const setInput = useRef(null);
 
 	const getDatabaseVersion = () => {
-		// If we just updated less than 30 seconds ago, don't update
+		// If we just updated less than MIN_TIMESTAMP_INTERVAL seconds ago, don't update
 		let curTime = (new Date()).getTime();
-		if (curTime - lastCheckedVersionTime <= 30000) { return; }
+		if (curTime - lastCheckedVersionTime <= MIN_TIMESTAMP_INTERVAL) { return; }
 
 		fetch(WINDOW_LOCATION + "/database-version?school_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())

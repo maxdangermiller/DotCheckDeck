@@ -4,6 +4,7 @@ import IconButton from '@mui/material/IconButton';
 import './ViewerSideBar.css';
 import OptionsModal from './ViewerSideBarComponents/OptionsModal';
 import SetNameModel from './ViewerSideBarComponents/SetNameModel';
+import NotesModel from './ViewerSideBarComponents/NotesModel';
 import AudioProgressBar from './AdminComponents/TimelinePage/AudioProgressBar';
 import Spinner from './utils/Spinner';
 
@@ -24,6 +25,7 @@ const ViewerSideBar = (props) => {
 
     const [showSettings, setShowSettings] = useState(false);
     const [showEditSetName, setShowEditSetName] = useState(false);
+    const [showNotes, setShowNotes] = useState(false);
     const [tempCurSetInfo, setTempCurSetInfo] = useState({});
 
     const openEditSetName = () => {
@@ -53,23 +55,24 @@ const ViewerSideBar = (props) => {
                         <Spinner />
                     </div>
                 }
-                
-                {
-                    // Add Other conditions here
-                    !loading && curSetInfo !== null ?
-                    <div style={{width: "100%"}}>
-                        <h1 className='centerText' style={{textOverflow: "ellipsis"}}><strong>Name:</strong> {setName}</h1>
-                        <h1 className='centerText'><strong>Measure:</strong> {curSetInfo["measure"]}</h1>
-                        <h1 className='centerText'><strong>Total Counts:</strong> {curSetInfo["total_counts"]}</h1>
-                        <h1 className='centerText'><strong>Counts:</strong> {curSetInfo["counts"]}</h1>
-                    </div> :
-                    <div>
-                        <h1 className='centerText'><strong>Name:</strong></h1>
-                        <h1 className='centerText'><strong>Measure:</strong></h1>
-                        <h1 className='centerText'><strong>Total Counts:</strong></h1>
-                        <h1 className='centerText'><strong>Counts:</strong></h1>
-                    </div>
-                }
+                <div onClick={(e) => setShowNotes(true)} style={{cursor: "pointer"}}>
+                    {
+                        // Add Other conditions here
+                        !loading && curSetInfo !== null ?
+                        <div style={{width: "100%"}}>
+                            <h1 className='centerText' style={{textOverflow: "ellipsis"}}><strong>Name:</strong> {setName}</h1>
+                            <h1 className='centerText'><strong>Measure:</strong> {curSetInfo["measure"]}</h1>
+                            <h1 className='centerText'><strong>Total Counts:</strong> {curSetInfo["total_counts"]}</h1>
+                            <h1 className='centerText'><strong>Counts:</strong> {curSetInfo["counts"]}</h1>
+                        </div> :
+                        <div>
+                            <h1 className='centerText'><strong>Name:</strong></h1>
+                            <h1 className='centerText'><strong>Measure:</strong></h1>
+                            <h1 className='centerText'><strong>Total Counts:</strong></h1>
+                            <h1 className='centerText'><strong>Counts:</strong></h1>
+                        </div>
+                    }
+                </div>
                 
             </div>
 
@@ -90,6 +93,12 @@ const ViewerSideBar = (props) => {
                 setCurSetInfo={setTempCurSetInfo}
                 sets={sets}
                 setSets={setSets}
+            />
+
+            <NotesModel 
+                show = {showNotes}
+                setShow = {setShowNotes}
+                curSetInfo = {curSetInfo}
             />
             
 

@@ -1171,10 +1171,11 @@ def notifyAdminOfNewUser(school_id:int, added_user:User):
 	emails = list()
 
 	for user in users:
-		emails.append({
-			"address": user.email,
-			"displayName": f"{user.first_name} {user.last_name}"
-		})
+		if user.send_admin_email is True:
+			emails.append({
+				"address": user.email,
+				"displayName": f"{user.first_name} {user.last_name}"
+			})
 	
 	try:
 
@@ -1833,6 +1834,8 @@ class CreateUserResource(Resource):
 		db.session.add(newUser)
 		db.session.commit()
 
+		notifyAdminOfNewUser(school_id, newUser)
+
 		return "Successfully Created User", 201
 
 	@jwt_required()
@@ -1967,6 +1970,8 @@ def activateInvitedUser():
 	db.session.add(newUser)
 	db.session.commit()
 
+	notifyAdminOfNewUser(school_id, newUser)
+
 	return "Created User.", 201
 
 
@@ -1993,7 +1998,6 @@ class InviteUserResource(Resource):
 		sendInviteUserEmail(args.get('email'), args.get('is_admin'), activeUser.school_id)
 
 		return "Sent.", 200
-
 
 
 class GetDatabaseResource(Resource):
