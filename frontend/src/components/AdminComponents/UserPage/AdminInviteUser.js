@@ -32,7 +32,8 @@ const AdminInviteUser = (props) => {
             .then(res => res.json())
             .then(
                 (result) => {
-                    console.log(result)
+                    console.log(result);
+                    setShow(false);
                 },
                 // Note: it's important to handle errors here
                 // instead of a catch() block so that we don't swallow
