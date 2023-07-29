@@ -11,7 +11,23 @@ const NotesModel = (props) => {
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
 
-    console.log(curSetInfo)
+    if (curSetInfo === null) {
+        return (
+            <Modal show={show} onHide={handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Notes for Set UNDEFINED</Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{minHeight: "20vh"}}>
+                    UNDEFINED
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
 
     return (
         <Modal show={show} onHide={handleClose}>

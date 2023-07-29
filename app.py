@@ -21,6 +21,11 @@ import random
 import math
 from cryptography.fernet import Fernet
 
+# Redis Queue
+from rq import Queue
+from rq.job import Job
+from worker import conn
+
 from cache import regions, CacheableMixin, query_callable
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -69,6 +74,7 @@ ma = Marshmallow(app)
 api = Api(app)
 jwt = JWTManager(app)
 admin = Admin(app, name='Dot Check Deck', template_mode='bootstrap3')
+queue = Queue(connection=conn)
 
 CORS(app)
 
@@ -1451,6 +1457,28 @@ def getAllDotsWithoutBuffer(schoolCode):
 	return output
 
 
+def updateSetInDotsCache(show):
+	print("UPDATING CACHE!")
+	try:
+		with open(f"cache/dots/{show.id}.json", "r") as file:
+			data = json.load(file)
+
+			curDatabaseVersion = show.last_update
+
+			for i in range(len(data)):
+				# If it's out of date, then we're gonna screw it (update it)
+				if data[i]["update_timestamp"] != curDatabaseVersion:
+					
+					setObj = Set.query.filter(Set.id == data[i]["setID"]).first()
+					data[i] = getAllDotInfoForSet(show, setObj)
+			
+			with open(f"cache/dots/{show.id}.json", "w") as outfile:
+					json.dump(data, outfile, indent=4)
+
+	except:
+		return getAllDotsWithoutBuffer(show.code)
+
+
 def getBufferedDots(showCode, middleSet, bufferSize):
 	# REQUIRE A SCHOOL CODE
 	if showCode is None:
@@ -1488,20 +1516,20 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 
 			# var to store all of the sets
 			output = []
-			changedSomething = False
+			foundSomething = False
 			
 			for i in range(startIndex, endIndex + 1):
 				# If it's out of date, then we're gonna screw it (update it)
-				if data[i]["update_timestamp"] != curDatabaseVersion:
-					setObj = Set.query.filter(Set.id == data[i]["setID"]).first()
-					data[i] = getAllDotInfoForSet(show, setObj)
-					changedSomething = True
+				if not foundSomething and data[i]["update_timestamp"] != curDatabaseVersion:
+					job = queue.enqueue_call(
+						func=updateSetInDotsCache, args=(show), result_ttl=5000
+					)
+
+					print(job.get_id())
+
+					foundSomething = True
 
 				output.append(data[i])
-			
-			if changedSomething:
-				with open(f"cache/dots/{show.id}.json", "w") as outfile:
-					json.dump(data, outfile, indent=4)
 				
 			return output, 200
 	except:

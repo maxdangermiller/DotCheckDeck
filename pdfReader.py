@@ -25,8 +25,12 @@ def goThroughTable(regions_raw) -> list:
 
 		# Looks like this: "Performer:Symbol: FLabel: 1"
 		perfFormatted = headerData[0]['text'].replace(":", ": ").replace("Label", "  Label")  # The header comes as one line but needs some formatting
-		performerSymbol = perfFormatted[perfFormatted.index("Symbol") + 9:perfFormatted.index("Label")].replace(" ", "")
-		performerLabel = perfFormatted[perfFormatted.index("Label") + 6:].replace(" ", "")
+		if "(unnamed)" not in perfFormatted:
+			performerSymbol = perfFormatted[perfFormatted.index("Symbol") + 9:perfFormatted.index("Label")].replace(" ", "")
+			performerLabel = perfFormatted[perfFormatted.index("Label") + 6:].replace(" ", "")
+		else:
+			performerSymbol = perfFormatted[perfFormatted.index("Symbol") + 9:].replace(" ", "")
+			performerLabel = "(unlabeled)"
 
 		# print(f"Reading:  \"{performerSymbol}: {performerLabel}\"")
 
