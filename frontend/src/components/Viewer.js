@@ -182,7 +182,7 @@ const Viewer = (props) => {
 					}
 				}
 				console.log("USING LOCAL SETS!");
-				console.log(parsedData);
+				console.log(parsedSets);
 				setSets(parsedSets);
 				setCurSetInfo(parsedSets[0]);
 
