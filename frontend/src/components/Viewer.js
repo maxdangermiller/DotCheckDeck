@@ -171,6 +171,7 @@ const Viewer = (props) => {
 				let parsedSets = JSON.parse(localSets);
 
 				if (parsedSets === undefined) { return false; }
+				if (parsedSets.length === 0) { return false; }
 
 				// Check version number
 				for (let i = 0; i < parsedSets.length; i++) {
