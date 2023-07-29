@@ -178,7 +178,7 @@ const Viewer = (props) => {
 						return false;
 					}
 				}
-				// console.log("USING LOCAL DATA!");
+				console.log("USING LOCAL SETS!");
 				// console.log(parsedData);
 				setSets(parsedSets);
 				setCurSetInfo(parsedSets[0]);
@@ -213,13 +213,11 @@ const Viewer = (props) => {
 					}
 				}
 
-				// console.log("Trying to use local Data", parsedData.length, sets.length)
+				console.log("USING LOCAL DATA!");
 				if (parsedData.length < sets.length || sets.length === 0) {
 					setData(parsedData);
 					return false;
 				}
-				// console.log("USING LOCAL DATA!");
-				// console.log(parsedData);
 				setData(parsedData);
 
 				return true;

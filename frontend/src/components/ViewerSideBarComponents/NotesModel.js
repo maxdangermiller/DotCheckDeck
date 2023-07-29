@@ -11,7 +11,7 @@ const NotesModel = (props) => {
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
 
-    if (curSetInfo === null) {
+    if (curSetInfo === null || curSetInfo === undefined) {
         return (
             <Modal show={show} onHide={handleClose}>
                 <Modal.Header closeButton>
