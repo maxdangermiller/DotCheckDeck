@@ -58,7 +58,7 @@ const ViewerSideBar = (props) => {
                 <div onClick={(e) => setShowNotes(true)} style={{cursor: "pointer"}}>
                     {
                         // Add Other conditions here
-                        !loading && curSetInfo !== null ?
+                        !loading && curSetInfo !== null && curSetInfo !== undefined?
                         <div style={{width: "100%"}}>
                             <h1 className='centerText' style={{textOverflow: "ellipsis"}}><strong>Name:</strong> {setName}</h1>
                             <h1 className='centerText'><strong>Measure:</strong> {curSetInfo["measure"]}</h1>

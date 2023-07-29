@@ -1,3 +1,4 @@
+# https://realpython.com/flask-by-example-implementing-a-redis-task-queue/
 import os
 
 import redis
