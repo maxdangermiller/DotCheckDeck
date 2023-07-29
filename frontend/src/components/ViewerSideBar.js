@@ -38,6 +38,8 @@ const ViewerSideBar = (props) => {
         setName = curSetInfo["set_name"];
     }
 
+    console.log(curSetInfo)
+
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "35vh", width: "100%"}}>
