@@ -30,6 +30,7 @@ function App() {
 	const { token, refToken, setRefToken, removeToken, setToken } = useToken();
 	const [ userData, setUserData ] = useState({});
 	const [ schoolCode, setSchoolCode ] = useState("");
+	const [ showID, setShowID ] = useState(-1);
 	const [ isBasic, setIsBasic ] = useState(false);
 
 	const refreshToken = () => {
@@ -51,6 +52,7 @@ function App() {
 							setToken(response.data.access_token);
 							setUserData(response.data.user);
 							setSchoolCode(response.data.school_code);
+							setShowID(response.data.show_id)
 						}
 	
 					}).catch((error) => {
@@ -132,7 +134,7 @@ function App() {
 						? <Navigate to="/login" />
 						: isBasic
 							? <BasicViewer token={token} schoolCode={schoolCode} />
-							: <Viewer token={token} schoolCode={schoolCode} userData={userData}/>
+							: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID}/>
 					} />
 					<Route path="/activate/:join_code" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
@@ -152,6 +154,7 @@ function App() {
 							setRefToken={setRefToken} 
 							setSchoolCode={setSchoolCode} 
 							setUserData={setUserData}
+							setShowID={setShowID}
 						/>
 					} />
 					<Route path="/admin" exact element={

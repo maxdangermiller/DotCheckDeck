@@ -6,7 +6,7 @@ import getApi from '../getApi';
 const WINDOW_LOCATION = getApi();
 
 const UserSectionSelection = (props) => {
-    const {data, curSet, schoolCode, token, userData, ...rest} = props;
+    const {data, curSet, schoolCode, token, userData, showID, ...rest} = props;
 
     const [show, setShow] = useState(true);
     const [sections, setSections] = useState(null);
@@ -16,7 +16,8 @@ const UserSectionSelection = (props) => {
     const handleShow = () => setShow(true);
 
     useEffect(() => {
-        if (getShowUser() !== undefined && getShowUser().section_id !== null) {
+        console.log(getShowUser())
+        if (getShowUser() === undefined || getShowUser().section_id !== null) {
             setShow(false);
             return;
         }
@@ -42,12 +43,14 @@ const UserSectionSelection = (props) => {
         .catch((error) => {
             alert(error);
         });
-    }, [userData]);
+    }, [userData, showID]);
 
     const getShowUser = () => {
+        console.log(showID)
         try {
             for (let i = 0; i < userData.show_users.length; i++) {
-                if (userData.show_users[i].show_id === userData.show.id) {
+                if (userData.show_users[i].show_id === showID) {
+                    console.log(userData.show_users[i])
                     return userData.show_users[i];
                 }
             }
@@ -59,6 +62,7 @@ const UserSectionSelection = (props) => {
 
     const update = () => {
         if (section.id === null || section.id === undefined) { return; }
+        if (getShowUser() === undefined) { return; }
         fetch(WINDOW_LOCATION + '/update-user-section', {
             method: 'POST',
             body: JSON.stringify({
@@ -128,7 +132,7 @@ const UserSectionSelection = (props) => {
                     
                     options={getSectionOptions()}
                     sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
-                    renderInput={(params) => <TextField {...params} label="Select Your Label" />}
+                    renderInput={(params) => <TextField {...params} label="Select Your Section" />}
                     onChange={(event, newValue) => setSection(newValue)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     value={section}

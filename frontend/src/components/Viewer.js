@@ -331,7 +331,7 @@ const Viewer = (props) => {
 		setIsDownloading(true);
 		setDownloadingProgress(0);
 
-		downloadPoints([]);
+		downloadPoints([], 0);
 
 	}
 
@@ -697,6 +697,7 @@ const Viewer = (props) => {
 					schoolCode={props.schoolCode} 
 					token={props.token} 
 					userData={props.userData}
+					showID={props.showID}
 				/>
 			</div>
 		);
@@ -755,6 +756,7 @@ const Viewer = (props) => {
 				schoolCode={props.schoolCode} 
 				token={props.token} 
 				userData={props.userData}
+				showID={props.showID}
 			/>
 		</div>
 	);

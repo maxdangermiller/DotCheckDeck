@@ -21,10 +21,10 @@ import random
 import math
 from cryptography.fernet import Fernet
 
-# Redis Queue
-from rq import Queue
-from rq.job import Job
-from worker import conn
+# TODO: Redis Queue
+# from rq import Queue
+# from rq.job import Job
+# from worker import conn
 
 from cache import regions, CacheableMixin, query_callable
 
@@ -74,7 +74,7 @@ ma = Marshmallow(app)
 api = Api(app)
 jwt = JWTManager(app)
 admin = Admin(app, name='Dot Check Deck', template_mode='bootstrap3')
-queue = Queue(connection=conn)
+# TODO: queue = Queue(connection=conn)
 
 CORS(app)
 
@@ -563,6 +563,7 @@ def create_token():
 	userString = {}
 	showString = {}
 	schoolCode = ""
+	showID = -1
 	if user is not None:
 		userString = user_schema.dump(user)
 
@@ -572,6 +573,7 @@ def create_token():
 
 			if userShow is not None:
 				schoolCode = userShow.code
+				showID = userShow.id
 
 				showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
 				if showUser is not None:
@@ -581,7 +583,8 @@ def create_token():
 		"access_token": access_token, 
 		"refresh_token": refresh_token, 
 		"user": mergeJsonDicts(userString, showString),
-		"school_code": schoolCode
+		"school_code": schoolCode,
+		"show_id": showID
 	}
 	return response
 
@@ -628,6 +631,7 @@ def get_jwt():
 		userString = {}
 		showString = {}
 		schoolCode = ""
+		showID = -1
 		if user is not None:
 			userString = user_schema.dump(user)
 
@@ -641,6 +645,7 @@ def get_jwt():
 
 				if userShow is not None:
 					schoolCode = userShow.code
+					showID = userShow.id
 
 					showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
 					if showUser is not None:
@@ -648,6 +653,12 @@ def get_jwt():
 
 
 		response = {"access_token": access_token, "user": mergeJsonDicts(showString, userString), "school_code": schoolCode}
+		response = {
+			"access_token": access_token, 
+			"user": mergeJsonDicts(userString, showString),
+			"school_code": schoolCode,
+			"show_id": showID
+		}
 		# print(response)
 		return response, 202
 	except (RuntimeError, KeyError):
@@ -827,7 +838,11 @@ def upload_file():
 			fileLocation = "./showPDFs/" + file.filename
 			file.save(fileLocation)
 			addShowFileToDatabase(fileLocation, school, show)
-		elif fileKey == "mp3-file" and file.filename.rsplit('.', 1)[1] == ".mp3":
+		elif fileKey == "mp3-file" and file.filename.rsplit('.', 1)[1] == "mp3":
+			doesExist = os.path.exists(f"./static/{show.id}")
+			if not doesExist:
+				os.makedirs(f"./static/{show.id}")
+				
 			fileLocation = f"./static/{show.id}/audio.mp3"
 			file.save(fileLocation)
 
@@ -1516,6 +1531,21 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 
 			# var to store all of the sets
 			output = []
+			changedSomething = False
+			
+			for i in range(startIndex, endIndex + 1):
+				# If it's out of date, then we're gonna screw it (update it)
+				if data[i]["update_timestamp"] != curDatabaseVersion:
+					setObj = Set.query.filter(Set.id == data[i]["setID"]).first()
+					data[i] = getAllDotInfoForSet(show, setObj)
+					changedSomething = True
+
+				output.append(data[i])
+			
+			if changedSomething:
+				with open(f"cache/dots/{show.id}.json", "w") as outfile:
+					json.dump(data, outfile, indent=4)
+			"""
 			foundSomething = False
 			
 			for i in range(startIndex, endIndex + 1):
@@ -1530,6 +1560,7 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 					foundSomething = True
 
 				output.append(data[i])
+			"""
 				
 			return output, 200
 	except:
@@ -1816,7 +1847,8 @@ class UpdateUserSectionResource(Resource):
 
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
-		show = Show.query.filter(Show.id == showUser.show_id).first().changeUpdateTime()
+		show = Show.query.filter(Show.id == showUser.show_id).first()
+		show.changeUpdateTime()
 
 		updateBufferWithNewUser(loggedInUser, showUser, show)
 		
@@ -2670,6 +2702,19 @@ if __name__ == "__main__":
 		# Use Default Config
 		else:
 			app.run(debug=True)
+
+"""
+Startup Command
+
+python app.py
+
+cd frontend
+npm start
+
+python worker.py
+
+redis-server
+"""
 
 """
 AFTER DEPLOY COMMANDS TO INSTALL JAVA

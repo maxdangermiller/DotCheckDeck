@@ -40,6 +40,7 @@ const Login = (props) => {
 				props.setRefToken(response.data.refresh_token);
 				props.setSchoolCode(response.data.school_code);
 				props.setUserData(response.data.user);
+				props.setShowID(response.data.show_id);
 				// window.location.href = "/editor";
 			}).catch((error) => {
 				if (error.response) {

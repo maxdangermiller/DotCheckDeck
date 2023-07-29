@@ -230,7 +230,8 @@ class Cache(object):
         try:
             self.regions[self.label].delete(key)
         except:
-            print("CACHE DOESN'T EXIST")
+            pass
+            # print("CACHE DOESN'T EXIST")
 
 
     @memoize
