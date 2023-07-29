@@ -170,6 +170,8 @@ const Viewer = (props) => {
 			if (localSets !== "" && localSets !== null) {
 				let parsedSets = JSON.parse(localSets);
 
+				if (parsedSets === undefined) { return false; }
+
 				// Check version number
 				for (let i = 0; i < parsedSets.length; i++) {
 					let timestamp = parsedSets[i].update_timestamp;
