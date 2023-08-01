@@ -101,6 +101,15 @@ function App() {
 		return false;
 	}
 
+	const isOnActivatePage = () => {
+		let path = window.location.pathname;
+		if (path.length < 9) { return false; }
+
+		if (path.substring(0, 9) !== "/activate") { return false; }
+
+		return true;
+	}
+
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 	const isPWAAdded = window.matchMedia('(display-mode: standalone)').matches;
 
@@ -124,7 +133,7 @@ function App() {
 					setIsBasic={setIsBasic}
 				/>
 				{
-					isMobile && !isPWAAdded ?
+					isMobile && !isPWAAdded && !isOnActivatePage() ?
 					<PWAInstructions />
 					: null
 				}

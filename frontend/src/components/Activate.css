@@ -23,6 +23,11 @@
     border-width: 0.125rem !important;
 }
 
+.activateFormHeight {
+    min-height: min(80vh, 120vw);
+    overflow: auto;
+}
+
 .customCardBody {
     height: 60%;
     overflow-x: hidden;

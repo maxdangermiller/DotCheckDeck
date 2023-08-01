@@ -309,9 +309,9 @@ const Activate = (props) => {
 	return(
 		<ThemeProvider theme={darkTheme}><section className="gradient-custom">
 			<div className="container py-5 h-100" style={{width: "100%"}}>
-				<div className="row d-flex justify-content-center align-items-center h-100" style={{width: "100%"}}>
-					<div className="col-14 col-md-10 col-lg-8 col-xl-6">
-						<div className="card bg-dark text-white" style={{borderRadius: '1rem', height: "80vh"}}>
+				<div className="row d-flex justify-content-center align-items-center">
+					<div className="col-14 col-md-10 col-lg-8 col-xl-6 activateFormHeight">
+						<div className="card bg-dark text-white activateFormHeight" style={{borderRadius: '1rem'}}>
 							<div className="card-body p-5 text-center h-100">
                                 <h2 className="fw-bold mb-2 text-uppercase">Activate</h2>
 								<p className="text-white-50 mb-5">Activate an account with a school!</p>

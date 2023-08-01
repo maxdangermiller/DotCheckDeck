@@ -30,7 +30,7 @@ def goThroughTable(regions_raw) -> list:
 			performerLabel = perfFormatted[perfFormatted.index("Label") + 6:].replace(" ", "")
 		else:
 			performerSymbol = perfFormatted[perfFormatted.index("Symbol") + 9:].replace(" ", "")
-			performerLabel = "(unlabeled)"
+			performerLabel = "N/A"
 
 		# print(f"Reading:  \"{performerSymbol}: {performerLabel}\"")
 
