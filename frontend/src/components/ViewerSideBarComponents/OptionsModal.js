@@ -33,6 +33,10 @@ const OptionsModal = (props) => {
         setUserOptions({...userOptions,  "showMovementBrackets": value});
     }
 
+    const setUseCollegeHash = (value) => {
+        setUserOptions({...userOptions,  "useCollegeHash": value});
+    }
+
     const setUseActualSetLength = (value) => {
         setUserOptions({...userOptions,  "useActualSetLength": value});
     }
@@ -136,6 +140,19 @@ const OptionsModal = (props) => {
                     />
                     <label className="form-check-label ">
                         Show Movement Brackets
+                    </label>
+                </div>
+                <div className="form-check">
+                    <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        value="" 
+                        onChange={() => setUseCollegeHash(!userOptions.useCollegeHash)} 
+                        checked={userOptions.useCollegeHash} 
+                        disabled={userOptions.highlightUser === null}
+                    />
+                    <label className="form-check-label ">
+                        Use College Hash
                     </label>
                 </div>
                 <div className="form-check">

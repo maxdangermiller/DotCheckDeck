@@ -106,12 +106,51 @@ const Canvas = props => {
         };
 
         // Takes the string of the hash and converts it to a percentage
-        const hashRatioConvert = (hash) => {
+        const hashRatioConvert = (hash, useCollegeHash) => {
             if (hash == "Front side") { return 1; }
-            if (hash == "Front Hash") { return FRONT_HASH_RATIO; }
-            if (hash == "Back Hash") { return BACK_HASH_RATIO; }
+            if (hash == "Front Hash") { 
+                if (useCollegeHash) {
+                    return FRONT_COLLAGE_HASH_RATIO;
+                }
+                return FRONT_HASH_RATIO; 
+            }
+            if (hash == "Back Hash") {
+                if (useCollegeHash) {
+                    return BACK_COLLAGE_HASH_RATIO;
+                }
+                return BACK_HASH_RATIO;
+            }
 
             return 0;
+        }
+
+        const hashStepsCorrect = (steps, hash, hashY, altHashY, y) => {
+            if (!userOptions.useCollegeHash) { return steps; }
+
+            if (hash == "Front Hash") { 
+                // Past Alt Hash
+                if (altHashY - y >= 0) {
+                    return Math.abs(steps - 4);
+                }
+                // Between Alt Hash and Hash
+                if (hashY - y >= 0) {
+                    return 4 - steps;
+                }
+                // Before Hash
+                return steps + 4;
+            }
+            if (hash == "Back Hash") {
+                // Past Alt Hash
+                if (altHashY - y <= 0) {
+                    return Math.abs(steps - 4);
+                }
+                // Between Alt Hash and Hash
+                if (hashY - y <= 0) {
+                    return 4 - steps;
+                }
+                // Before Hash
+                return steps + 4;
+            }
         }
 
         const drawTextBetween = (x, y, maxWidth, maxHeight, text, color) => {
@@ -185,9 +224,11 @@ const Canvas = props => {
             if (dot === null) { return; }
             // Find the cords of the closest line and hash
             const lineRatio = sideLineRatioConvert( dot["side"], dot["line"] );
-            const hashRatio = hashRatioConvert(dot["use_hash"]);
+            const hashRatio = hashRatioConvert(dot["use_hash"], userOptions.useCollegeHash);
+            const hashRatioHS = hashRatioConvert(dot["use_hash"], false);
             const lineX = lineRatio * canvas.width;
             const hashY = hashRatio * canvas.height;
+            const hashY_HS = hashRatioHS * canvas.height;
 
             // console.log("Drawing Brackets: " + lineRatio + " : " + lineX)
 
@@ -228,11 +269,7 @@ const Canvas = props => {
                 context.lineTo(x, useY + DASH_LENGTH);
 
                 // Draw text
-                const maxWidth = Math.max(Math.abs(lineX - x), canvas.width * 0.04);
-                const centerX = (lineX - x) / 2 + x;
-                // drawTextBetween(centerX, textY, maxWidth, TEXT_OFFSET, dot["steps"], HIGHLIGHT_USER_COLOR);
-
-                drawMovementBracketText(lineX, useY, x, useY, xDirection, 0, dot["steps"], HIGHLIGHT_USER_COLOR);
+                drawMovementBracketText(lineX, useY, x, useY, xDirection, 0, dot.steps, HIGHLIGHT_USER_COLOR);
             }
 
             if (y !== hashY) {
@@ -262,14 +299,10 @@ const Canvas = props => {
                 context.moveTo(useX + DASH_LENGTH, y);
                 context.lineTo(useX - DASH_LENGTH, y);
 
+                let steps = hashStepsCorrect(dot.fb_steps, dot.use_hash, hashY_HS, hashY, yDirection);
+
                 // Draw text
-                // drawTextBetween(textXStart, textXEnd, (y - hashY) + hashY, dot["fbSteps"], HIGHLIGHT_USER_COLOR, 4);
-                const maxHeight = Math.max(Math.abs(hashY - y), canvas.width * 0.04);
-                const textY = (hashY - y) / 2 + y;
-
-                // drawTextBetween(textX, textY, TEXT_OFFSET * 3, maxHeight, dot["fbSteps"], HIGHLIGHT_USER_COLOR);
-
-                drawMovementBracketText(useX, hashY, useX, y, 0, yDirection, dot["fb_steps"], HIGHLIGHT_USER_COLOR);
+                drawMovementBracketText(useX, hashY, useX, y, 0, yDirection, steps, HIGHLIGHT_USER_COLOR);
             }
 
             context.stroke();

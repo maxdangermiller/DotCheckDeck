@@ -54,7 +54,7 @@ const Viewer = (props) => {
 		"showMovementBrackets": false, "highlightUser": null,
 		"moveSpeed": 10, "useActualSetLength": false,
 		"dimOtherUsers": false, "showCollegeHash": true,
-		"followingUser": false
+		"followingUser": false, "useCollegeHash": false
 	});
 
 	const setInput = useRef(null);
@@ -692,6 +692,7 @@ const Viewer = (props) => {
 			<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
 				<h1>Rotate Please</h1>
 				<h2>or switch to basic mode</h2>
+				<button className='btn btn-primary' onClick={(e) => props.setIsBasic(true)}>Open Basic</button>
 				<UserSectionSelection 
 					data={data} 
 					curSet={curSet} 
