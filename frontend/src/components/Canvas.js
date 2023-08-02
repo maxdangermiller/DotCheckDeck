@@ -142,15 +142,17 @@ const Canvas = props => {
             if (hash == "Back Hash") {
                 // Past Alt Hash
                 if (altHashY - y <= 0) {
-                    return Math.abs(steps - 4);
+                    return steps + 4;
                 }
                 // Between Alt Hash and Hash
                 if (hashY - y <= 0) {
                     return 4 - steps;
                 }
                 // Before Hash
-                return steps + 4;
+                return Math.abs(steps - 4);
             }
+
+            return steps;
         }
 
         const drawTextBetween = (x, y, maxWidth, maxHeight, text, color) => {
