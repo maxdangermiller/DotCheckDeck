@@ -127,6 +127,8 @@ const Canvas = props => {
         const hashStepsCorrect = (steps, hash, hashY, altHashY, y) => {
             if (!userOptions.useCollegeHash) { return steps; }
 
+            // console.log(hashY, altHashY, y)
+
             if (hash == "Front Hash") { 
                 // Past Alt Hash
                 if (altHashY - y >= 0) {
@@ -141,15 +143,15 @@ const Canvas = props => {
             }
             if (hash == "Back Hash") {
                 // Past Alt Hash
-                if (altHashY - y <= 0) {
+                if (hashY - y >= 0) {
                     return steps + 4;
                 }
                 // Between Alt Hash and Hash
-                if (hashY - y <= 0) {
+                if (altHashY - y >= 0) {
                     return 4 - steps;
                 }
                 // Before Hash
-                return Math.abs(steps - 4);
+                return steps - 4;
             }
 
             return steps;
@@ -301,7 +303,7 @@ const Canvas = props => {
                 context.moveTo(useX + DASH_LENGTH, y);
                 context.lineTo(useX - DASH_LENGTH, y);
 
-                let steps = hashStepsCorrect(dot.fb_steps, dot.use_hash, hashY_HS, hashY, yDirection);
+                let steps = hashStepsCorrect(dot.fb_steps, dot.use_hash, hashY_HS, hashY, y);
 
                 // Draw text
                 drawMovementBracketText(useX, hashY, useX, y, 0, yDirection, steps, HIGHLIGHT_USER_COLOR);
@@ -1118,6 +1120,11 @@ const Canvas = props => {
                     if (dot["userID"] !== lastDot["userID"]) { 
                         // console.log("FAIL! Labels don't match between sets in animation. Attempting to fix."); 
                         lastDot = getMatchingLabel(lastSetData, dot["userID"]);
+
+                        // If we didn't find the last dot
+                        if (lastDot === undefined) {
+                            continue;
+                        }
 
                     }
                     

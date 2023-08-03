@@ -123,7 +123,7 @@ const BasicViewer = (props) => {
             let fbDirection = dot.fb_direction === "Front" ? "in front of" : dot.fb_direction;
             return (
                 <strong>
-                {dot.fb_steps} steps {fbDirection} {dot.use_hash}
+                {dot.fb_steps} steps {fbDirection} {dot.use_hash} (HS)
                 </strong>
             );
         }

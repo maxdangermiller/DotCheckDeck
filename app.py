@@ -183,8 +183,8 @@ class Set(CacheableMixin, db.Model):
 	# Relationships
 	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	set_names = db.relationship('SetName', backref='set')
-	dots = db.relationship('Dot', backref='set')
+	set_names = db.relationship('SetName', cascade="all,delete", backref='set')
+	dots = db.relationship('Dot', cascade="all,delete", backref='set')
 
 
 	# Data
@@ -219,8 +219,8 @@ class BandSection(CacheableMixin, db.Model):
 	# Relationships
 	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	show_users = db.relationship('ShowUser', backref='band_section')
-	set_names = db.relationship('SetName', backref='band_section')
+	show_users = db.relationship('ShowUser', cascade="all,delete", backref='band_section')
+	set_names = db.relationship('SetName', cascade="all,delete", backref='band_section')
 
 	# Data
 	name = db.Column(db.String(32), default="default")
@@ -252,7 +252,7 @@ class ShowUser(CacheableMixin, db.Model):
 	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
 	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 	section_id = db.Column(db.Integer, db.ForeignKey('band_section.id'))
-	dots = db.relationship('Dot', backref='show_user')
+	dots = db.relationship('Dot', cascade="all,delete", backref='show_user')
 
 	# Data
 	symbol = db.Column(db.String(16))
@@ -281,7 +281,7 @@ class User(CacheableMixin, db.Model):
 
 	# Relationships
 	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_users = db.relationship('ShowUser', backref='user')
+	show_users = db.relationship('ShowUser', cascade="all,delete", backref='user')
 
 	# Data
 	email = db.Column(db.String(128), unique=True)
@@ -368,14 +368,14 @@ class School(CacheableMixin, db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 
 	# Relationships
-	shows = db.relationship('Show', backref='school')
-	users = db.relationship('User', backref='school')
+	shows = db.relationship('Show', cascade="all,delete", backref='school')
+	users = db.relationship('User', cascade="all,delete", backref='school')
 
-	show_users = db.relationship('ShowUser', backref='school')
-	sets = db.relationship('Set', backref='school')
-	dots = db.relationship('Dot', backref='school')
-	band_sections = db.relationship('BandSection', backref='school')
-	set_names = db.relationship('SetName', backref='school')
+	show_users = db.relationship('ShowUser', cascade="all,delete", backref='school')
+	sets = db.relationship('Set', cascade="all,delete", backref='school')
+	dots = db.relationship('Dot', cascade="all,delete", backref='school')
+	band_sections = db.relationship('BandSection', cascade="all,delete", backref='school')
+	set_names = db.relationship('SetName', cascade="all,delete", backref='school')
 
 
 	# Data
@@ -842,7 +842,7 @@ def upload_file():
 			doesExist = os.path.exists(f"./static/{show.id}")
 			if not doesExist:
 				os.makedirs(f"./static/{show.id}")
-				
+
 			fileLocation = f"./static/{show.id}/audio.mp3"
 			file.save(fileLocation)
 
