@@ -563,9 +563,9 @@ const Viewer = (props) => {
 		
 		if (props.userData.label !== undefined) {
 			console.log(props.userData)
-			setUserOptions({...parsedData,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}});
+			setUserOptions({...parsedData,  "highlightUser": {"id": props.userData.id, "label": props.userData.label}, "followingUser": false});
 		} else {
-			setUserOptions({...parsedData,  "highlightUser": null});
+			setUserOptions({...parsedData,  "highlightUser": null, "followingUser": false});
 		}
 	}, [props.userData])
 
