@@ -40,7 +40,7 @@ const ViewerSideBar = (props) => {
 
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
-            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "35vh", width: "100%"}}>
+            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "35vh", width: "100%", maxWidth:"20vw"}}>
                 <h1 className='viewerSideBarHeader'>Current Set:</h1>
                 {
                     !loading ?
@@ -55,7 +55,7 @@ const ViewerSideBar = (props) => {
                         <Spinner />
                     </div>
                 }
-                <div onClick={(e) => setShowNotes(true)} style={{cursor: "pointer"}}>
+                <div onClick={(e) => setShowNotes(true)} style={{cursor: "pointer", maxWidth:"95%"}}>
                     {
                         // Add Other conditions here
                         !loading && curSetInfo !== null && curSetInfo !== undefined?

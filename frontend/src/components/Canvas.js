@@ -44,7 +44,7 @@ const Canvas = props => {
 
     const [dots, setDots] = useState([]);
     const [hoverDot, setHoverDot] = useState({});
-    const [followDot, setFollowDot] = useState({});
+    const [followDot, setFollowDot] = useState(undefined);
     const [cameraOffset, setCameraOffset] = useState({x: 0, y: 0});
 
     const [cameraZoom, setCameraZoom] = useState(1);
@@ -130,27 +130,27 @@ const Canvas = props => {
             // console.log(hashY, altHashY, y)
 
             if (hash == "Front Hash") { 
-                // Past Alt Hash
+                // Past College Hash
                 if (altHashY - y >= 0) {
                     return Math.abs(steps - 4);
                 }
-                // Between Alt Hash and Hash
+                // Between College Hash and HS Hash
                 if (hashY - y >= 0) {
                     return 4 - steps;
                 }
-                // Before Hash
+                // Before HS Hash
                 return steps + 4;
             }
             if (hash == "Back Hash") {
-                // Past Alt Hash
+                // Past HS Hash
                 if (hashY - y >= 0) {
                     return steps + 4;
                 }
-                // Between Alt Hash and Hash
+                // Between College Hash and HS Hash
                 if (altHashY - y >= 0) {
                     return 4 - steps;
                 }
-                // Before Hash
+                // Before College Hash
                 return steps - 4;
             }
 
@@ -552,7 +552,7 @@ const Canvas = props => {
                 context.fillText(userLabel, x, y + canvas.height * 0.015);
                 context.closePath();
 
-                if (followDot.dot !== undefined) {
+                if (followDot !== undefined) {
                     if (userOptions.highlightUser.label === data[curSetIndex].dots[curUserIndex].userLabel) {
                         followDotCords = {x: x, y: y};
                         drawUserDialogue(x, y, data[curSetIndex].dots[curUserIndex]);
@@ -592,7 +592,7 @@ const Canvas = props => {
 
                 if (isHighlighted) {
                     // console.log(followDot, dot)
-                    if (followDot.dot !== undefined && followDot.userID === dot.userID) {
+                    if (followDot !== undefined && followDot.userID === dot.userID) {
                         followDotCords = {x: x, y: y};
                         drawUserDialogue(x, y, dot);
                     }
@@ -605,7 +605,7 @@ const Canvas = props => {
                 drawPoint(x, y, color, userLabel)
 
                 if (isHighlighted) {
-                    if (followDot.dot !== undefined && followDot.userID === dot.userID) {
+                    if (followDot !== undefined && followDot.userID === dot.userID) {
                         followDotCords = {x: x, y: y};
                         drawUserDialogue(x, y, dot);
                     }
@@ -902,9 +902,8 @@ const Canvas = props => {
         }
 
         const doPanAndZoom = (ctx) => {
-            if (cameraOffset !== null) {
-                
-                if (followDot.dot !== undefined) {
+            if (cameraOffset !== null) {    
+                if (followDot !== undefined) {
                     ctx.translate( canvas.width / 2, canvas.height / 2 )        // Translate to center for zoom
                     ctx.scale(FOLLOWING_USER_ZOOM, FOLLOWING_USER_ZOOM)                               // Zoom
                     ctx.translate( -canvas.width / 2, -canvas.height / 2 )      // Go back
@@ -1043,7 +1042,7 @@ const Canvas = props => {
                 }
             }
 
-            if (drawBracket.useX !== null && followDot.dot === undefined) {
+            if (drawBracket.useX !== null && followDot === undefined) {
                 drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot);
             }
 
@@ -1308,7 +1307,7 @@ const Canvas = props => {
     }, [curSet]);
 
     const dotHover = (event) => {
-        if (followDot.dot !== undefined)  { return; }
+        if (followDot !== undefined)  { return; }
 
         let x = (event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft) - translation.x) / translation.s,
             y = (event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop) - translation.y) / translation.s;
@@ -1422,16 +1421,17 @@ const Canvas = props => {
         if (userOptions.followingUser && userOptions.highlightUser !== null) {
             let userID = userOptions.highlightUser.id;
             console.log(userID)
+            
             for (let i = 0; i < dots.length; i++) {
                 if (dots[i].userID === userID) {
                     console.log(dots[i])
                     setFollowDot(dots[i]);
                 }
             }
-        } else if (!userOptions.followingUser) {
-            setFollowDot({});
+        } else if (!userOptions.followingUser && followDot !== undefined) {
+            setFollowDot(undefined);
         }
-    }, [userOptions])
+    }, [userOptions, dots])
 
     return <canvas
         ref={canvasRef}

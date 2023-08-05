@@ -2,15 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import getApi from './getApi';
 import axios from "axios";
 import { AutoTextSize } from 'auto-text-size'
+import { Switch, FormControlLabel } from '@mui/material';
 
 const WINDOW_LOCATION = getApi();
 
 const BasicViewer = (props) => {
-    const {token, schoolCode, ...rest} = props;
+    const {token, schoolCode, setIsBasic, ...rest} = props;
 
     const [data, setData] = useState(undefined);
     const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState(-1);
     const [curDatabaseSNTimestamp, setCurDatabaseSNTimestamp] = useState(-1);
+    const [useCollegeHash, setUseCollegeHash] = useState(false);
 
     
     useEffect(() => {
@@ -103,6 +105,44 @@ const BasicViewer = (props) => {
         )
     }
 
+    const convertToCollegeHash = (dot) => {
+        let hash = dot.use_hash;
+        let steps = dot.fb_steps; 
+        let direction = dot.fb_direction;   // "Behind" or "Front" or "On"
+
+        
+        if (hash == "Back Hash") {
+            if (direction == "Behind") {
+                return {...dot, fb_steps: dot.fb_steps + 4};
+            }
+            if (direction == "On") {
+                return {...dot, fb_steps: 4, fb_direction: "Front"};
+            }
+            if (direction == "Front") {
+                if (dot.fb_steps < 4) {
+                    return {...dot, fb_steps: 4 - dot.fb_steps, fb_direction: "Front"};
+                }
+                return {...dot, fb_steps: dot.fb_steps - 4};
+            }
+        }
+        if (hash == "Front Hash") { 
+            if (direction == "Behind") {
+                if (dot.fb_steps < 4) {
+                    return {...dot, fb_steps: 4 - dot.fb_steps, fb_direction: "Front"};
+                }
+                return {...dot, fb_steps: dot.fb_steps - 4};
+            }
+            if (direction == "Front") {
+                return {...dot, fb_steps: dot.fb_steps + 4};
+            }
+            if (direction == "On") {
+                return {...dot, fb_steps: 4, fb_direction: "Front"};
+            }
+        }
+
+        return dot;
+    }
+
     const getDotText1 = (dot) => {
         if (dot.steps !== 0) {
             return (
@@ -119,17 +159,23 @@ const BasicViewer = (props) => {
     }
 
     const getDotText2 = (dot) => {
+        let useHash = "HS"
+        if (useCollegeHash) {
+            dot = convertToCollegeHash(dot)
+            useHash = "College"
+        }
+
         if (dot.fb_steps !== 0) {
             let fbDirection = dot.fb_direction === "Front" ? "in front of" : dot.fb_direction;
             return (
                 <strong>
-                {dot.fb_steps} steps {fbDirection} {dot.use_hash} (HS)
+                {dot.fb_steps} steps {fbDirection} {dot.use_hash} ({useHash})
                 </strong>
             );
         }
         return (
             <strong>
-            On {dot.use_hash}
+            On {dot.use_hash} ({useHash})
             </strong>
         );
     }
@@ -162,6 +208,20 @@ const BasicViewer = (props) => {
             }
             </ul>
             </div>
+            <br />
+            <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Open Normal</button>
+            
+            <FormControlLabel 
+                control={
+                    <Switch
+                        checked={useCollegeHash}
+                        onChange={(e) => setUseCollegeHash(e.target.checked)}
+                        inputProps={{ 'aria-label': 'controlled' }}
+                        size='xl'
+                    />
+                }
+                label="Use College Hash" 
+            />
 		</div>
     );
 }
