@@ -1263,12 +1263,6 @@ const Canvas = props => {
                 let newDots = drawDots(_draw, data, curSet);
                 setDots(newDots)
 
-                // Check to see if we need to show the next dots too
-                if (_draw.userOptions.showNextSet && data[curSet + 1].dots !== undefined) {
-                    let nextSetData = data[curSet + 1].dots
-                    // drawDots(_draw, nextSetData);
-                }
-
                 if (hoverDot.x !== undefined) {
                     drawUserDialogue(hoverDot.x, hoverDot.y, hoverDot);
                 }
@@ -1278,12 +1272,6 @@ const Canvas = props => {
             else if (drawInfo.length > curSet && drawInfo[curSet] !== undefined)  {
                 let newDots = drawDots(_draw, drawInfo, curSet);
                 setDots(newDots)
-
-                // Check to see if we need to show the next dots too
-                if (_draw.userOptions.showNextSet && drawInfo[curSet + 1].dots !== undefined) {
-                    let nextSetData = drawInfo[curSet + 1].dots
-                    // drawDots(_draw, nextSetData);
-                }
 
                 if (hoverDot.x !== undefined) {
                     drawUserDialogue(hoverDot.x, hoverDot.y, hoverDot);

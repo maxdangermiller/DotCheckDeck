@@ -253,6 +253,7 @@ const Viewer = (props) => {
 	const downloadPoints = (localData, depth) => {
 		if (depth >= 20) {
 			console.log("REACHED MAX DEPTH!")
+			window.location.reload();
 			return; 
 		}
 
