@@ -352,10 +352,19 @@ const Canvas = props => {
             if (dot["userName"] !== "None None" && dot["userName"] !== "") {
                 context.font = canvas.height * 0.015 + 'px ArialBlack';
 
-                const MAX_LENGTH = 12;
+                const MAX_LENGTH = 10;
                 if (dot["userName"].length > MAX_LENGTH) {
                     let split = dot["userName"].split(" ");
+                    
+                    if (split.length < 2) {
+                        console.log("PROBLEM WITH NAME!", dot);
+                    }
+
                     let shortenedName = split[0] + " " + split[1][0] + "."
+
+                    if (shortenedName.length > MAX_LENGTH) {
+                        shortenedName = shortenedName.substring(0, MAX_LENGTH);
+                    }
 
                     context.fillText(shortenedName, x + w * 0.65, y + h * 0.25);
                     
