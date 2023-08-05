@@ -1421,12 +1421,18 @@ const Canvas = props => {
         if (userOptions.followingUser && userOptions.highlightUser !== null) {
             let userID = userOptions.highlightUser.id;
             console.log(userID)
+            let didThing = false;
             
             for (let i = 0; i < dots.length; i++) {
                 if (dots[i].userID === userID) {
                     console.log(dots[i])
                     setFollowDot(dots[i]);
+                    didThing = true;
                 }
+            }
+
+            if (!didThing) {
+                console.log(dots)
             }
         } else if (!userOptions.followingUser && followDot !== undefined) {
             setFollowDot(undefined);

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import getApi from './getApi';
 import axios from "axios";
 import { AutoTextSize } from 'auto-text-size'
-import { Switch, FormControlLabel } from '@mui/material';
+import { Switch, FormControlLabel, Stack, Typography } from '@mui/material';
 
 const WINDOW_LOCATION = getApi();
 
@@ -209,19 +209,18 @@ const BasicViewer = (props) => {
             </ul>
             </div>
             <br />
-            <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Open Normal</button>
+            <button className='btn btn-primary' onClick={(e) => setIsBasic(false)} style={{right: "1rem", bottom: "1rem", position: "absolute"}}>Open Normal</button>
             
-            <FormControlLabel 
-                control={
-                    <Switch
-                        checked={useCollegeHash}
-                        onChange={(e) => setUseCollegeHash(e.target.checked)}
-                        inputProps={{ 'aria-label': 'controlled' }}
-                        size='xl'
-                    />
-                }
-                label="Use College Hash" 
-            />
+            <Stack direction="row" spacing={1} alignItems="center" style={{left: "1rem", bottom: "1rem", position: "absolute"}}>
+                <Typography>High School</Typography>
+                <Switch
+                    checked={useCollegeHash}
+                    onChange={(e) => setUseCollegeHash(e.target.checked)}
+                    inputProps={{ 'aria-label': 'controlled' }}
+                    size='xl'
+                />
+                <Typography>College</Typography>
+            </Stack>
 		</div>
     );
 }
