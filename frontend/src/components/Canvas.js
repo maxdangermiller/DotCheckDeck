@@ -1412,7 +1412,6 @@ const Canvas = props => {
             for (let i = 0; i < dots.length; i++) {
                 if (dots[i].userLabel === userLabel) {
                     setFollowDot(dots[i]);
-                    didThing = true;
                 }
             }
         } else if (!userOptions.followingUser && followDot !== undefined) {
