@@ -1407,12 +1407,12 @@ const Canvas = props => {
 
     useEffect(() => {
         if (userOptions.followingUser && userOptions.highlightUser !== null) {
-            let userID = userOptions.highlightUser.id;
-            console.log(userID)
+            let userLabel = userOptions.highlightUser.label;
+            console.log(userLabel)
             let didThing = false;
             
             for (let i = 0; i < dots.length; i++) {
-                if (dots[i].userID === userID) {
+                if (dots[i].userLabel === userLabel) {
                     console.log(dots[i])
                     setFollowDot(dots[i]);
                     didThing = true;
