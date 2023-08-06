@@ -720,6 +720,7 @@ const Viewer = (props) => {
 					curPlayTime={curPlayTime}
 					audioPlaying={audioPlaying}
 					userOptions={userOptions}
+					setUserOptions={setUserOptions}
 					userData={props.userData}
 				/>
 			</div>

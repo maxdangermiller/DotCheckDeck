@@ -37,7 +37,7 @@ const Canvas = props => {
     const { 
         draw, setDimensions, curDimensions, 
         curSet, sets, loading, curPlayTime, 
-        audioPlaying, userOptions, userData, ...rest 
+        audioPlaying, userOptions, setUserOptions, userData, ...rest 
     } = props;
 
     const canvasRef = useRef(null)
@@ -1319,14 +1319,18 @@ const Canvas = props => {
         dots.forEach(function(dot) {
             let cords = convertDotToCords(dot, canvasRef.current.width, canvasRef.current.height);
             if (y > cords.y - margin && y < cords.y + margin  && x > cords.x - margin && x < cords.x + margin) {
-                // alert('This is: ' + dot["userLabel"]);
                 wasOnDot = true;
-                setHoverDot({...dot, "x": cords.x, "y": cords.y});
+                setUserOptions({...userOptions, "highlightUser": {"id": dot.userID, "label": dot.userLabel}})
+                // setHoverDot({...dot, "x": cords.x, "y": cords.y});
             }
         });
 
         if (!wasOnDot && hoverDot["x"]) {
-            setHoverDot({});
+            // setHoverDot({});
+        }
+
+        if (!wasOnDot && userOptions.highlightUser.id !== userData.id) {
+            setUserOptions({...userOptions, "highlightUser": {"id": userData.id, "label": userData.label}})
         }
     }
 
