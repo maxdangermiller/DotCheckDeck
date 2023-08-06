@@ -142,7 +142,7 @@ function App() {
 						token === "" || schoolCode === ""
 						? <Navigate to="/login" />
 						: isBasic
-							? <BasicViewer token={token} schoolCode={schoolCode} setIsBasic={setIsBasic}/>
+							? <BasicViewer token={token} schoolCode={schoolCode} setIsBasic={setIsBasic} userData={userData}/>
 							: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} setIsBasic={setIsBasic}/>
 					} />
 					<Route path="/activate/:join_code" exact element={

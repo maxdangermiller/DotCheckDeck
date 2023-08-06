@@ -3,16 +3,19 @@ import getApi from './getApi';
 import axios from "axios";
 import { AutoTextSize } from 'auto-text-size'
 import { Switch, FormControlLabel, Stack, Typography } from '@mui/material';
+import SetNameModelBasic from './ViewerSideBarComponents/SetNameModelBasic';
 
 const WINDOW_LOCATION = getApi();
 
 const BasicViewer = (props) => {
-    const {token, schoolCode, setIsBasic, ...rest} = props;
+    const {token, schoolCode, setIsBasic, userData, ...rest} = props;
 
     const [data, setData] = useState(undefined);
     const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState(-1);
     const [curDatabaseSNTimestamp, setCurDatabaseSNTimestamp] = useState(-1);
     const [useCollegeHash, setUseCollegeHash] = useState(false);
+    const [showEditSetName, setShowEditSetName] = useState(false);
+    const [tempCurSetInfo, setTempCurSetInfo] = useState({});
 
     
     useEffect(() => {
@@ -180,6 +183,11 @@ const BasicViewer = (props) => {
         );
     }
 
+    const openEditSetName = (dotData) => {
+        console.log(dotData)
+        setShowEditSetName(true);
+        setTempCurSetInfo(JSON.parse(JSON.stringify(dotData)));
+    }
 
     return (
         <div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
@@ -202,6 +210,11 @@ const BasicViewer = (props) => {
                             <div className='mb-2'>For {dotData.counts} counts</div>
                             <div className='mb-2'>Measures: {dotData.measure}</div>
                         </div>
+                        {
+                            userData.is_section_leader ?
+                            <button className='btn btn-secondary' onClick={(e) => openEditSetName(dotData)} style={{right: "1rem", bottom: "1rem", position: "absolute"}}>Edit</button>
+                            : null
+                        }
                     </li>
 
                 )
@@ -221,6 +234,16 @@ const BasicViewer = (props) => {
                 />
                 <Typography>College</Typography>
             </Stack>
+
+            <SetNameModelBasic 
+                show = {showEditSetName}
+                setShow = {setShowEditSetName}
+                token = {token}
+                curSetInfo={tempCurSetInfo}
+                setCurSetInfo={setTempCurSetInfo}
+                data={data}
+                setData={setData}
+            />
 		</div>
     );
 }

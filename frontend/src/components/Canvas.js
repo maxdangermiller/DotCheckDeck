@@ -343,7 +343,7 @@ const Canvas = props => {
             context.closePath();
 
             context.beginPath();
-            context.font = canvas.height * 0.03 + 'px ArialBlack';
+            context.font = canvas.height * 0.02 + 'px ArialBlack';
             context.fillStyle = "black";
             context.textBaseline = "middle";
             context.textAlign = "center";
@@ -352,7 +352,7 @@ const Canvas = props => {
             if (dot["userName"] !== "None None" && dot["userName"] !== "") {
                 context.font = canvas.height * 0.015 + 'px ArialBlack';
 
-                const MAX_LENGTH = 10;
+                const MAX_LENGTH = 12;
                 if (dot["userName"].length > MAX_LENGTH) {
                     let split = dot["userName"].split(" ");
                     
@@ -363,7 +363,7 @@ const Canvas = props => {
                     let shortenedName = split[0] + " " + split[1][0] + "."
 
                     if (shortenedName.length > MAX_LENGTH) {
-                        shortenedName = shortenedName.substring(0, MAX_LENGTH);
+                        shortenedName = shortenedName.substring(0, MAX_LENGTH - 1) + ".";
                     }
 
                     context.fillText(shortenedName, x + w * 0.65, y + h * 0.25);
