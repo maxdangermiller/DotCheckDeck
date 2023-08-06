@@ -222,18 +222,21 @@ const BasicViewer = (props) => {
             </ul>
             </div>
             <br />
-            <button className='btn btn-primary' onClick={(e) => setIsBasic(false)} style={{right: "1rem", bottom: "1rem", position: "absolute"}}>Open Normal</button>
+            <div className='d-flex flex-row justify-content-between align-items-center' style={{width:"100%", padding:"1rem"}}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography>High School</Typography>
+                    <Switch
+                        checked={useCollegeHash}
+                        onChange={(e) => setUseCollegeHash(e.target.checked)}
+                        inputProps={{ 'aria-label': 'controlled' }}
+                        size='xl'
+                    />
+                    <Typography>College</Typography>
+                </Stack>
+
+                <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Open Normal</button>
+            </div>
             
-            <Stack direction="row" spacing={1} alignItems="center" style={{left: "1rem", bottom: "1rem", position: "absolute"}}>
-                <Typography>High School</Typography>
-                <Switch
-                    checked={useCollegeHash}
-                    onChange={(e) => setUseCollegeHash(e.target.checked)}
-                    inputProps={{ 'aria-label': 'controlled' }}
-                    size='xl'
-                />
-                <Typography>College</Typography>
-            </Stack>
 
             <SetNameModelBasic 
                 show = {showEditSetName}
