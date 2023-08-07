@@ -1420,7 +1420,8 @@ const Canvas = props => {
 
     useEffect(() => {
         if (userOptions.followingUser && userOptions.highlightUser !== null) {
-            let userLabel = userOptions.highlightUser.label;
+            let userLabel = userData.label;
+            // let userLabel = userOptions.highlightUser.label;
             
             for (let i = 0; i < dots.length; i++) {
                 if (dots[i].userLabel === userLabel) {
