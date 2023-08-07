@@ -106,9 +106,19 @@ const AdminConvertToProp = (props) => {
                             type="text" 
                             className="form-control" 
                             id="showNameInput" 
-                            placeholder="12345678" 
+                            placeholder="" 
                             value={userLabel}
                             onChange={(event) => setUserLabel(event.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label htmlFor="image" className="form-label">Choose Image</label>
+                        <input 
+                            className="form-control" 
+                            type="file" 
+                            id="image" 
+                            onChange={(event) => setImage(event.target.files[0])}
                         />
                     </div>
                     
