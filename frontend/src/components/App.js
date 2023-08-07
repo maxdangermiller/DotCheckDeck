@@ -13,6 +13,7 @@ import getApi from './getApi';
 import AdminJoinCodeDisplay from './AdminComponents/AdminJoinCodeDisplay';
 import AdminCreateShow from './AdminComponents/AdminCreateShow';
 import AdminAddProp from './AdminComponents/AdminAddProp';
+import AdminConvertToProp from './AdminComponents/AdminConvertToProp';
 import BasicViewer from './BasicViewer';
 import VerifyAccount from './utils/VerifyAccount';
 import ResetPassword from './utils/ResetPassword';
@@ -191,6 +192,11 @@ function App() {
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/" />
 						: <AdminAddProp token={token} schoolCode={schoolCode}/>
+					} />
+					<Route path="/admin-convert-to-prop" exact element={
+						token !== "" && token !== undefined && !isAdminAuthorized()
+						? <Navigate to="/" />
+						: <AdminConvertToProp token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/activate-account/:enc_id" exact element={
 						<VerifyAccount/>

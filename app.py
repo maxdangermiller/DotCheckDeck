@@ -1159,6 +1159,63 @@ def add_prop_to_show():
 
 	return "Done.", 200
 
+@app.route('/convert-user-to-prop', methods=['POST'])
+@jwt_required()
+def convert_user_to_prop():
+	identity = get_jwt_identity()
+	user = User.query.filter_by(email=identity).first()
+
+	if user is None:
+		return "Unauthorized", 401
+	
+	show_code = request.form.get("show_code", "")
+	width = request.form.get("width", 1)
+	height = request.form.get("height", 1)
+	label = request.form.get("label", "")
+
+	show = Show.query.filter(Show.code == show_code).first()
+
+	if show is None:
+		return "Invalid Show", 404
+	
+	showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.label == label).first()
+
+	if showUser is None:
+		return "Invalid show label", 404
+	
+	showUser.is_locked = True
+	db.session.commit()	
+
+	dotIcon = DotIcon(
+		school_id = user.school_id,
+		show_id = show.id,
+		width_in_steps = width,
+		hight_in_steps = height
+	)
+	db.session.add(dotIcon)
+	db.session.commit()	
+
+	print(request.files)
+
+	if "image" not in request.files:
+		return "Missing SVG!", 400
+
+	# Get Image and save it
+	fileLocation = f"./static/{show.id}/{dotIcon.id}.svg"
+	request.files["image"].save(fileLocation)
+
+	dots = Dot.query.filter(Dot.show_user_id == showUser.id).all()
+	for dot in dots:
+		dot.dot_icon_id = dotIcon.id
+		db.session.commit()
+
+	# There has been a change made to the show's date, 
+	# so we must change the "last update time" var in the show object
+	show.changeUpdateTime()  
+	db.session.commit()
+
+	return "Done.", 200
+
 
 @app.route('/get-icon/<id>', methods=['GET'])
 @jwt_required()
@@ -1270,10 +1327,6 @@ class SchoolCodeAuthResource(Resource):
 		for showUser in users:
 			if showUser.user_id is None and not showUser.is_locked:
 				filteredUsers.append(showUser)
-			else:
-				user = User.query.filter(User.id == showUser.user_id).first()
-				if user.activated_date is None:
-					filteredUsers.append(showUser)
 
 		
 		return {"schoolName": school.name, "name": show.name, "users": show_users_schema.dump(filteredUsers), "email": school.email}, 200
