@@ -725,6 +725,7 @@ const Viewer = (props) => {
 					userOptions={userOptions}
 					setUserOptions={setUserOptions}
 					userData={props.userData}
+					token={props.token}
 				/>
 			</div>
 			<ViewerSideBar 

@@ -1,6 +1,7 @@
 import React, {useRef, useEffect, useState} from 'react'
 import convertDotToCords from './utils/ConvertDotToCords';
 import './font.css'
+import getApi from './getApi';
 
 const FUTURE_DOT_COLOR = "rgba(0, 100, 0, 0.8)";
 const PREVIOUS_DOT_COLOR = "rgba(100, 0, 0, 0.8)";
@@ -32,12 +33,14 @@ const GRID_MAJOR_DIVISION_COLOR = "rgba(100, 100, 255, 0.6)";
 const GRID_MINOR_DIVISION_COLOR = "rgba(200, 200, 255, 0.4)";
 const COLLAGE_HASH_COLOR = "rgb(100, 0, 0)";
 
+const WINDOW_LOCATION = getApi();
+
 const Canvas = props => {
 
     const { 
         draw, setDimensions, curDimensions, 
         curSet, sets, loading, curPlayTime, 
-        audioPlaying, userOptions, setUserOptions, userData, ...rest 
+        audioPlaying, userOptions, setUserOptions, userData, token, ...rest 
     } = props;
 
     const canvasRef = useRef(null)
@@ -71,6 +74,11 @@ const Canvas = props => {
         let frameCount = 0
         let animationFrameId
         let followDotCords = {x: 0, y: 0};
+
+        const steps_to_px = (steps, height) => {
+            let oneStep = height / 1920 * 22.5;
+            return steps * oneStep;
+        }        
 
         // Takes the side and line and give the percentage out of 100
         const sideLineRatioConvert = (side, line) => {
@@ -547,19 +555,31 @@ const Canvas = props => {
                 );
                 let x = cords0.x
                 let y = cords0.y
+                let dot = data[curSetIndex].dots[curUserIndex];
 
-                context.beginPath();
-                context.fillStyle = color;
-                context.arc(x, y, size / 2, 0, 2 * Math.PI);
-                context.fill();
-                context.closePath();
+                if (dot.dot.dot_icon_id !== null) {
+                    let img = new Image();
+                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
+                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+
+                    context.drawImage(img, x - width / 2, y - height / 2, width, height);
+                }
+                else {
+                    context.beginPath();
+                    context.fillStyle = color;
+                    context.arc(x, y, size / 2, 0, 2 * Math.PI);
+                    context.fill();
+                    context.closePath();
+                    
+                    context.beginPath();
+                    context.font = canvas.height * 0.015 + 'px ArialBlack';
+                    context.textBaseline = "middle";
+                    context.textAlign = "center";
+                    context.fillText(userLabel, x, y + canvas.height * 0.015);
+                    context.closePath();
+                }
     
-                context.beginPath();
-                context.font = canvas.height * 0.015 + 'px ArialBlack';
-                context.textBaseline = "middle";
-                context.textAlign = "center";
-                context.fillText(userLabel, x, y + canvas.height * 0.015);
-                context.closePath();
 
                 if (followDot !== undefined) {
                     if (userOptions.highlightUser.label === data[curSetIndex].dots[curUserIndex].userLabel) {
@@ -596,8 +616,18 @@ const Canvas = props => {
                 const x = ((x1 - x0) / counts * count) + x0;
                 const y = m * x + b;
 
+                if (dot.dot.dot_icon_id !== null) {
+                    let img = new Image();
+                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
+                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                drawPoint(x, y, color, userLabel)
+                    context.drawImage(img, x - width / 2, y - height / 2, width, height);
+                }
+                else {
+                    drawPoint(x, y, color, userLabel)
+                }
+
 
                 if (isHighlighted) {
                     // console.log(followDot, dot)
@@ -611,7 +641,17 @@ const Canvas = props => {
                 const x = x0
                 const y = ((y1 - y0) / counts * count) + y0;
 
-                drawPoint(x, y, color, userLabel)
+                if (dot.dot.dot_icon_id !== null) {
+                    let img = new Image();
+                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
+                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+
+                    context.drawImage(img, x - width / 2, y - height / 2, width, height);
+                }
+                else {
+                    drawPoint(x, y, color, userLabel)
+                }
 
                 if (isHighlighted) {
                     if (followDot !== undefined && followDot.userID === dot.userID) {
@@ -1035,6 +1075,16 @@ const Canvas = props => {
                             let color = getDotColor(dot, false, userOptions.useSectionColors)
                             drawPoint(useX, useY, color, dot.userLabel);
                         }
+                    }
+
+                    // If it's an icon dot
+                    else if (dot.dot.dot_icon_id !== null) {
+                        let img = new Image();
+                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
+                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+
+                    context.drawImage(img, useX - width / 2, useY - height / 2, width, height);
                     }
 
                     // If not, handel all of the not selected dots

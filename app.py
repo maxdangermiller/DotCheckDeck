@@ -288,6 +288,7 @@ class ShowUser(CacheableMixin, db.Model):
 	symbol = db.Column(db.String(16))
 	label = db.Column(db.String(16))
 	is_section_leader = db.Column(db.Boolean, default=False)
+	is_locked = db.Column(db.Boolean, default=False)
 
 	# Timestamps
 	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
@@ -354,6 +355,7 @@ class Show(CacheableMixin, db.Model):
 	dots = db.relationship('Dot', cascade="all,delete", backref='show')
 	band_sections = db.relationship('BandSection', cascade="all,delete", backref='show')
 	set_names = db.relationship('SetName', cascade="all,delete", backref='show')
+	dot_icons = db.relationship('DotIcon', cascade="all,delete", backref='show')
 	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 
 	# Data
@@ -404,6 +406,7 @@ class School(CacheableMixin, db.Model):
 	show_users = db.relationship('ShowUser', cascade="all,delete", backref='school')
 	sets = db.relationship('Set', cascade="all,delete", backref='school')
 	dots = db.relationship('Dot', cascade="all,delete", backref='school')
+	dot_icons = db.relationship('DotIcon', cascade="all,delete", backref='school')
 	band_sections = db.relationship('BandSection', cascade="all,delete", backref='school')
 	set_names = db.relationship('SetName', cascade="all,delete", backref='school')
 
@@ -420,6 +423,20 @@ class School(CacheableMixin, db.Model):
 
 
 # Serializers
+class DotIconSchema(ma.SQLAlchemyAutoSchema):
+	class Meta:
+		"""
+		fields = (
+			"id", "show_id", "set_id", "show_user_id", "direction", "line",
+			"steps", "side", "fb_steps", "fb_direction", "use_hash"
+		)
+		"""
+
+		model = DotIcon
+		include_fk = True
+		load_instance = True
+
+
 class DotSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
 		"""
@@ -432,6 +449,8 @@ class DotSchema(ma.SQLAlchemyAutoSchema):
 		model = Dot
 		include_fk = True
 		load_instance = True
+	
+	dot_icon = ma.Nested(DotIconSchema)
 
 
 class SetNameSchema(ma.SQLAlchemyAutoSchema):
@@ -1054,6 +1073,106 @@ def reset_password():
 	return "Done.", 200
 
 
+# Icon For Dots
+
+@app.route('/add-prop-to-show', methods=['POST'])
+@jwt_required()
+def add_prop_to_show():
+	identity = get_jwt_identity()
+	user = User.query.filter_by(email=identity).first()
+
+	if user is None:
+		return "Unauthorized", 401
+	
+	show_code = request.form.get("show_code", "")
+	width = request.form.get("width", 1)
+	height = request.form.get("height", 1)
+
+	direction = request.form.get("direction", None)
+	line = request.form.get("line", None)
+	steps = request.form.get("steps", None)
+	side = request.form.get("side", None)
+	fb_steps = request.form.get("fb_steps", None)
+	fb_direction = request.form.get("fb_direction", None)
+	use_hash = request.form.get("use_hash", None)
+
+	show = Show.query.filter(Show.code == show_code).first()
+
+	if show is None:
+		return "Invalid Show", 404
+	
+	print(show)
+
+	dotIcon = DotIcon(
+		school_id = user.school_id,
+		show_id = show.id,
+		width_in_steps = width,
+		hight_in_steps = height
+	)
+	db.session.add(dotIcon)
+	db.session.commit()	
+
+	print(request.files)
+
+	if "image" not in request.files:
+		return "Missing SVG!", 400
+
+	# Get Image and save it
+	fileLocation = f"./static/{show.id}/{dotIcon.id}.svg"
+	request.files["image"].save(fileLocation)
+	
+	showUser = ShowUser(
+		school_id = user.school_id,
+		show_id = show.id,
+		symbol = "*",
+		label = "",
+		is_locked = True
+	)
+	db.session.add(showUser)
+	db.session.commit()	
+
+	sets = Set.query.filter(Set.show_id == show.id).all()
+
+	for set in sets:
+		dot = Dot(
+			school_id = user.school_id,
+			show_id = show.id,
+			set_id = set.id,
+			show_user_id = showUser.id,
+			dot_icon_id = dotIcon.id,
+
+			direction = direction,
+			line = line,
+			steps = steps,
+			side = side,
+			fb_steps = fb_steps,
+			fb_direction = fb_direction,
+			use_hash = use_hash
+		)
+		db.session.add(dot)
+		db.session.commit()	
+
+	# There has been a change made to the show's date, 
+	# so we must change the "last update time" var in the show object
+	show.changeUpdateTime()  
+	db.session.commit()
+
+	return "Done.", 200
+
+
+@app.route('/get-icon/<id>', methods=['GET'])
+@jwt_required()
+def get_icon(id):
+	identity = get_jwt_identity()
+	user = User.query.filter_by(email=identity).first()
+
+	if user is None:
+		return "Unauthorized", 401
+	dotIcon = DotIcon.query.filter(DotIcon.id == id).first()
+
+	return send_from_directory(f"static/{dotIcon.show_id}", f"{dotIcon.id}.svg"), 200
+
+
 # OBJECT API
 
 
@@ -1149,7 +1268,7 @@ class SchoolCodeAuthResource(Resource):
 		users = ShowUser.query.filter(ShowUser.show_id == show.id).all()
 		filteredUsers = []
 		for showUser in users:
-			if showUser.user_id is None:
+			if showUser.user_id is None and not showUser.is_locked:
 				filteredUsers.append(showUser)
 			else:
 				user = User.query.filter(User.id == showUser.user_id).first()

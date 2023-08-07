@@ -12,6 +12,7 @@ import PWAInstructions from './PWAInstructions';
 import getApi from './getApi';
 import AdminJoinCodeDisplay from './AdminComponents/AdminJoinCodeDisplay';
 import AdminCreateShow from './AdminComponents/AdminCreateShow';
+import AdminAddProp from './AdminComponents/AdminAddProp';
 import BasicViewer from './BasicViewer';
 import VerifyAccount from './utils/VerifyAccount';
 import ResetPassword from './utils/ResetPassword';
@@ -185,6 +186,11 @@ function App() {
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/" />
 						: <AdminCreateShow token={token} schoolCode={schoolCode}/>
+					} />
+					<Route path="/admin-add-prop" exact element={
+						token !== "" && token !== undefined && !isAdminAuthorized()
+						? <Navigate to="/" />
+						: <AdminAddProp token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/activate-account/:enc_id" exact element={
 						<VerifyAccount/>
