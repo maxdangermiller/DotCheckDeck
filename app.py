@@ -32,13 +32,6 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__, static_folder='client/build', static_url_path='')
 
-"""
-https://blog.miguelgrinberg.com/post/how-to-deploy-a-react--flask-project
-https://dashboard.heroku.com/apps/marching-band-app/settings
-https://stackoverflow.com/questions/65888631/how-do-i-use-heroku-postgres-with-my-flask-sqlalchemy-app
-https://towardsdatascience.com/deploy-a-micro-flask-application-into-heroku-with-postgresql-database-d95fd0c19408
-"""
-
 # WEBSITE_HOSTNAME exists only in production environment
 if 'WEBSITE_HOSTNAME' not in os.environ:
 	# local development, where we'll use environment variables

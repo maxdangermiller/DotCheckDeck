@@ -1320,16 +1320,25 @@ const Canvas = props => {
             let cords = convertDotToCords(dot, canvasRef.current.width, canvasRef.current.height);
             if (y > cords.y - margin && y < cords.y + margin  && x > cords.x - margin && x < cords.x + margin) {
                 wasOnDot = true;
-                setUserOptions({...userOptions, "highlightUser": {"id": dot.userID, "label": dot.userLabel}})
-                // setHoverDot({...dot, "x": cords.x, "y": cords.y});
+                if (userOptions.showMovementBrackets) {
+                    setUserOptions({...userOptions, "highlightUser": {"id": dot.userID, "label": dot.userLabel}})
+                }
+                else {
+                    setHoverDot({...dot, "x": cords.x, "y": cords.y});
+                }
             }
         });
 
-        if (!wasOnDot && hoverDot["x"]) {
-            // setHoverDot({});
+        if (!wasOnDot && !userOptions.showMovementBrackets && hoverDot["x"]) {
+            setHoverDot({});
         }
 
-        if (!wasOnDot && userOptions.highlightUser.id !== userData.id) {
+        else if (
+            !wasOnDot && 
+            userOptions.showMovementBrackets && 
+            userOptions.highlightUser !== null &&
+            userOptions.highlightUser.id !== userData.id
+        ) {
             setUserOptions({...userOptions, "highlightUser": {"id": userData.id, "label": userData.label}})
         }
     }
