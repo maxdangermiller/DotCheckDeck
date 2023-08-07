@@ -109,7 +109,8 @@ email_client = EmailClient.from_connection_string("endpoint=https://email-parent
 # flask db upgrade
 
 def generateUpdateCode() -> int:
-	return random.randint(0, math.pow(2, 31) - 1)
+	return random.randint(0, math.pow(2, 31) - 1)	
+
 
 class Dot(CacheableMixin, db.Model):
 	cache_label = "dot"
@@ -123,6 +124,7 @@ class Dot(CacheableMixin, db.Model):
 	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
 	set_id = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
 	show_user_id = db.Column(db.Integer, db.ForeignKey('show_user.id'), nullable=False)
+	dot_icon_id = db.Column(db.Integer, db.ForeignKey('dot_icon.id'), nullable=True)
 
 	# Data
 	direction = db.Column(db.String(16))
@@ -143,6 +145,41 @@ class Dot(CacheableMixin, db.Model):
 
 	def __str__(self):
 		return f"Dot({self.show_user_id} ->{self.id})"
+
+
+class DotIcon(CacheableMixin, db.Model):
+	cache_label = "dot_icon"
+	cache_regions = regions
+	query_class = query_callable(regions)
+
+	id = db.Column(db.Integer, primary_key=True)
+
+	# Relationships
+	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
+	dots = db.relationship('Dot', cascade="all,delete", backref='dot_icon')
+
+	# Data
+	width_in_steps = db.Column(db.Integer, default=1)
+	hight_in_steps = db.Column(db.Integer, default=1)
+
+	# Timestamps
+	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
+	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
+	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
+
+	def get_svg_file_path(self) -> str:
+		return f"static/{self.show_id}/{self.id}.svg"
+	
+	def save_svg(self, svg_str: str):
+		with open(self.get_svg_file_path(), "w") as file: 
+			file.write(svg_str)
+
+	def __repr__(self):
+		return f"DotIcon({self.id})"
+
+	def __str__(self):
+		return self.__repr__()
 
 
 class SetName(CacheableMixin, db.Model):
@@ -508,6 +545,7 @@ class SchoolModelView(SecureModelView):
 
 
 admin.add_view(SecureModelView(Dot, db.session))
+admin.add_view(SecureModelView(DotIcon, db.session))
 admin.add_view(SecureModelView(SetName, db.session))
 admin.add_view(SecureModelView(Set, db.session))
 admin.add_view(SecureModelView(ShowUser, db.session))
@@ -1624,7 +1662,7 @@ def getBufferedUserDots(show, showUser):
 			return output
 	except:
 		print("ERROR")
-		return getAllDotsWithoutBuffer(showCode)
+		return getAllDotsWithoutBuffer(show.code)
 
 
 class GetUserDotsResource(Resource):
