@@ -43,7 +43,7 @@ const BasicViewer = (props) => {
 		try {
 			if (localData !== "" && localData !== null) {
 				let parsedData = JSON.parse(localData);
-                console.log(parsedData);
+                console.log(parsedData, curDatabaseTimestamp, curDatabaseSNTimestamp);
 
 				// Check version number
 				for (let i = 0; i < parsedData.dots.length; i++) {
@@ -79,7 +79,9 @@ const BasicViewer = (props) => {
 
 
     useEffect(() => {
+        if (curDatabaseTimestamp === -1 || curDatabaseSNTimestamp === -1 ) { return; }
         if (!checkLocalData()) {
+            console.log("UPDATING BASIC MODE")
             const url = WINDOW_LOCATION + "/get-dots-user?school_code=" + schoolCode + "&token=" + token;
     
             axios({
