@@ -1070,6 +1070,17 @@ const Canvas = props => {
                             let color = getDotColor(dot, true, userOptions.useSectionColors)
                             drawHighlightedPoint(data, index, x, userOptions, color, dot.userLabel)
                         }
+
+                        // If it's an icon dot
+                        else if (dot.dot.dot_icon_id !== null) {
+                            let img = new Image();
+                            img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
+                            let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                            let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+
+                            context.drawImage(img, useX - width / 2, useY - height / 2, width, height);
+                        }
+
                         // Else dim others 
                         else {
                             let color = getDotColor(dot, false, userOptions.useSectionColors)
@@ -1080,11 +1091,11 @@ const Canvas = props => {
                     // If it's an icon dot
                     else if (dot.dot.dot_icon_id !== null) {
                         let img = new Image();
-                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
-                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
-                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+                        img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
+                        let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                        let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                    context.drawImage(img, useX - width / 2, useY - height / 2, width, height);
+                        context.drawImage(img, useX - width / 2, useY - height / 2, width, height);
                     }
 
                     // If not, handel all of the not selected dots
