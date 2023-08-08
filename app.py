@@ -2317,21 +2317,25 @@ class GetDatabaseResource(Resource):
 def updateBufferWithSetName(show, setName):
 	data = []
 
-	with open(f"cache/set-names/{show.id}.json", "r") as file:
-		data = json.load(file)
-		print(data)
+	try:
+		with open(f"cache/set-names/{show.id}.json", "r") as file:
+			data = json.load(file)
+			print(data)
 
-		if str(setName.section_id) not in data:
-			return
+			if str(setName.section_id) not in data:
+				return
 
-		for id, section in data.items():
-			for set in section:
-				if id == str(setName.section_id) and set["set_id"] == setName.set_id:
-						set["set_name"] = setName.name
-				set["update_timestamp"] = str(show.last_set_name_update)
-	
-	with open(f"cache/set-names/{show.id}.json", "w") as file: 
-		json.dump(data, file, indent=4)
+			for id, section in data.items():
+				for set in section:
+					if id == str(setName.section_id) and set["set_id"] == setName.set_id:
+							set["set_name"] = setName.name
+					set["update_timestamp"] = str(show.last_set_name_update)
+		
+		with open(f"cache/set-names/{show.id}.json", "w") as file: 
+			json.dump(data, file, indent=4)
+	except:
+		getSetNamesWithoutBuffer(show)
+
 
 
 class UpdateOrCreateSetNameResource(Resource):
@@ -2580,7 +2584,7 @@ class GetDefaultJoinCode(Resource):
 		return {"code": show.code, "name": show.name}
 
 
-def getSetNamesWithoutBuffer(show, showUser):
+def getSetNamesWithoutBuffer(show):
 	sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
 	sections = BandSection.query.filter(BandSection.show_id == show.id).all()
 
@@ -2629,19 +2633,19 @@ def getBufferedSetNames(show, showUser):
 
 			if str(showUser.section_id) not in data:
 				print("Section doesn't exist!")
-				return getSetNamesWithoutBuffer(show, showUser), 200
+				return getSetNamesWithoutBuffer(show), 200
 			
 			for setName in data[str(showUser.section_id)]:
 				output.append(setName)
 				if setName["update_timestamp"] != curDatabaseVersion:
 					print("Updating!")
-					return getSetNamesWithoutBuffer(show, showUser), 200
+					return getSetNamesWithoutBuffer(show), 200
 			# print(len(output))
 				
 			return output, 200
 	except:
 		print("ERROR")
-		return getSetNamesWithoutBuffer(show, showUser), 200
+		return getSetNamesWithoutBuffer(show), 200
 
 
 class SetNameListResource(Resource):
