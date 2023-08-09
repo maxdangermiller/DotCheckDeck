@@ -21,6 +21,8 @@ import random
 import math
 from cryptography.fernet import Fernet
 
+import storage
+
 # TODO: Redis Queue
 # from rq import Queue
 # from rq.job import Job
@@ -36,10 +38,13 @@ app = Flask(__name__, static_folder='client/build', static_url_path='')
 if 'WEBSITE_HOSTNAME' not in os.environ:
 	# local development, where we'll use environment variables
 	app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+	storage_obj = storage.LocalStorageClient()
 else:
 	# production
 	print("Loading config.production from production.py")
 	app.config.from_object('production')
+
+	storage_obj = storage.CloudStorageClient()
 
 	app.config.update(
 		SQLALCHEMY_DATABASE_URI=app.config.get('DATABASE_URI'),
@@ -628,6 +633,7 @@ def create_token():
 				showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
 				if showUser is not None:
 					showString = show_user_schema.dump(showUser)
+					showString["show_user_id"] = showUser.id
 
 	response = {
 		"access_token": access_token, 
@@ -700,6 +706,7 @@ def get_jwt():
 					showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
 					if showUser is not None:
 						showString = show_user_schema.dump(showUser)
+						showString["show_user_id"] = showUser.id
 
 
 		response = {"access_token": access_token, "user": mergeJsonDicts(showString, userString), "school_code": schoolCode}
@@ -780,6 +787,7 @@ def send_music():
 
 	print(show.id)
 
+	return storage_obj.send_file(f"static/{show.id}", "audio.mp3")
 	return send_from_directory(f"static/{show.id}", "audio.mp3")
 
 
@@ -887,7 +895,13 @@ def upload_file():
 		if len(fileKey) > 8 and fileKey[:8] == "pdf-file" and is_pdf(file.filename):
 			fileLocation = "./showPDFs/" + file.filename
 			file.save(fileLocation)
+
+			# Save to cloud
+			with open(fileLocation, "rb") as file:
+				storage_obj.save_file(f"showPDFs/", file.filename, file)
+
 			addShowFileToDatabase(fileLocation, school, show)
+
 		elif fileKey == "mp3-file" and file.filename.rsplit('.', 1)[1] == "mp3":
 			doesExist = os.path.exists(f"./static/{show.id}")
 			if not doesExist:
@@ -895,6 +909,10 @@ def upload_file():
 
 			fileLocation = f"./static/{show.id}/audio.mp3"
 			file.save(fileLocation)
+
+			# Save to cloud
+			with open(fileLocation, "rb") as file:
+				storage_obj.save_file(f"static/{show.id}", "audio.mp3", file)
 
 	return "Success!", 200
 
@@ -1120,6 +1138,9 @@ def add_prop_to_show():
 	# Get Image and save it
 	fileLocation = f"./static/{show.id}/{dotIcon.id}.svg"
 	request.files["image"].save(fileLocation)
+
+	with open(fileLocation, "rb") as file:
+		storage_obj.save_file(f"static/{show.id}", f"{dotIcon.id}.svg", file)
 	
 	showUser = ShowUser(
 		school_id = user.school_id,
@@ -1227,6 +1248,10 @@ def get_icon(id):
 		return "Unauthorized", 401
 	dotIcon = DotIcon.query.filter(DotIcon.id == id).first()
 
+	if dotIcon is None:
+		return "Dot Icon doesn't exist", 404
+
+	return storage_obj.send_file(f"static/{dotIcon.show_id}", f"{dotIcon.id}.svg"), 200
 	return send_from_directory(f"static/{dotIcon.show_id}", f"{dotIcon.id}.svg"), 200
 
 

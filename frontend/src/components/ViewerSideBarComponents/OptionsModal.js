@@ -59,7 +59,7 @@ const OptionsModal = (props) => {
 
         for (let x = 0; x < dots.length; x++) {
             output.push({
-                id: dots[x].userID, 
+                id: dots[x].dot.show_user_id, 
                 label: dots[x].userLabel, 
             });
             

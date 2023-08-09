@@ -1,17 +1,130 @@
-from azure.storage.blob import BlobServiceClient
-import os
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, ContainerSasPermissions
+from datetime import datetime, timedelta
+import json
+import os, time
+from flask import send_from_directory
+
 
 class StorageClient:
-	def __init__(self, use_cloud) -> None:
+	def __init__(self) -> None:
+		pass
+	
+	def get_file(self, path: str, filename: str):
+		raise NotImplementedError
+	
+	def send_file(self, path: str, filename: str):
+		raise NotImplementedError
+
+	def save_file(self, path: str, filename: str, file):
+		raise NotImplementedError
+	
+	def get_json(self, path: str, filename: str):
+		raise NotImplementedError
+	
+	def save_json(self, path: str, filename:str, data):
+		raise NotImplementedError
+
+
+class LocalStorageClient(StorageClient):
+	def __init__(self) -> None:
+		super().__init__()
+
+	def get_file(self, path: str, filename: str):
+		with open(f"./{path}/{filename}", "rb") as file: 
+			return file
+	
+	def send_file(self, path: str, filename: str):
+		return send_from_directory(f"./{path}", filename)
+
+	def save_file(self, path: str, filename: str, file):
+		# Create Path if it doesn't exist
+		doesExist = os.path.exists(f"./{path}")
+		if not doesExist:
+			os.makedirs(f"./{path}")
+
+		file.save(f"./{path}/{filename}")
+	
+	def get_json(self, path: str, filename: str):
+		with open(f"./{path}/{filename}", "r") as file: 
+			return json.load(file, indent=4)
+	
+	def save_json(self, path: str, filename: str, data):
+		with open(f"./{path}/{filename}", "w") as file: 
+			json.dump(data, file, indent=4)
+
+
+class CloudStorageClient(StorageClient):
+	def __init__(self) -> None:
+		self.containers = list()
+
 		# connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 		self.connect_str = "DefaultEndpointsProtocol=https;AccountName=dcdstorage;AccountKey=bmnJVBPHDQ6aAkGYIEb270FzNpXrlD50Z54hcqEjTbu48F1bDnPnFjyHIIJKDVF9fFgAPnBQgHdN+AStBwN7Tw==;EndpointSuffix=core.windows.net"
 		self.container_name = "static"
-		self.use_cloud = use_cloud
 
 		self.blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
-	
-	def get_container(self, name):
-		return StorageContainer(self, name)
+		
+		self.files = list()
+		self.last_update = 0
+
+	def get_container(self, container_name: str):
+		# Check if we have it in self.containers
+		for container in self.containers:
+			if container.get_name() == container_name:
+				return container
+		
+		# If not get it
+		container = StorageContainer(self, container_name)
+		self.containers.append(container)
+
+		return container
+
+	def update_files(self, path):
+		if time.time() - self.last_update <= 10000:
+			return
+
+		path_list = path.split("/")
+		container = self.get_container(path_list[0])
+		container_client = container.get_client()
+
+		blob_list = container_client.list_blobs()
+		for blob in blob_list:
+			print("\t" + blob.name)
+			filename = blob.name.replace("-", "/")
+			save_path = f"./{path_list[0]}/{filename}"
+
+			with open(save_path, mode="wb") as download_file:
+				download_file.write(container_client.download_blob(blob.name).readall())
+
+		self.last_update = time.time()
+		
+	def get_file(self, path: str, filename: str):
+		try:
+			path_list = path.split("/")
+			container = self.get_container(path_list[0])
+			path_fixed = path.replace("/", "-")[len(path_list[0]) + 1:]
+
+			container_client = container.get_client()
+
+			container_client.download_blob(f"{path_fixed}-{filename}").readall()
+
+			save_path = f"./{path}/{filename}"
+
+			with open(save_path, mode="wb") as download_file:
+				download_file.write(container_client.download_blob(f"{path_fixed}-{filename}").readall())
+				return download_file
+		except:
+			raise FileNotFoundError(f"When trying to load file ({path_fixed}/{filename}) from the cloud, it wasn't found")
+		
+	def send_file(self, path: str, filename: str):
+		self.update_files(path)
+		return send_from_directory(path, filename)
+
+	def save_file(self, path: str, filename: str, file):
+		path_list = path.split("/")
+		container = self.get_container(path_list[0])
+		path_fixed = path.replace("/", "-")[len(path_list[0]) + 1:]
+
+		return container.get_client().upload_blob(f"{path_fixed}-{filename}", file)
 
 
 class StorageContainer:
@@ -23,26 +136,23 @@ class StorageContainer:
 			self.container_client.get_container_properties()
 		except Exception as e:
 			self.container_client = client.blob_service_client.create_container(name)
+
+	def get_name(self):
+		return self.name
 	
 	def get_client(self):
 		return self.container_client
-	
-	def save_file(self, filename, file):
-		if self.client.use_cloud:
-			self.get_client().upload_blob(filename, file)
-		else:
-			doesExist = os.path.exists(f"./static/{self.name}")
-			if not doesExist:
-				os.makedirs(f"./static/{self.name}")
-								
-			with open(f"static/{self.name}/{filename}", "w") as file_w: 
-				file_w.writelines(file.readlines())
 
 
 
 if __name__ == "__main__":
-	sc = StorageClient(False)
-	scon = sc.get_container("static-1")
+	sc = CloudStorageClient()
 
-	with open("static/1/1.svg", "r") as file: 
-		scon.save_file("1.svg", file)
+	# with open("static/1/1.svg", "rb") as file: 
+	# 	sc.save_file("static/1", "1.svg", file)
+
+	for file_path in os.listdir('static/5'):
+		path = os.path.join("static/5", file_path)
+		if os.path.isfile(path):
+			with open(path, "rb") as file:
+				sc.save_file("static/5", file_path, file)

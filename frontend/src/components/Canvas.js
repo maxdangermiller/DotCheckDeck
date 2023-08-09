@@ -582,7 +582,7 @@ const Canvas = props => {
     
 
                 if (followDot !== undefined) {
-                    if (userOptions.highlightUser.label === data[curSetIndex].dots[curUserIndex].userLabel) {
+                    if (userOptions.highlightUser.id === data[curSetIndex].dots[curUserIndex].dot.show_user_id) {
                         followDotCords = {x: x, y: y};
                         drawUserDialogue(x, y, data[curSetIndex].dots[curUserIndex]);
                     }
@@ -1021,8 +1021,9 @@ const Canvas = props => {
             if (userOptions.highlightUser !== null) {
                 for (let x = 0; x < data.length; x++) {
                     const dot = data[x];
-
-                    if (userOptions.highlightUser.label === dot.userLabel) {
+                    
+                    if (userOptions.highlightUser.id === dot.dot.show_user_id) {
+                        // console.log(userOptions.highlightUser, dot)
                         return dot;
                     }
                 }
@@ -1054,7 +1055,7 @@ const Canvas = props => {
                 // Check if there is a user highlighted
                 if (highlightedUserData !== null) {
                     // Check if the current dot being read is that label
-                    if (highlightedUserData.userLabel === dot.userLabel) {
+                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id) {
                         if (userOptions.showMovementBrackets) {
                             drawBracket = {useX:useX, useY:useY, dot:dot.dot};
                         }
@@ -1382,13 +1383,14 @@ const Canvas = props => {
             if (y > cords.y - margin && y < cords.y + margin  && x > cords.x - margin && x < cords.x + margin) {
                 wasOnDot = true;
                 if (userOptions.showMovementBrackets) {
-                    setUserOptions({...userOptions, "highlightUser": {"id": dot.userID, "label": dot.userLabel}})
+                    setUserOptions({...userOptions, "highlightUser": {"id": dot.dot.show_user_id, "label": dot.userLabel}})
                 }
                 else {
                     setHoverDot({...dot, "x": cords.x, "y": cords.y});
                 }
             }
         });
+        
 
         if (!wasOnDot && !userOptions.showMovementBrackets && hoverDot["x"]) {
             setHoverDot({});
@@ -1400,7 +1402,7 @@ const Canvas = props => {
             userOptions.highlightUser !== null &&
             userOptions.highlightUser.id !== userData.id
         ) {
-            setUserOptions({...userOptions, "highlightUser": {"id": userData.id, "label": userData.label}})
+            setUserOptions({...userOptions, "highlightUser": {"id": userData.show_user_id, "label": userData.label}})
         }
     }
 
@@ -1490,11 +1492,11 @@ const Canvas = props => {
 
     useEffect(() => {
         if (userOptions.followingUser && userOptions.highlightUser !== null) {
-            let userLabel = userData.label;
+            let showUserID = userData.show_user_id;
             // let userLabel = userOptions.highlightUser.label;
             
             for (let i = 0; i < dots.length; i++) {
-                if (dots[i].userLabel === userLabel) {
+                if (dots[i].dot.show_user_id === showUserID) {
                     setFollowDot(dots[i]);
                 }
             }
