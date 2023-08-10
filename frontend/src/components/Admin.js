@@ -13,7 +13,7 @@ import './Admin.css';
 const WINDOW_LOCATION = getApi();
 
 const Admin = (props) => {
-    const [data, setData] = useState({"school": {}, "sections": [], "sets": [], "shows": [], "users": [], "prop_show_users": []});
+    const [data, setData] = useState({"school": {}, "sections": [], "sets": [], "shows": [], "users": [], "prop_show_users": [], "default_show": {}});
     const [menuIndex, setMenuIndex] = useState(0);
 
     const { schoolCode, token, ...rest } = props
@@ -36,7 +36,7 @@ const Admin = (props) => {
 
         }
         if (menuIndex === 4) {
-            return (<AdminPropsPage  token={token} props={data.prop_show_users} setProps={setProps} sets={data.sets}/>);
+            return (<AdminPropsPage  token={token} props={data.prop_show_users} setProps={setProps} sets={data.sets} showCode={data.default_show.code}/>);
 
         }
         if (menuIndex === 5) {

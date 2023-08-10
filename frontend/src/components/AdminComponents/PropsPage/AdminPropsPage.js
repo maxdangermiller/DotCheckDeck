@@ -2,22 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import Table from 'react-bootstrap/Table';
 import getApi from '../../getApi';
 import Boolean from '../Boolean';
+import AdminAddProp from './AdminAddProp';
+import AdminEditProp from './AdminEditProp';
 
 const WINDOW_LOCATION = getApi();
 const CELL_STYLE = "flex-row justify-content-center d-flex align-items-center adminTextAlignCenter";
 
 const SORT_ID = 0;
-const SORT_MEASURE = 1;
-const SORT_COUNTS = 2;
-const SORT_T_COUNTS = 3;
-const SORT_S_TIME = 4;
-const SORT_E_TIME = 5;
+const SORT_LABEL = 1;
+const SORT_IS_LOCKED = 2;
+const SORT_IS_STATIONARY = 3;
+const SORT_LOADED_DOTS = 4;
 
 const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminPropsPage = (_props) => {
-    const {token, props, setProps, sets, ...rest} = _props;
+    const {token, props, setProps, sets, showCode, ...rest} = _props;
 
     const [sortBy, setSortBy] = useState(0);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
@@ -27,31 +28,31 @@ const AdminPropsPage = (_props) => {
     const [curEdit, setCurEdit] = useState({});
     const [curNotes, setCurNotes] = useState("");
 
-    const openEdit = (set) => {
-        setCurEdit(set);
+    const openEdit = (prop) => {
+        setCurEdit(prop);
         setShowEdit(true);
-    }
-    
-    const openNotes = (set) => {
-        setCurNotes(set.notes);
-        setShowNotes(true);
-    }
-
-    const getOnlyPropShowUsers = (users) => {
-        console.log(users)
-
-        return [];
     }
     
     const sort = (data) => {
         let useKey = "";
 
         if (sortBy === SORT_ID)     { useKey = "id";    }
-        if (sortBy === SORT_MEASURE)   { useKey = "measure";  }
-        if (sortBy === SORT_COUNTS)  { useKey = "counts";  }
-        if (sortBy === SORT_T_COUNTS)  { useKey = "total_counts";  }
-        if (sortBy === SORT_S_TIME)  { useKey = "start_time_code";  }
-        if (sortBy === SORT_E_TIME)  { useKey = "end_time_code";  }
+        if (sortBy === SORT_LABEL)   { useKey = "label";  }
+        if (sortBy === SORT_IS_LOCKED)  { useKey = "is_locked";  }
+        if (sortBy === SORT_IS_STATIONARY)  { useKey = "is_stationary";  }
+        if (sortBy === SORT_LOADED_DOTS)  { 
+            return data.sort(function(a, b) {
+                let keyA = convertIndicesListToRangeString(a.dots, sets);
+                let keyB = convertIndicesListToRangeString(b.dots, sets);
+    
+                let oppDir = sortDirection === SORT_UP ? SORT_DOWN : SORT_UP;
+    
+                if (keyA < keyB) return oppDir;
+                if (keyA > keyB) return sortDirection;
+    
+                return 0;
+            });
+        }
 
         return data.sort(function(a, b) {
             let keyA = a[useKey] !== null ? a[useKey] : "";
@@ -121,9 +122,10 @@ const AdminPropsPage = (_props) => {
                 <tr>
                     <th onClick={() => handelHeaderClick(0)}>#</th>
                     <th onClick={() => handelHeaderClick(1)}>Label</th>
-                    <th onClick={() => handelHeaderClick(1)}>Is Locked</th>
-                    <th onClick={() => handelHeaderClick(2)}>Is Stationary</th>
-                    <th onClick={() => handelHeaderClick(2)}># Dots</th>
+                    <th onClick={() => handelHeaderClick(2)}>Is Locked</th>
+                    <th onClick={() => handelHeaderClick(3)}>Is Stationary</th>
+                    <th onClick={() => handelHeaderClick(4)}># Dots</th>
+                    <th onClick={() => handelHeaderClick(0)}>Image</th>
                     <th>Edit</th>
                 </tr>
             </thead>
@@ -136,18 +138,37 @@ const AdminPropsPage = (_props) => {
                             <td><div className={CELL_STYLE}> <Boolean state={prop.is_locked}/> </div></td>
                             <td><div className={CELL_STYLE}> <Boolean state={prop.is_stationary}/> </div></td>
                             <td><div className={CELL_STYLE}> {convertIndicesListToRangeString(prop.dots, sets)} </div></td>
+                            <td><div className={CELL_STYLE}> <img src={WINDOW_LOCATION + "/get-icon/" + prop.dots[0].dot_icon.id + "?token=" + token} alt="Image"  height={24}/> </div></td>
                             <td><div className={CELL_STYLE}>
-                                <button className='btn btn-success' onClick={(e) => openEdit(prop)}>Edit</button> 
+                                {
+                                    prop.is_stationary ?
+                                    <button className='btn btn-success' onClick={(e) => openEdit(prop)}>Edit</button> 
+                                    : null
+                                }
                             </div></td>
                         </tr> 
                 )
                 }
             </tbody>
         </Table>
+
+        <AdminEditProp 
+            show={showEdit}
+            setShow={setShowEdit}
+            token={token}
+            prop={curEdit}
+        />
+        <AdminAddProp 
+            show={showCreate}
+            setShow={setShowCreate}
+            token={token}
+            showCode={showCode}
+        />
+
         <button 
             className="btn btn-success" 
             style={{bottom: "1vh", left: "1vw", position: "absolute"}}
-            onClick={() => window.location.href = "/admin-add-prop"}
+            onClick={() => setShowCreate(true)}
         >Create Prop</button>
         </>
     );

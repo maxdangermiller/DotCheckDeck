@@ -11,7 +11,7 @@ const AdminAddProp = (props) => {
     const [showCode, setShowCode] = useState("");
     const [width, setWidth] = useState(1);
     const [height, setHeight] = useState(1);
-    const [direction, setDirection] = useState("");
+    const [direction, setDirection] = useState("On");
     const [line, setLine] = useState("50");
     const [steps, setSteps] = useState(0.0);
     const [side, setSide] = useState(1);
@@ -33,7 +33,7 @@ const AdminAddProp = (props) => {
         formData.append('show_code', showCode);
         formData.append('width', width);
         formData.append('height', height);
-        formData.append('direction', direction);
+        formData.append('direction', direction === "On" ? "" : direction);
         formData.append('line', line);
         formData.append('steps', steps);
         formData.append('side', side);
@@ -73,110 +73,97 @@ const AdminAddProp = (props) => {
                     <div className='overflow overflow-auto' style={{height:"100%"}}>
                     <h2 className="fw-bold mb-2 text-uppercase">Create Prop</h2>
                     
-                    <div className="mb-3">
-                        <label htmlFor="showNameInput" className="form-label">Show Code</label>
-                        <input 
-                            type="text" 
-                            className="form-control" 
-                            id="showNameInput" 
-                            placeholder="12345678" 
-                            value={showCode}
-                            onChange={(event) => setShowCode(event.target.value)}
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="widthInput" className="form-label">Width in steps</label>
-                        <input 
-                            type="number" 
-                            className="form-control" 
-                            id="widthInput" 
-                            placeholder={0}
+                    <TextField
+                        label="Show Code"
+                        defaultValue="12345678"
+                        value={showCode}
+                        onChange={(event) => setShowCode(event.target.value)}
+                        fullWidth
+                    />
+                    <div className='d-flex flex-row justify-content-between align-items-center'>
+                        <TextField
+                            label="Width in steps"
                             value={width}
                             onChange={(event) => setWidth(event.target.value)}
+                            sx={{ width: "40%", margin: "1rem" }}
+                            type="number"
                         />
-                    </div>
-                    <div className="mb-3">
-                        <label htmlFor="heightInput" className="form-label">Height in steps</label>
-                        <input 
-                            type="number" 
-                            className="form-control" 
-                            id="heightInput" 
-                            placeholder={0}
+                        <TextField
+                            label="Height in steps"
                             value={height}
                             onChange={(event) => setHeight(event.target.value)}
+                            sx={{ width: "40%", margin: "1rem" }}
+                            type="number"
                         />
                     </div>
 
                     <br />
 
-                    <Autocomplete
-                        options={["", "Outside", "Inside"]}
-                        sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
-                        renderInput={(params) => <TextField {...params} label="Direction" />}
-                        onChange={(event, newValue) => setDirection(newValue)}
-                        value={direction}
-                        size="small"
-                    />
-
-                    <Autocomplete
-                        options={["5", "10", "15", "20", "25", "30", "35", "40", "45", "50"]}
-                        sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
-                        renderInput={(params) => <TextField {...params} label="Line" />}
-                        onChange={(event, newValue) => setLine(newValue)}
-                        value={line}
-                        size="small"
-                    />
-
-                    <div className="mb-3">
-                        <label htmlFor="stepsInput" className="form-label">Steps</label>
-                        <input 
-                            type="number" 
-                            className="form-control" 
-                            id="stepsInput" 
-                            placeholder={0}
+                    <div className='d-flex flex-row justify-content-between align-items-center'>
+                        <TextField
+                            label="Steps"
                             value={steps}
                             onChange={(event) => setSteps(event.target.value)}
+                            sx={{ width: "30%", margin: "1rem" }}
+                            type="number"
+                        />
+
+                        <Autocomplete
+                            options={["On", "Outside", "Inside"]}
+                            sx={{ width: "30%", margin: "1rem" }}
+                            renderInput={(params) => <TextField {...params} label="Direction" />}
+                            onChange={(event, newValue) => setDirection(newValue)}
+                            value={direction}
+                            size="small"
+                        />
+
+                        <Autocomplete
+                            options={["5", "10", "15", "20", "25", "30", "35", "40", "45", "50"]}
+                            sx={{ width: "20%", margin: "1rem" }}
+                            renderInput={(params) => <TextField {...params} label="Line" />}
+                            onChange={(event, newValue) => setLine(newValue)}
+                            value={line}
+                            size="small"
                         />
                     </div>
 
-                    <Autocomplete
-                        options={["1", "2"]}
-                        sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
-                        renderInput={(params) => <TextField {...params} label="Side" />}
-                        onChange={(event, newValue) => setSide(parseInt(newValue))}
-                        value={side.toString()}
-                        size="small"
-                    />
-
-                    <div className="mb-3">
-                        <label htmlFor="stepsInput" className="form-label">Forward Backward Steps</label>
-                        <input 
-                            type="number" 
-                            className="form-control" 
-                            id="stepsInput" 
-                            placeholder={0}
+                    <div className='d-flex flex-row justify-content-between align-items-center'>
+                        <TextField
+                            label="Steps"
                             value={fbSteps}
                             onChange={(event) => setFBSteps(event.target.value)}
+                            sx={{ width: "15%", margin: "1rem" }}
+                            type="number"
+                        />
+
+                        <Autocomplete
+                            options={["On", "Front", "Behind"]}
+                            sx={{ width: "30%", margin: "1rem" }}
+                            renderInput={(params) => <TextField {...params} label="Line" />}
+                            onChange={(event, newValue) => setFBDirection(newValue)}
+                            value={fbDirection}
+                            size="small"
+                        />
+
+                        <Autocomplete
+                            options={["Front side", "Front Hash", "Back Hash", "Back Side"]}
+                            sx={{ width: "30%", margin: "1rem" }}
+                            renderInput={(params) => <TextField {...params} label="Hash" />}
+                            onChange={(event, newValue) => setUseHash(newValue)}
+                            value={useHash}
+                            size="small"
+                        />
+                        
+                        <Autocomplete
+                            options={["1", "2"]}
+                            sx={{ width: "15%", paddingTop: "1vh", paddingBottom: "1vh" }}
+                            renderInput={(params) => <TextField {...params} label="Side" />}
+                            onChange={(event, newValue) => setSide(parseInt(newValue))}
+                            value={side.toString()}
+                            size="small"
                         />
                     </div>
 
-                    <Autocomplete
-                        options={["On", "Front", "Behind"]}
-                        sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
-                        renderInput={(params) => <TextField {...params} label="Line" />}
-                        onChange={(event, newValue) => setFBDirection(newValue)}
-                        value={fbDirection}
-                        size="small"
-                    />
-
-                    <Autocomplete
-                        options={["Front side", "Front Hash", "Back Hash", "Back Side"]}
-                        sx={{ width: "100%", paddingTop: "1vh", paddingBottom: "1vh" }}
-                        renderInput={(params) => <TextField {...params} label="Line" />}
-                        onChange={(event, newValue) => setUseHash(newValue)}
-                        value={useHash}
-                        size="small"
-                    />
 
                     <br />
 

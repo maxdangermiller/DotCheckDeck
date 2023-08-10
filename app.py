@@ -1101,7 +1101,7 @@ def add_prop_to_show():
 	identity = get_jwt_identity()
 	user = User.query.filter_by(email=identity).first()
 
-	if user is None:
+	if user is None or user.is_admin is False:
 		return "Unauthorized", 401
 	
 	show_code = request.form.get("show_code", "")
@@ -1115,6 +1115,7 @@ def add_prop_to_show():
 	fb_steps = request.form.get("fb_steps", None)
 	fb_direction = request.form.get("fb_direction", None)
 	use_hash = request.form.get("use_hash", None)
+	label = request.form.get("label", "")
 
 	show = Show.query.filter(Show.code == show_code).first()
 
@@ -1148,7 +1149,7 @@ def add_prop_to_show():
 		school_id = user.school_id,
 		show_id = show.id,
 		symbol = "*",
-		label = "",
+		label = label,
 		is_locked = True,
 		is_prop = True,
 		is_stationary = True
@@ -1182,7 +1183,7 @@ def add_prop_to_show():
 	show.changeUpdateTime()  
 	db.session.commit()
 
-	return "Done.", 200
+	return "Done.", 201
 
 @app.route('/convert-user-to-prop', methods=['POST'])
 @jwt_required()
@@ -1190,7 +1191,7 @@ def convert_user_to_prop():
 	identity = get_jwt_identity()
 	user = User.query.filter_by(email=identity).first()
 
-	if user is None:
+	if user is None or user.is_admin is False:
 		return "Unauthorized", 401
 	
 	show_code = request.form.get("show_code", "")
@@ -1239,6 +1240,73 @@ def convert_user_to_prop():
 	# There has been a change made to the show's date, 
 	# so we must change the "last update time" var in the show object
 	show.changeUpdateTime()  
+	db.session.commit()
+
+	return "Done.", 200
+
+
+@app.route('/move-stationary-prop', methods=["POST"])
+@jwt_required()
+def move_stationary_prop():
+	identity = get_jwt_identity()
+	user = User.query.filter_by(email=identity).first()
+
+	if user is None or user.is_admin is False:
+		return "Unauthorized", 401
+	
+	prop_id = request.form.get("prop_id", None)
+
+	prop = ShowUser.query.filter(ShowUser.id == prop_id, ShowUser.is_prop == True).first()
+
+	if prop is None:
+		return "Prop doesn't exist", 404
+	
+	if not prop.is_stationary:
+		return "This prop isn't stationary", 400
+	
+	# Get all of the directional data
+	direction = request.form.get("direction", None)
+	line = request.form.get("line", None)
+	steps = request.form.get("steps", None)
+	side = request.form.get("side", None)
+	fb_steps = request.form.get("fb_steps", None)
+	fb_direction = request.form.get("fb_direction", None)
+	use_hash = request.form.get("use_hash", None)
+	label = request.form.get("label", None)
+
+	print(request.form)
+
+	if label is not None:
+		prop.label = label
+		db.session.commit()
+	
+	dots = Dot.query.filter(Dot.show_user_id == prop.id).all()
+
+	dotIcon = DotIcon.query.filter(DotIcon.id == dots[0].dot_icon_id).first()
+
+	for dot in dots:
+		dot.direction = direction
+		dot.line = line
+		dot.steps = steps
+		dot.side = side
+		dot.fb_steps = fb_steps
+		dot.fb_direction = fb_direction
+		dot.use_hash = use_hash
+		
+		db.session.commit()	
+
+
+	# Get Image and save it
+	if "image" in request.files:
+		fileLocation = f"./static/{show.id}/{dotIcon.id}.svg"
+		request.files["image"].save(fileLocation)
+
+		with open(fileLocation, "rb") as file:
+			storage_obj.save_file(f"static/{show.id}", f"{dotIcon.id}.svg", file)
+
+	# There has been a change made to the show's date, 
+	# so we must change the "last update time" var in the show object
+	Show.query.filter(Show.id == prop.show_id).first().changeUpdateTime()  
 	db.session.commit()
 
 	return "Done.", 200
@@ -2351,7 +2419,8 @@ class GetDatabaseResource(Resource):
 			"sets": sets_schema.dump(sets),
 			"shows": shows_schema.dump(shows),
 			"users": users_schema.dump(users),
-			"prop_show_users": prop_show_user_data
+			"prop_show_users": prop_show_user_data,
+			"default_show": show_schema.dump(defaultShow)
 		}
 
 
