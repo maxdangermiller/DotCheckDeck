@@ -65,20 +65,27 @@ const OptionsModal = (props) => {
                 });
             }
         }
+        
 
         return output.sort(function(a, b) {
-            let keyA = a["label"].match(/(\d+)/);
-            let keyB = b["label"].match(/(\d+)/);
-            let keyAPrefix = a["label"].replace(/[0-9]/g, '');
-            let keyBPrefix = b["label"].replace(/[0-9]/g, '');
-
-            // Compare the letter "prefixes" first
-            if (keyAPrefix < keyBPrefix) return -1;
-            if (keyAPrefix > keyBPrefix) return 1;
-
-            // Compare the numbers
-            if (parseInt(keyA) < parseInt(keyB)) return -1;
-            if (parseInt(keyA) > parseInt(keyB)) return 1;
+            try {
+                let keyA = a["label"].match(/(\d+)/);
+                let keyB = b["label"].match(/(\d+)/);
+                let keyAPrefix = a["label"].replace(/[0-9]/g, '');
+                let keyBPrefix = b["label"].replace(/[0-9]/g, '');
+    
+                // Compare the letter "prefixes" first
+                if (keyAPrefix < keyBPrefix) return -1;
+                if (keyAPrefix > keyBPrefix) return 1;
+    
+                // Compare the numbers
+                if (parseInt(keyA) < parseInt(keyB)) return -1;
+                if (parseInt(keyA) > parseInt(keyB)) return 1;
+            } catch (error) {
+                console.log(output);
+                console.log(a, b);
+                console.log(error);
+            }
 
             return 0;
         });

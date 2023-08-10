@@ -1149,7 +1149,9 @@ def add_prop_to_show():
 		show_id = show.id,
 		symbol = "*",
 		label = "",
-		is_locked = True
+		is_locked = True,
+		is_prop = True,
+		is_stationary = True
 	)
 	db.session.add(showUser)
 	db.session.commit()	
@@ -1207,6 +1209,8 @@ def convert_user_to_prop():
 		return "Invalid show label", 404
 	
 	showUser.is_locked = True
+	is_prop = True,
+	is_stationary = False
 	db.session.commit()	
 
 	dotIcon = DotIcon(
