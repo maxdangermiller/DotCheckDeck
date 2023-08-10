@@ -58,11 +58,12 @@ const OptionsModal = (props) => {
         let dots = value[set_numb].dots;
 
         for (let x = 0; x < dots.length; x++) {
-            output.push({
-                id: dots[x].dot.show_user_id, 
-                label: dots[x].userLabel, 
-            });
-            
+            if (!dots[x].show_user.is_locked && dots[x].userLabel !== null) {
+                output.push({
+                    id: dots[x].dot.show_user_id, 
+                    label: dots[x].userLabel, 
+                });
+            }
         }
 
         return output.sort(function(a, b) {

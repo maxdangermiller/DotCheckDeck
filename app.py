@@ -1649,6 +1649,7 @@ def getAllDotInfoForSet(show, set):
 
 		dotCords.append({
 			'dot': dot_schema.dump(dot),
+			'show_user': show_user_schema.dump(showUserObj),
 
 			'counts': set.counts,
 			
