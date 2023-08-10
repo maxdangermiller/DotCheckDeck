@@ -265,6 +265,7 @@ const Viewer = (props) => {
 
 		// If we're buffered then don't worry about calling the API
 		if (useSetIndex === -1) { 
+			console.log(localData);
 			setData(localData);
 			setIsDownloading(false); 
 			return; 
