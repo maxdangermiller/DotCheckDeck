@@ -170,11 +170,6 @@ const AdminSetsPage = (props) => {
                 handleSave={handleSave}
             />
         </Table>
-        <button 
-            className="btn btn-success" 
-            style={{bottom: "1vh", left: "1vw", position: "absolute"}}
-            onClick={() => setShowCreate(true)}
-        >Create Section</button>
         </>
     );
 }

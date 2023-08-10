@@ -5,6 +5,7 @@ import AdminSectionsPage from './AdminComponents/SectionPage/AdminSectionsPage';
 import AdminSetNamePage from './AdminComponents/SetNamePage/AdminSetNamePage';
 import AdminShowPage from './AdminComponents/ShowPage/AdminShowPage';
 import AdminSetsPage from './AdminComponents/SetPage/AdminSetsPage';
+import AdminPropsPage from './AdminComponents/PropsPage/AdminPropsPage';
 import getApi from './getApi';
 
 import './Admin.css';
@@ -12,7 +13,7 @@ import './Admin.css';
 const WINDOW_LOCATION = getApi();
 
 const Admin = (props) => {
-    const [data, setData] = useState({"school": {}, "sections": [], "sets": [], "shows": [], "users": []});
+    const [data, setData] = useState({"school": {}, "sections": [], "sets": [], "shows": [], "users": [], "prop_show_users": []});
     const [menuIndex, setMenuIndex] = useState(0);
 
     const { schoolCode, token, ...rest } = props
@@ -35,6 +36,10 @@ const Admin = (props) => {
 
         }
         if (menuIndex === 4) {
+            return (<AdminPropsPage  token={token} props={data.prop_show_users} setProps={setProps} sets={data.sets}/>);
+
+        }
+        if (menuIndex === 5) {
             return (<AdminShowPage token={token} shows={data.shows} setShows={setShows}/>);
 
         }
@@ -51,6 +56,10 @@ const Admin = (props) => {
 
     const setSets = (sections) => {
         setData({...data, "sets": sections})
+    }
+
+    const setProps = (props) => {
+        setData({...data, "prop_show_users": props})
     }
 
     const setShows = (shows) => {
@@ -101,8 +110,9 @@ const Admin = (props) => {
                             <a className={getActiveClassName(1)} onClick={(e) => setMenuIndex(1)}>Sections</a>
                             <a className={getActiveClassName(2)} onClick={(e) => setMenuIndex(2)}>Set Names</a>
                             <a className={getActiveClassName(3)} onClick={(e) => setMenuIndex(3)}>Sets</a>
-                            <a className={getActiveClassName(4)} onClick={(e) => setMenuIndex(4)}>Show Settings</a>
-                            <a className={getActiveClassName(5)} onClick={(e) => setMenuIndex(5)}>School Settings</a>
+                            <a className={getActiveClassName(4)} onClick={(e) => setMenuIndex(4)}>Props</a>
+                            <a className={getActiveClassName(5)} onClick={(e) => setMenuIndex(5)}>Show Settings</a>
+                            <a className={getActiveClassName(6)} onClick={(e) => setMenuIndex(6)}>School Settings</a>
                            
                         </nav>
                     </nav>

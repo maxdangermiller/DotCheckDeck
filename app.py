@@ -294,6 +294,8 @@ class ShowUser(CacheableMixin, db.Model):
 	label = db.Column(db.String(16))
 	is_section_leader = db.Column(db.Boolean, default=False)
 	is_locked = db.Column(db.Boolean, default=False)
+	is_prop = db.Column(db.Boolean, default=False)
+	is_stationary = db.Column(db.Boolean, default=False)
 
 	# Timestamps
 	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
@@ -1091,7 +1093,7 @@ def reset_password():
 	return "Done.", 200
 
 
-# Icon For Dots
+# Props
 
 @app.route('/add-prop-to-show', methods=['POST'])
 @jwt_required()
@@ -2297,6 +2299,7 @@ class GetDatabaseResource(Resource):
 		3) Set Names
 		4) Show
 		5) School
+		6) Props
 		"""
 		identity = get_jwt_identity()
 		
@@ -2330,12 +2333,20 @@ class GetDatabaseResource(Resource):
 		# Get Sets + set names
 		sets = Set.query.filter(Set.school_id == school.id, Set.show_id == defaultShow.id).order_by(Set.showIndex).all()
 
+		propShowUsers = ShowUser.query.filter(ShowUser.show_id == defaultShow.id, ShowUser.is_prop == True).all()
+		prop_show_user_data = show_users_schema.dump(propShowUsers)
+
+		for prop in prop_show_user_data:
+			dots = Dot.query.filter(Dot.show_user_id == prop["id"]).all()
+			prop["dots"] = dots_schema.dump(dots)
+
 		return {
 			"school": school_schema.dump(school),
 			"sections": sections_data,
 			"sets": sets_schema.dump(sets),
 			"shows": shows_schema.dump(shows),
-			"users": users_schema.dump(users)
+			"users": users_schema.dump(users),
+			"prop_show_users": prop_show_user_data
 		}
 
 
@@ -2702,6 +2713,30 @@ class SetNameListResource(Resource):
 		return getBufferedSetNames(show, showUser)
 
 
+# Props
+
+class PropsListResource(Resource):
+	@jwt_required()
+	def get():
+		identity = get_jwt_identity()
+
+		activeUser = User.query.filter(User.email == identity).first()
+
+		if activeUser is None: 
+			return "INVALID AUTHORIZATION", 401
+		
+		if not activeUser.is_admin:
+			return "INVALID AUTHORIZATION", 401
+		
+		showCode = request.args.get('show_code', None)
+
+		show = Show.query.filter(Show.code == showCode).first()
+
+		showUsers = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.is_prop == True).all()
+
+		return show_users_schema.dump(showUsers), 200
+
+
 
 api.add_resource(SetListResource, '/sets')
 api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
@@ -2724,6 +2759,7 @@ api.add_resource(SetNameListResource, '/get-set-names')
 api.add_resource(GetSectionsResource, '/get-sections')
 api.add_resource(UpdateUserSectionResource, '/update-user-section')
 api.add_resource(AddShowUserResource, "/add-show-user-to-user")
+api.add_resource(PropsListResource, "/get-props")
 
 
 
