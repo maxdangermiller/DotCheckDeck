@@ -9,6 +9,7 @@ import axios from "axios";
 import getApi from './getApi';
 import logo from '../logo.svg';
 import CustomDownloadProgress from './CustomDownloadProgress';
+import UserInfoDialogue from './utils/UserInfoDialogue';
 
 import {ReactComponent as FindUserButton} from '../circle-question.svg';
 import UserSectionSelection from './utils/UserSectionSelection';
@@ -38,6 +39,7 @@ const Viewer = (props) => {
 	const [audioPlaying, setAudioPlaying] = useState(false);
 	const [curPlayTime, setCurPlayTime] = useState(20000);
 	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+	const [displayUserInfo, setDisplayUserInfo] = useState({show: false, dot: null});
 	// const [audio, setAudio] = useState(null);
 
 	const [isDownloading, setIsDownloading] = useState(false);
@@ -58,6 +60,7 @@ const Viewer = (props) => {
 	});
 
 	const setInput = useRef(null);
+	const canvasRef = useRef(null);
 
 	const getDatabaseVersion = () => {
 		// If we just updated less than MIN_TIMESTAMP_INTERVAL seconds ago, don't update
@@ -311,7 +314,7 @@ const Viewer = (props) => {
 					window.location.href = "/login";
 				} else if (error.response && error.response.status === 404) {
 					localStorage.removeItem("localSets")
-					// window.location.reload();
+					window.location.reload();
 				}
 			})
 		}
@@ -714,7 +717,7 @@ const Viewer = (props) => {
 
 	return (
 		<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
-			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass">
+			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass" ref={canvasRef}>
 				<Canvas 
 					draw={draw} 
 					setDimensions={setDimensions} 
@@ -728,7 +731,10 @@ const Viewer = (props) => {
 					setUserOptions={setUserOptions}
 					userData={props.userData}
 					token={props.token}
+					displayUserInfo={displayUserInfo}
+					setDisplayUserInfo={setDisplayUserInfo}
 				/>
+				<UserInfoDialogue displayUserInfo={displayUserInfo} canvasRef={canvasRef}/>
 			</div>
 			<ViewerSideBar 
 				curSetInfo={curSetInfo} 

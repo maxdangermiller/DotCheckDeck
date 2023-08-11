@@ -16,7 +16,7 @@ const UserSectionSelection = (props) => {
     const handleShow = () => setShow(true);
 
     useEffect(() => {
-        console.log(getShowUser())
+        // console.log(getShowUser())
         if (getShowUser() === undefined || getShowUser().section_id !== null) {
             setShow(false);
             return;
@@ -37,7 +37,7 @@ const UserSectionSelection = (props) => {
             return response.json();
         })
         .then((data) => {
-            console.log(data);
+            // console.log(data);
             setSections(data);
         })
         .catch((error) => {
@@ -46,11 +46,11 @@ const UserSectionSelection = (props) => {
     }, [userData, showID]);
 
     const getShowUser = () => {
-        console.log(showID)
+        // console.log(showID)
         try {
             for (let i = 0; i < userData.show_users.length; i++) {
                 if (userData.show_users[i].show_id === showID) {
-                    console.log(userData.show_users[i])
+                    // console.log(userData.show_users[i])
                     return userData.show_users[i];
                 }
             }

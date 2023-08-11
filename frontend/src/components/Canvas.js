@@ -40,7 +40,8 @@ const Canvas = props => {
     const { 
         draw, setDimensions, curDimensions, 
         curSet, sets, loading, curPlayTime, 
-        audioPlaying, userOptions, setUserOptions, userData, token, ...rest 
+        audioPlaying, userOptions, setUserOptions, 
+        userData, token, displayUserInfo, setDisplayUserInfo, ...rest 
     } = props;
 
     const canvasRef = useRef(null)
@@ -417,6 +418,16 @@ const Canvas = props => {
             context.fillText("for " + dot["counts"] + " counts", x + w * 0.5, y + h * 0.8, w * 0.9);
             // console.log(dot);
             context.closePath();
+        }
+
+        const drawUserName = (dot) => {
+            if (displayUserInfo.dot === null || displayUserInfo.dot.dot.id !== dot.dot.id) {
+                if (dot.userID !== userData.show_user_id) {
+                    setDisplayUserInfo({show: true, dot: dot})
+                } else {
+                    setDisplayUserInfo({show: false, dot: dot})
+                }
+            }
         }
 
         const drawLine = (x0, y0, x1, y1, color, thickness) => {
@@ -1057,7 +1068,7 @@ const Canvas = props => {
                     // Check if the current dot being read is that label
                     if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id) {
                         if (userOptions.showMovementBrackets) {
-                            drawBracket = {useX:useX, useY:useY, dot:dot.dot};
+                            drawBracket = {useX:useX, useY:useY, dot:dot};
                         }
 
                         let color = getDotColor(dot, true, userOptions.useSectionColors)
@@ -1114,7 +1125,8 @@ const Canvas = props => {
             }
 
             if (drawBracket.useX !== null && followDot === undefined) {
-                drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot);
+                drawUserName(drawBracket.dot)
+                drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot.dot);
             }
 
             return newDots;
@@ -1392,7 +1404,7 @@ const Canvas = props => {
         });
         
 
-        if (!wasOnDot && !userOptions.showMovementBrackets && hoverDot["x"]) {
+        if (!wasOnDot && !userOptions.showMovementBrackets && hoverDot["x"]  !== undefined) {
             setHoverDot({});
         }
 
@@ -1402,6 +1414,9 @@ const Canvas = props => {
             userOptions.highlightUser !== null &&
             userOptions.highlightUser.id !== userData.id
         ) {
+            if (hoverDot["x"] !== undefined) {
+                setHoverDot({});
+            }
             setUserOptions({...userOptions, "highlightUser": {"id": userData.show_user_id, "label": userData.label}})
         }
     }
