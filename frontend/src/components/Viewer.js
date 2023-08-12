@@ -563,8 +563,9 @@ const Viewer = (props) => {
 		try {
 			let localUserOptions = window.localStorage.getItem("localUserOptions");
 			parsedData = JSON.parse(localUserOptions);
+			localUserOptions.keys()
 		} catch {
-			setUserOptions({
+			parsedData = {
 				"showNextSet": false, "showLastSet": false, "drawPath": false,
 				"highlightSection": false,
 				"useSectionColors": true,
@@ -572,7 +573,8 @@ const Viewer = (props) => {
 				"moveSpeed": 10, "useActualSetLength": false,
 				"dimOtherUsers": false, "showCollegeHash": true,
 				"followingUser": false
-			});
+			};
+			window.localStorage.setItem("localUserOptions", JSON.stringify(parsedData));
 		}
 		
 		if (props.userData.label !== undefined) {

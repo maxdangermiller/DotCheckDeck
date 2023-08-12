@@ -319,7 +319,7 @@ class User(CacheableMixin, db.Model):
 
 	# Relationships
 	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_users = db.relationship('ShowUser', cascade="all,delete", backref='user')
+	show_users = db.relationship('ShowUser', backref='user')
 
 	# Data
 	email = db.Column(db.String(128), unique=True)
@@ -842,14 +842,16 @@ def addShowFileToDatabase(file, school, show):
 				db.session.commit()
 			else:
 				_set = Set.query.filter(Set.set_numb==dot.setNumb, Set.show_id==show.id).first()
-			print(f"Adding dot: '{dot}' to DATABASE [SET {_set.set_numb}]")
-			_dot = Dot(
-				set_id=_set.id, show_user_id=showUser.id, direction=str(dot.direction),
-				line=str(dot.line), steps=float(dot.steps), side=int(dot.side), fb_steps=float(dot.fbSteps),
-				fb_direction=str(dot.fbDirection), use_hash=str(dot.useHash), school_id=school.id, show_id = show.id
-			)
-			db.session.add(_dot)
-			db.session.commit()
+			
+			if Dot.query.filter(Dot.show_user_id == showUser.id, Dot.set_id == _set.id).first() is None:
+				print(f"Adding dot: '{dot}' to DATABASE [SET {_set.set_numb}]")
+				_dot = Dot(
+					set_id=_set.id, show_user_id=showUser.id, direction=str(dot.direction),
+					line=str(dot.line), steps=float(dot.steps), side=int(dot.side), fb_steps=float(dot.fbSteps),
+					fb_direction=str(dot.fbDirection), use_hash=str(dot.useHash), school_id=school.id, show_id = show.id
+				)
+				db.session.add(_dot)
+				db.session.commit()
 	
 	# Go through and add show indices
 	sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
