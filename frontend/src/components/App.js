@@ -129,6 +129,7 @@ function App() {
 			</div>
 		);
 	} else {
+		console.log(token, schoolCode)
 		return (
 			<Router>
 				<NavBar 
