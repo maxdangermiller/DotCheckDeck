@@ -311,8 +311,8 @@ const Viewer = (props) => {
 
 					window.location.href = "/login";
 				} else if (error.response && error.response.status === 404) {
-					window.localStorage.removeItem("localSets")
-					window.location.reload();
+					// window.localStorage.removeItem("localSets")
+					// window.location.reload();
 				}
 			})
 		}
