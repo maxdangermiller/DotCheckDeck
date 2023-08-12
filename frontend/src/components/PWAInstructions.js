@@ -40,7 +40,7 @@ const PWAInstructions = (props) => {
                             <strong>iPhone:</strong>
                             <ListGroup as="ol" numbered>
                                 <ListGroup.Item as="li">
-                                    Press <IOSShareIcon width="1rem" height="1rem"/>
+                                    Press <IOSShareIcon width="24px" height="24px"/>
                                 </ListGroup.Item>
                                 <ListGroup.Item as="li">Press "Add to Home Screen"</ListGroup.Item>
                                 <ListGroup.Item as="li">Press "Add"</ListGroup.Item>

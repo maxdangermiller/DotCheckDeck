@@ -3,12 +3,12 @@ import { useState } from 'react';
 function useToken() {
 
 	function getRefToken() {
-		const userToken = localStorage.getItem('ref-token');
+		const userToken = window.localStorage.getItem('ref-token');
 		return userToken && userToken
 	}
 
 	function getToken() {
-		const userToken = localStorage.getItem('token');
+		const userToken = window.localStorage.getItem('token');
 		return userToken && userToken
 	}
 
@@ -16,18 +16,18 @@ function useToken() {
 	const [refToken, setRefToken] = useState(getRefToken());
 
 	function saveToken(userToken) {
-		localStorage.setItem('token', userToken);
+		window.localStorage.setItem('token', userToken);
 		setToken(userToken);
 	}
 
 	function saveRefToken(userToken) {
-		localStorage.setItem('ref-token', userToken);
+		window.localStorage.setItem('ref-token', userToken);
 		setRefToken(userToken);
 	}
 
 	function removeToken() {
-		localStorage.removeItem("token");
-		localStorage.removeItem("ref-token");
+		window.localStorage.removeItem("token");
+		window.localStorage.removeItem("ref-token");
 		setRefToken(null);
 		setToken(null);
 	}

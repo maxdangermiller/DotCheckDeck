@@ -168,7 +168,7 @@ const Viewer = (props) => {
 	const checkLocalSets = () => {
 		// Check If Saved
 		// Check Version number?
-		let localSets = localStorage.getItem("localSets");
+		let localSets = window.localStorage.getItem("localSets");
 		try {
 			if (localSets !== "" && localSets !== null) {
 				let parsedSets = JSON.parse(localSets);
@@ -205,7 +205,7 @@ const Viewer = (props) => {
 		// if (timestamp !== curDatabaseTimestamp) { return false; }
 		
 		// Check if Saved
-		let localData = localStorage.getItem("localData");
+		let localData = window.localStorage.getItem("localData");
 		try {
 			if (localData !== "" && localData !== null) {
 				let parsedData = JSON.parse(localData);
@@ -236,7 +236,7 @@ const Viewer = (props) => {
 
 	const getLocalData = () => {
 		try {
-			let localData = localStorage.getItem("localData");
+			let localData = window.localStorage.getItem("localData");
 			let parsedData = JSON.parse(localData);
 			return parsedData;
 		} catch {
@@ -245,12 +245,12 @@ const Viewer = (props) => {
 	}
 
 	const saveLocalData = (newData) => {
-		localStorage.setItem("localData", JSON.stringify(newData));
-		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+		window.localStorage.setItem("localData", JSON.stringify(newData));
+		window.localStorage.setItem("database-timestamp", curDatabaseTimestamp);
 	}
 	const saveLocalSets = (newSets) => {
-		localStorage.setItem("localSets", JSON.stringify(newSets));
-		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+		window.localStorage.setItem("localSets", JSON.stringify(newSets));
+		window.localStorage.setItem("database-timestamp", curDatabaseTimestamp);
 	}
 
 	const downloadPoints = (localData, depth) => {
@@ -311,7 +311,7 @@ const Viewer = (props) => {
 
 					window.location.href = "/login";
 				} else if (error.response && error.response.status === 404) {
-					localStorage.removeItem("localSets")
+					window.localStorage.removeItem("localSets")
 					window.location.reload();
 				}
 			})
@@ -444,7 +444,7 @@ const Viewer = (props) => {
 
 	const checkLocalSetNames = () => {
 		// Check if Saved
-		let localData = localStorage.getItem("local-set-name-data");
+		let localData = window.localStorage.getItem("local-set-name-data");
 		try {
 			if (localData !== "" && localData !== null) {
 				let parsedData = JSON.parse(localData);
@@ -473,7 +473,7 @@ const Viewer = (props) => {
 	}
 
 	const saveLocalSetNames = (newData) => {
-		localStorage.setItem("local-set-name-data", JSON.stringify(newData));
+		window.localStorage.setItem("local-set-name-data", JSON.stringify(newData));
 	}
 
 	const retrieveNewSetNames = () => {
@@ -551,7 +551,7 @@ const Viewer = (props) => {
 	useEffect(() => {
 		let parsedData = userOptions;
 		try {
-			let localUserOptions = localStorage.getItem("localUserOptions");
+			let localUserOptions = window.localStorage.getItem("localUserOptions");
 			parsedData = JSON.parse(localUserOptions);
 		} catch {
 			setUserOptions({
@@ -585,7 +585,7 @@ const Viewer = (props) => {
 	}, [])
 
 	const setUserOptionsFunc = (data) => {
-		localStorage.setItem("localUserOptions", JSON.stringify(data));
+		window.localStorage.setItem("localUserOptions", JSON.stringify(data));
 		setUserOptions(data);
 	}
 

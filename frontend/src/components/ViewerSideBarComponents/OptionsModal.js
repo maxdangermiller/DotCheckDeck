@@ -118,18 +118,6 @@ const OptionsModal = (props) => {
                         className="form-check-input" 
                         type="checkbox" 
                         value="" 
-                        onChange={() => setUseActualSetLength(!userOptions.useActualSetLength)} 
-                        checked={userOptions.useActualSetLength} 
-                    />
-                    <label className="form-check-label ">
-                        Use Actual Set Timings
-                    </label>
-                </div>
-                <div className="form-check">
-                    <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        value="" 
                         onChange={() => setShowCollegeHash(!userOptions.showCollegeHash)} 
                         checked={userOptions.showCollegeHash} 
                     />
