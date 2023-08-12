@@ -82,6 +82,11 @@ function App() {
 			url: WINDOW_LOCATION + "/logout",
 		}).then((response) => {
 			removeToken();
+			localStorage.removeItem("localSets")
+			localStorage.removeItem("localData")
+			localStorage.removeItem("database-timestamp")
+			localStorage.removeItem("local-basic-data")
+			localStorage.removeItem("localUserOptions")
 			window.location.href = "/login"
 		}).catch((error) => {
 			if (error.response) {
