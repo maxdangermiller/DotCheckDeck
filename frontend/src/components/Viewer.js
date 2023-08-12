@@ -510,7 +510,7 @@ const Viewer = (props) => {
 
 	// On initial open, call the API and get all of the sets
 	useEffect(() => {
-		if (curDatabaseTimestamp === -1) { return; }
+		// if (curDatabaseTimestamp === -1) { return; }
 		if (!checkLocalSets()) {
 			fetch(WINDOW_LOCATION + "/sets?school_code=" + props.schoolCode + "&token=" + props.token)
 				.then(res => res.json())
@@ -529,7 +529,7 @@ const Viewer = (props) => {
 					}
 			);
 		}
-	}, [curDatabaseTimestamp])
+	}, [])
 
 	// Get audio!
 	useEffect(() => {
