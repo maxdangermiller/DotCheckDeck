@@ -37,8 +37,8 @@ function App() {
 
 	const refreshToken = () => {
 		if (token == null) {
-			// console.log("Token: " + token);
-			// console.log("Ref Token: " + refToken);
+			console.log("Token: " + token);
+			console.log("Ref Token: " + refToken);
 			if (refToken != null) {
 				try {
 
