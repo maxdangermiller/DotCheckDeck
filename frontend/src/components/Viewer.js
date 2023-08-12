@@ -307,9 +307,7 @@ const Viewer = (props) => {
 				downloadPoints(dataBackup, depth + 1);
 			}).catch((error) => {
 				if (error.response && error.response.status === 401 || error.response.status === 400) {
-					// console.log(error.response)
-					// console.log(error.response.status)
-					// console.log(error.response.headers)
+					console.log(error.response)
 
 					window.location.href = "/login";
 				} else if (error.response && error.response.status === 404) {
@@ -419,9 +417,7 @@ const Viewer = (props) => {
 				if (!curSetBuffered || loading) { setLoading(false); }
 			}).catch((error) => {
 				if (error.response && error.response.status === 401 || error.response.status === 400) {
-					// console.log(error.response)
-					// console.log(error.response.status)
-					// console.log(error.response.headers)
+					console.log(error.response)
 
 					window.location.href = "/login";
 				}
