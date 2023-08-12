@@ -82,8 +82,8 @@ function App() {
 			url: WINDOW_LOCATION + "/logout",
 		}).then((response) => {
 			removeToken();
-			window.localStorage.removeItem("localSets")
-			window.localStorage.removeItem("localData")
+			window.localStorage.removeItem("local-sets")
+			window.localStorage.removeItem("local-data")
 			window.localStorage.removeItem("database-timestamp")
 			window.localStorage.removeItem("local-basic-data")
 			window.location.href = "/login"

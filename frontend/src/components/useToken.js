@@ -16,12 +16,12 @@ function useToken() {
 	const [refToken, setRefToken] = useState(getRefToken());
 
 	function saveToken(userToken) {
-		window.localStorage.setItem('token', userToken);
+		localStorage.setItem('token', userToken);
 		setToken(userToken);
 	}
 
 	function saveRefToken(userToken) {
-		window.localStorage.setItem('ref-token', userToken);
+		localStorage.setItem('ref-token', userToken);
 		setRefToken(userToken);
 	}
 

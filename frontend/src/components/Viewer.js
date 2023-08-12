@@ -205,7 +205,7 @@ const Viewer = (props) => {
 		// if (timestamp !== curDatabaseTimestamp) { return false; }
 		
 		// Check if Saved
-		let localData = window.localStorage.getItem("localData");
+		let localData = window.localStorage.getItem("local-data");
 		try {
 			if (localData !== "" && localData !== null) {
 				let parsedData = JSON.parse(localData);
@@ -236,7 +236,7 @@ const Viewer = (props) => {
 
 	const getLocalData = () => {
 		try {
-			let localData = window.localStorage.getItem("localData");
+			let localData = window.localStorage.getItem("local-data");
 			let parsedData = JSON.parse(localData);
 			return parsedData;
 		} catch {
@@ -245,12 +245,12 @@ const Viewer = (props) => {
 	}
 
 	const saveLocalData = (newData) => {
-		window.localStorage.setItem("localData", JSON.stringify(newData));
-		window.localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+		localStorage.setItem("local-data", JSON.stringify(newData));
+		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
 	}
 	const saveLocalSets = (newSets) => {
-		window.localStorage.setItem("localSets", JSON.stringify(newSets));
-		window.localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+		localStorage.setItem("local-sets", JSON.stringify(newSets));
+		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
 	}
 
 	const downloadPoints = (localData, depth) => {
@@ -268,51 +268,51 @@ const Viewer = (props) => {
 
 		// If we're buffered then don't worry about calling the API
 		if (useSetIndex === -1) { 
-			console.log(localData);
+			console.log("DATA FULLY DOWNLOADED!");
 			setData(localData);
 			setIsDownloading(false); 
 			return; 
 		}
-
+		
 		if (sets.length !== 0 && useSetIndex !== -1) {
 			console.log("Recalculating Points! ");
-
+			
 			setSentRequest(true);
-
+			
 			// console.log(sets)
 			const url1 = WINDOW_LOCATION + "/get-dots?school_code=" + props.schoolCode 
-				+ "&set=" + sets[useSetIndex]["set_numb"] + "&token=" + props.token;
-
+			+ "&set=" + sets[useSetIndex]["set_numb"] + "&token=" + props.token;
+			
 			axios({
 				method: "GET",
 				url:url1,
 			}).then((response) => {
 				let dataBackup = localData;
-
+				
 				for (let i = 0; i < response.data.length; i++) {
 					const setNumb = response.data[i]["index"];
 					dataBackup[setNumb] = response.data[i];
 				}
-
+				
 				console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
-
+				
 				setDownloadingProgress(parseInt(dataBackup.length / sets.length * 100));
 				console.log(dataBackup);
-
+				
 				saveLocalData(dataBackup);
-
 				setSentRequest(false);
 				
 				// Recurse
 				downloadPoints(dataBackup, depth + 1);
 			}).catch((error) => {
+				console.log(error)
 				if (error.response && error.response.status === 401 || error.response.status === 400) {
 					console.log(error.response)
 
 					window.location.href = "/login";
 				} else if (error.response && error.response.status === 404) {
-					// window.localStorage.removeItem("localSets")
-					// window.location.reload();
+					window.localStorage.removeItem("localSets")
+					window.location.reload();
 				}
 			})
 		}
@@ -510,7 +510,7 @@ const Viewer = (props) => {
 
 	// On initial open, call the API and get all of the sets
 	useEffect(() => {
-		// if (curDatabaseTimestamp === -1) { return; }
+		if (curDatabaseTimestamp === -1) { return; }
 		if (!checkLocalSets()) {
 			fetch(WINDOW_LOCATION + "/sets?school_code=" + props.schoolCode + "&token=" + props.token)
 				.then(res => res.json())
@@ -529,7 +529,7 @@ const Viewer = (props) => {
 					}
 			);
 		}
-	}, [])
+	}, [curDatabaseTimestamp])
 
 	// Get audio!
 	useEffect(() => {
