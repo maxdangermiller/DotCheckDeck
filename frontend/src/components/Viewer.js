@@ -214,16 +214,19 @@ const Viewer = (props) => {
 				for (let i = 0; i < parsedData.length; i++) {
 					let timestamp = parsedData[i].update_timestamp;
 					if (timestamp !== curDatabaseTimestamp) {
+						console.log("Found timestamp of: " + timestamp + ", when the current timestamp is: " + curDatabaseTimestamp)
 						// Start UPDATING THOSE SETS
 						return false;
 					}
 				}
 
-				console.log("USING LOCAL DATA!");
 				if (parsedData.length < sets.length || sets.length === 0) {
-					setData(parsedData);
+					console.log("USING INCOMPLETE LOCAL DATA!", parsedData.length, sets.length);
+					// setData(parsedData);
 					return false;
 				}
+
+				console.log("USING COMPLETE LOCAL DATA!");
 				setData(parsedData);
 
 				return true;
@@ -245,7 +248,7 @@ const Viewer = (props) => {
 	}
 
 	const saveLocalData = (newData) => {
-		localStorage.setItem("local-data", JSON.stringify(newData));
+		window.localStorage.setItem("local-data", JSON.stringify(newData));
 		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
 	}
 	const saveLocalSets = (newSets) => {
@@ -253,7 +256,7 @@ const Viewer = (props) => {
 		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
 	}
 
-	const downloadPoints = (localData, depth) => {
+	const downloadPoints = (localData, depth, lastIndex) => {
 		if (depth >= 20) {
 			console.log("REACHED MAX DEPTH!")
 			window.location.reload();
@@ -262,14 +265,21 @@ const Viewer = (props) => {
 
 		let useSetIndex = findFirstBufferHole(localData, sets);
 
+		if (useSetIndex === lastIndex) {
+			console.log("Reloading because we're trying to load the same data again for some reason!")
+			window.location.reload();
+			return
+		}
+
 		// Don't do it again if we've already sent out a request and it's not pressing because it's already buffered
 		// "|| (useSetIndex - 4 >= curSet && useSetIndex + 4 <= curSet)" NOT SURE WHY THIS WAS HERE
 		if (sentRequest) { return; }  
 
 		// If we're buffered then don't worry about calling the API
 		if (useSetIndex === -1) { 
-			console.log("DATA FULLY DOWNLOADED!");
+			console.log("DATA FULLY DOWNLOADED! Set count: " + localData.length);
 			setData(localData);
+			saveLocalData(localData);
 			setIsDownloading(false); 
 			return; 
 		}
@@ -303,7 +313,7 @@ const Viewer = (props) => {
 				setSentRequest(false);
 				
 				// Recurse
-				downloadPoints(dataBackup, depth + 1);
+				downloadPoints(dataBackup, depth + 1, useSetIndex);
 			}).catch((error) => {
 				console.log(error)
 				if (error.response && error.response.status === 401 || error.response.status === 400) {
@@ -338,7 +348,7 @@ const Viewer = (props) => {
 		setIsDownloading(true);
 		setDownloadingProgress(0);
 
-		downloadPoints([], 0);
+		downloadPoints([], 0, -1);
 
 	}
 
