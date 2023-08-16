@@ -267,8 +267,8 @@ const Viewer = (props) => {
 
 		if (useSetIndex === lastIndex) {
 			console.log("Reloading because we're trying to load the same data again for some reason!")
-			window.location.reload();
-			return
+			// window.location.reload();
+			// return
 		}
 
 		// Don't do it again if we've already sent out a request and it's not pressing because it's already buffered
