@@ -1340,8 +1340,8 @@ def make_all_dots_for_prop_an_icon():
 				side = defaultDot.side,
 				fb_steps = defaultDot.fb_steps,
 				fb_direction = defaultDot.fb_direction,
-				use_hash = defaultDot.use_hash
-				dot_icon_id = defaultDot.dot_icon_id,
+				use_hash = defaultDot.use_hash,
+				dot_icon_id = defaultDot.dot_icon_id
 			)
 
 			db.session.add(dot)
