@@ -4,6 +4,7 @@ import getApi from '../../getApi';
 import Boolean from '../Boolean';
 import AdminAddProp from './AdminAddProp';
 import AdminEditProp from './AdminEditProp';
+import axios from "axios";
 
 const WINDOW_LOCATION = getApi();
 const CELL_STYLE = "flex-row justify-content-center d-flex align-items-center adminTextAlignCenter";
