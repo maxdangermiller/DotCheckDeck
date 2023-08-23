@@ -1206,8 +1206,8 @@ def convert_user_to_prop():
 		return "Invalid show label", 404
 	
 	showUser.is_locked = True
-	is_prop = True,
-	is_stationary = False
+	showUser.is_prop = True,
+	showUser.is_stationary = False
 	db.session.commit()	
 
 	dotIcon = DotIcon(
@@ -1334,6 +1334,10 @@ def make_all_dots_for_prop_an_icon():
 		dot = Dot.query.filter(Dot.show_user_id == prop.id, Dot.set_id == set.id).first()
 		if dot is None and prop.is_stationary and defaultDot is not None:
 			dot = Dot(
+				set_id = set.id, 
+				show_user_id = prop.id,
+				school_id = defaultDot.school_id, 
+				show_id = defaultDot.show_id,
 				direction = defaultDot.direction,
 				line = defaultDot.line,
 				steps = defaultDot.steps,
@@ -1354,6 +1358,11 @@ def make_all_dots_for_prop_an_icon():
 		if useProp is not None and dot.dot_icon_id is None:
 			dot.dot_icon_id = useProp
 			db.session.commit()	
+
+	# There has been a change made to the show's date, 
+	# so we must change the "last update time" var in the show object
+	Show.query.filter(Show.id == prop.show_id).first().changeUpdateTime()
+	db.session.commit()
 
 	return "Done.", 200
 	
