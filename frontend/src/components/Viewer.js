@@ -248,8 +248,12 @@ const Viewer = (props) => {
 	}
 
 	const saveLocalData = (newData) => {
-		window.localStorage.setItem("local-data", JSON.stringify(newData));
-		localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+		try {
+			localStorage.setItem("local-data", JSON.stringify(newData));
+			localStorage.setItem("database-timestamp", curDatabaseTimestamp);
+		} catch (error) {
+			localStorage.clear();
+		}
 	}
 	const saveLocalSets = (newSets) => {
 		localStorage.setItem("local-sets", JSON.stringify(newSets));
@@ -293,38 +297,43 @@ const Viewer = (props) => {
 			const url1 = WINDOW_LOCATION + "/get-dots?school_code=" + props.schoolCode 
 			+ "&set=" + sets[useSetIndex]["set_numb"] + "&token=" + props.token;
 			
-			axios({
-				method: "GET",
-				url:url1,
-			}).then((response) => {
-				let dataBackup = localData;
-				
-				for (let i = 0; i < response.data.length; i++) {
-					const setNumb = response.data[i]["index"];
-					dataBackup[setNumb] = response.data[i];
-				}
-				
-				console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
-				
-				setDownloadingProgress(parseInt(dataBackup.length / sets.length * 100));
-				console.log(dataBackup);
-				
-				saveLocalData(dataBackup);
-				setSentRequest(false);
-				
-				// Recurse
-				downloadPoints(dataBackup, depth + 1, useSetIndex);
-			}).catch((error) => {
-				console.log(error)
-				if (error.response && error.response.status === 401 || error.response.status === 400) {
-					console.log(error.response)
-
-					window.location.href = "/login";
-				} else if (error.response && error.response.status === 404) {
-					window.localStorage.removeItem("localSets")
-					window.location.reload();
-				}
-			})
+			try {
+				axios({
+					method: "GET",
+					url:url1,
+				}).then((response) => {
+					let dataBackup = localData;
+					
+					for (let i = 0; i < response.data.length; i++) {
+						const setNumb = response.data[i]["index"];
+						dataBackup[setNumb] = response.data[i];
+					}
+					
+					console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(dataBackup, sets) + ".")
+					
+					setDownloadingProgress(parseInt(dataBackup.length / sets.length * 100));
+					console.log(dataBackup);
+					
+					saveLocalData(dataBackup);
+					setSentRequest(false);
+					
+					// Recurse
+					downloadPoints(dataBackup, depth + 1, useSetIndex);
+				}).catch((error) => {
+					console.log(error)
+					if (error.response && error.response.status === 401 || error.response.status === 400) {
+						console.log(error.response)
+	
+						window.location.href = "/login";
+					} else if (error.response && error.response.status === 404) {
+						window.localStorage.removeItem("localSets")
+						window.location.reload();
+					}
+				})
+			} catch (error) {
+				window.localStorage.clear();
+				window.location.reload();
+			}
 		}
 	}
 
@@ -563,8 +572,12 @@ const Viewer = (props) => {
 		try {
 			let localUserOptions = window.localStorage.getItem("localUserOptions");
 			parsedData = JSON.parse(localUserOptions);
-			localUserOptions.keys()
+			if (parsedData.dimOtherUsers === undefined) {
+				throw new Error('Yeah... Sorry');
+			}
+			console.log("Successfully loaded user preferences")
 		} catch {
+			console.log("DIDN'T Find Saved User Prefs, creating new ones")
 			parsedData = {
 				"showNextSet": false, "showLastSet": false, "drawPath": false,
 				"highlightSection": false,
