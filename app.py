@@ -810,12 +810,6 @@ def addShowFileToDatabase(file, school, show):
 		firstShowUser = ShowUser.query.filter(ShowUser.label == dotSheet.label, ShowUser.show_id == show.id).first()
 
 		if firstShowUser is None:
-			# TODO: Creating a new user object for each show user 
-			# will probably cause problems with activate because emails are unique
-			# user = User(school_id = school.id)
-			# db.session.add(user)
-			# db.session.commit()
-
 			showUser = ShowUser(
 				school_id = school.id,
 				show_id = show.id, 
@@ -1312,6 +1306,38 @@ def move_stationary_prop():
 	db.session.commit()
 
 	return "Done.", 200
+
+
+@app.route('/make-all-dots-for-prop-an-icon', methods=["POST"])
+@jwt_required()
+def make_all_dots_for_prop_an_icon():
+	identity = get_jwt_identity()
+	user = User.query.filter_by(email=identity).first()
+
+	if user is None or user.is_admin is False:
+		return "Unauthorized", 401
+	
+	prop_id = request.form.get("prop_id", None)
+
+	prop = ShowUser.query.filter(ShowUser.id == prop_id, ShowUser.is_prop == True).first()
+
+	
+	if prop is None:
+		return "Prop doesn't exist", 404
+
+	dots = Dot.query.filter(Dot.show_user_id == prop.id).all()
+
+	useProp = None
+	for dot in dots:
+		if useProp is None and dot.dot_icon_id is not None:
+			useProp = dot.dot_icon_id
+		
+		if useProp is not None and dot.dot_icon_id is None:
+			dot.dot_icon_id = useProp
+			db.session.commit()	
+
+	return "Done.", 200
+	
 
 
 @app.route('/get-icon/<id>', methods=['GET'])

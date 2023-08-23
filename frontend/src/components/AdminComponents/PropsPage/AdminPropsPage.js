@@ -115,6 +115,31 @@ const AdminPropsPage = (_props) => {
 		return string;
 	}
 
+    const expandToAllSets = (id) => {
+
+        const formData = new FormData();
+
+        formData.append('prop_id', id);
+
+        axios({
+            method: "POST",
+            url: WINDOW_LOCATION + "/make-all-dots-for-prop-an-icon",
+            data: formData,
+            headers: {
+                "Content-Type": "multipart/form-data",
+                'Authorization': 'Bearer ' + token
+            }
+        }).then((response) => {
+            window.location.reload();
+        }).catch((error) => {
+            if (error.response) {
+                console.log(error.response)
+                // console.log(error.response.status)
+                // console.log(error.response.headers)
+            }
+        })
+    }
+
     return(
         <>
         <Table striped bordered hover>
@@ -127,6 +152,7 @@ const AdminPropsPage = (_props) => {
                     <th onClick={() => handelHeaderClick(4)}># Dots</th>
                     <th onClick={() => handelHeaderClick(0)}>Image</th>
                     <th>Edit</th>
+                    <th>Expand To All Sets</th>
                 </tr>
             </thead>
             <tbody>
@@ -145,6 +171,9 @@ const AdminPropsPage = (_props) => {
                                     <button className='btn btn-success' onClick={(e) => openEdit(prop)}>Edit</button> 
                                     : null
                                 }
+                            </div></td>
+                            <td><div className={CELL_STYLE}>
+                                <button className='btn btn-success' onClick={(e) => expandToAllSets(prop.id)}>Expand</button> 
                             </div></td>
                         </tr> 
                 )
