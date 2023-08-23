@@ -1252,7 +1252,7 @@ def move_stationary_prop():
 	
 	prop_id = request.form.get("prop_id", None)
 
-	prop = ShowUser.query.filter(ShowUser.id == prop_id, ShowUser.is_prop == True).first()
+	prop = ShowUser.query.filter(ShowUser.id == prop_id, ShowUser.is_prop == True, ShowUser.school_id == user.school_id).first()
 
 	if prop is None:
 		return "Prop doesn't exist", 404
@@ -1319,16 +1319,35 @@ def make_all_dots_for_prop_an_icon():
 	
 	prop_id = request.form.get("prop_id", None)
 
-	prop = ShowUser.query.filter(ShowUser.id == prop_id, ShowUser.is_prop == True).first()
+	prop = ShowUser.query.filter(ShowUser.id == prop_id, ShowUser.is_prop == True, ShowUser.school_id == user.school_id).first()
 
 	
 	if prop is None:
 		return "Prop doesn't exist", 404
 
-	dots = Dot.query.filter(Dot.show_user_id == prop.id).all()
+	sets = Set.query.filter(Set.show_id == prop.show_id).all()
+
+	defaultDot = Dot.query.filter(Dot.show_user_id == prop.id, Dot.dot_icon_id != None).first()
 
 	useProp = None
-	for dot in dots:
+	for set in sets:
+		dot = Dot.query.filter(Dot.show_user_id == prop.id, Dot.set_id == set.id).first()
+		if dot is None and prop.is_stationary and defaultDot is not None:
+			dot = Dot(
+				direction = defaultDot.direction,
+				line = defaultDot.line,
+				steps = defaultDot.steps,
+				side = defaultDot.side,
+				fb_steps = defaultDot.fb_steps,
+				fb_direction = defaultDot.fb_direction,
+				use_hash = defaultDot.use_hash
+				dot_icon_id = defaultDot.dot_icon_id,
+			)
+
+			db.session.add(dot)
+			db.session.commit()	
+
+
 		if useProp is None and dot.dot_icon_id is not None:
 			useProp = dot.dot_icon_id
 		
