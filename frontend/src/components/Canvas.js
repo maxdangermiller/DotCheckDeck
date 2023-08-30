@@ -41,7 +41,7 @@ const Canvas = props => {
         draw, setDimensions, curDimensions, 
         curSet, sets, loading, curPlayTime, 
         audioPlaying, userOptions, setUserOptions, 
-        userData, token, displayUserInfo, setDisplayUserInfo, ...rest 
+        userData, token, displayUserInfo, setDisplayUserInfo, isOffline, ...rest 
     } = props;
 
     const canvasRef = useRef(null)
@@ -568,7 +568,7 @@ const Canvas = props => {
                 let y = cords0.y
                 let dot = data[curSetIndex].dots[curUserIndex];
 
-                if (dot.dot.dot_icon_id !== null) {
+                if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let img = new Image();
                     img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
@@ -627,7 +627,7 @@ const Canvas = props => {
                 const x = ((x1 - x0) / counts * count) + x0;
                 const y = m * x + b;
 
-                if (dot.dot.dot_icon_id !== null) {
+                if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let img = new Image();
                     img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
@@ -652,7 +652,7 @@ const Canvas = props => {
                 const x = x0
                 const y = ((y1 - y0) / counts * count) + y0;
 
-                if (dot.dot.dot_icon_id !== null) {
+                if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let img = new Image();
                     img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
@@ -1084,7 +1084,7 @@ const Canvas = props => {
                         }
 
                         // If it's an icon dot
-                        else if (dot.dot.dot_icon_id !== null) {
+                        else if (dot.dot.dot_icon_id !== null && !isOffline) {
                             let img = new Image();
                             img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                             let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
@@ -1101,7 +1101,7 @@ const Canvas = props => {
                     }
 
                     // If it's an icon dot
-                    else if (dot.dot.dot_icon_id !== null) {
+                    else if (dot.dot.dot_icon_id !== null && !isOffline) {
                         let img = new Image();
                         img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                         let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);

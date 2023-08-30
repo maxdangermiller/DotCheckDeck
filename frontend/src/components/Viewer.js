@@ -63,6 +63,17 @@ const Viewer = (props) => {
 	const canvasRef = useRef(null);
 
 	const getDatabaseVersion = () => {
+		if (props.isOffline) {
+			try {
+				const localTimestamp = localStorage.getItem("database-timestamp");
+				if (localTimestamp !== null) {
+					setCurDatabaseTimestamp(localTimestamp);
+				}
+			} catch (error) {
+				console.log("NO SAVED TIMESTAMP!");
+			}
+			return;
+		}
 		// If we just updated less than MIN_TIMESTAMP_INTERVAL seconds ago, don't update
 		let curTime = (new Date()).getTime();
 		if (curTime - lastCheckedVersionTime <= MIN_TIMESTAMP_INTERVAL) { return; }
@@ -168,7 +179,7 @@ const Viewer = (props) => {
 	const checkLocalSets = () => {
 		// Check If Saved
 		// Check Version number?
-		let localSets = window.localStorage.getItem("localSets");
+		let localSets = window.localStorage.getItem("local-sets");
 		try {
 			if (localSets !== "" && localSets !== null) {
 				let parsedSets = JSON.parse(localSets);
@@ -177,11 +188,13 @@ const Viewer = (props) => {
 				if (parsedSets.length === 0) { return false; }
 
 				// Check version number
-				for (let i = 0; i < parsedSets.length; i++) {
-					let timestamp = parsedSets[i].update_timestamp;
-					if (timestamp !== curDatabaseTimestamp) {
-						// Start UPDATING THOSE SETS
-						return false;
+				if (!props.isOffline) {
+					for (let i = 0; i < parsedSets.length; i++) {
+						let timestamp = parsedSets[i].update_timestamp;
+						if (timestamp !== curDatabaseTimestamp) {
+							// Start UPDATING THOSE SETS
+							return false;
+						}
 					}
 				}
 				console.log("USING LOCAL SETS!");
@@ -211,12 +224,14 @@ const Viewer = (props) => {
 				let parsedData = JSON.parse(localData);
 
 				// Check version number
-				for (let i = 0; i < parsedData.length; i++) {
-					let timestamp = parsedData[i].update_timestamp;
-					if (timestamp !== curDatabaseTimestamp) {
-						console.log("Found timestamp of: " + timestamp + ", when the current timestamp is: " + curDatabaseTimestamp)
-						// Start UPDATING THOSE SETS
-						return false;
+				if (!props.isOffline) {
+					for (let i = 0; i < parsedData.length; i++) {
+						let timestamp = parsedData[i].update_timestamp;
+						if (timestamp !== curDatabaseTimestamp) {
+							console.log("Found timestamp of: " + timestamp + ", when the current timestamp is: " + curDatabaseTimestamp)
+							// Start UPDATING THOSE SETS
+							return false;
+						}
 					}
 				}
 
@@ -468,15 +483,22 @@ const Viewer = (props) => {
 			if (localData !== "" && localData !== null) {
 				let parsedData = JSON.parse(localData);
 
+				if (parsedData === undefined) {
+					return false;
+				}
+
 				// Check version number
-				for (let i = 0; i < parsedData.length; i++) {
-					let timestamp = parsedData[i].update_timestamp;
-					if (timestamp !== curDatabaseSNTimestamp) {
-						// Start UPDATING THOSE SET NAMES
-						return false;
+				if (!props.isOffline) {
+					for (let i = 0; i < parsedData.length; i++) {
+						let timestamp = parsedData[i].update_timestamp;
+						if (timestamp !== curDatabaseSNTimestamp) {
+							// Start UPDATING THOSE SET NAMES
+							return false;
+						}
 					}
 				}
 
+				console.log(parsedData.length, sets.length)
 				// console.log("Trying to use local Data", parsedData.length, sets.length)
 				if (parsedData.length < sets.length || sets.length === 0) {
 					return false;
@@ -502,6 +524,7 @@ const Viewer = (props) => {
 			.then(res => res.json())
 			.then(
 				(result) => {
+					console.log(result);
 					saveLocalSetNames(result);
 					updateSetNames(result);
 				},
@@ -552,6 +575,7 @@ const Viewer = (props) => {
 
 	// Get audio!
 	useEffect(() => {
+		if (props.isOffline) { return; }
 		audio = new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token);
 		audio.load();
 	}, [])
@@ -754,6 +778,7 @@ const Viewer = (props) => {
 					token={props.token}
 					displayUserInfo={displayUserInfo}
 					setDisplayUserInfo={setDisplayUserInfo}
+					isOffline = {props.isOffline}
 				/>
 				<UserInfoDialogue displayUserInfo={displayUserInfo} canvasRef={canvasRef}/>
 			</div>

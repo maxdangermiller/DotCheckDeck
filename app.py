@@ -2253,7 +2253,7 @@ class CreateUserResource(Resource):
 		db.session.add(newUser)
 		db.session.commit()
 
-		notifyAdminOfNewUser(school_id, newUser)
+		notifyAdminOfNewUser(activeUser.school_id, newUser)
 
 		return "Successfully Created User", 201
 
@@ -3021,7 +3021,7 @@ if __name__ == "__main__":
 		
 		# Some database configuration, idk what tbh
 		if arg == "fix-show-indices":
-			print("Configuring Show Indicies!")
+			print("Configuring Show Indices!")
 			rebuild = True
 			with app.app_context():
 				show = Show.query.filter().first()
@@ -3033,7 +3033,7 @@ if __name__ == "__main__":
 	
 		# Some database configuration, idk what tbh
 		if arg == "fix-things":
-			print("Configuring Show Indicies!")
+			print("Configuring Show Indices!")
 			rebuild = True
 			with app.app_context():
 				show = Show.query.filter().first()

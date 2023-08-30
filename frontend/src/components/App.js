@@ -34,6 +34,27 @@ function App() {
 	const [ schoolCode, setSchoolCode ] = useState("");
 	const [ showID, setShowID ] = useState(-1);
 	const [ isBasic, setIsBasic ] = useState(false);
+	const [ isOffline, setIsOffline ] = useState(false);
+
+	const attemptOffline = () => {
+		try {
+			const localUserData = JSON.parse(localStorage.getItem("app-user-data"));
+			const localShowCode = localStorage.getItem("app-show-code");
+			const localShowID = localStorage.getItem("app-show-id");
+
+			if (localUserData === null || localShowCode === null || localShowID === null) {
+				return false;
+			}
+			
+			setUserData(localUserData);
+			setSchoolCode(localShowCode);
+			setShowID(localShowID);
+			return true;
+
+		} catch (error) {
+			return false
+		}
+	}
 
 	const refreshToken = () => {
 		if (token == null) {
@@ -47,7 +68,8 @@ function App() {
 						url: WINDOW_LOCATION + "/get-token",
 						headers: {
 							Authorization: `Bearer ${refToken}`,
-						}
+						},
+						timeout: 5000
 					}).then((response) => {
 						console.log(response.data)
 						if (response.status === 202) {
@@ -55,10 +77,26 @@ function App() {
 							setUserData(response.data.user);
 							setSchoolCode(response.data.school_code);
 							setShowID(response.data.show_id)
+
+							localStorage.setItem("app-user-data", JSON.stringify(response.data.user))
+							localStorage.setItem("app-show-code", response.data.school_code)
+							localStorage.setItem("app-show-id", response.data.show_id)
 						}
 	
 					}).catch((error) => {
-						if (error.response) {
+						console.log(error)
+						if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+							console.log('Request timed out');
+							if (attemptOffline()) {
+								setIsOffline(true);
+							} else {
+								if (window.location.pathname !== "/login") {
+									setIsOffline(false);
+									window.location.href = "/login";
+								}
+							}
+						}
+						else if (error.response) {
 							// console.log(error.response)
 							// console.log(error.response.status)
 							// console.log(error.response.headers)
@@ -97,7 +135,7 @@ function App() {
 	}
 
 	const isAdminAuthorized = () => {
-		if (token === "" || token === undefined) {
+		if (token === "" || token === undefined || isOffline) {
 			return false;
 		}
 
@@ -119,7 +157,7 @@ function App() {
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 	const isPWAAdded = window.matchMedia('(display-mode: standalone)').matches;
 
-	if (token == null) {
+	if (token == null && !isOffline) {
 		return (
 			<div className="d-flex align-items-center justify-content-center flex-column fullScreen">
 				<div className="spinner-border" role="status">
@@ -145,11 +183,11 @@ function App() {
 				}
 				<Routes>
 					<Route path="/" exact element={
-						token === "" || schoolCode === ""
+						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
 						: isBasic
-							? <BasicViewer token={token} schoolCode={schoolCode} setIsBasic={setIsBasic} userData={userData}/>
-							: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} setIsBasic={setIsBasic}/>
+							? <BasicViewer token={token} schoolCode={schoolCode} setIsBasic={setIsBasic} userData={userData} isOffline={isOffline}/>
+							: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} setIsBasic={setIsBasic} isOffline={isOffline}/>
 					} />
 					<Route path="/activate/:join_code" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
