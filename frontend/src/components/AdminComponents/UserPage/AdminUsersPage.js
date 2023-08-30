@@ -18,9 +18,10 @@ const SORT_EMAIL = 2;
 const SORT_FIRST_NAME = 3;
 const SORT_LAST_NAME = 4;
 const SORT_IS_ADMIN = 5;
-const SORT_ACTIVATED_DATE = 6;
-const SORT_CREATED_DATE = 7;
-const SORT_UPDATED_DATE = 8;
+const SORT_IS_VERIFIED = 6;
+const SORT_ACTIVATED_DATE = 7;
+const SORT_CREATED_DATE = 8;
+const SORT_UPDATED_DATE = 9;
 const SORT_UP = 1;
 const SORT_DOWN = -1;
 
@@ -149,6 +150,7 @@ const AdminUsersPage = (props) => {
         if (sortBy === SORT_FIRST_NAME)     { useKey = "first_name";    }
         if (sortBy === SORT_LAST_NAME)      { useKey = "last_name";     }
         if (sortBy === SORT_IS_ADMIN)       { useKey = "is_admin";      }
+        if (sortBy === SORT_IS_VERIFIED)    { useKey = "verified_date"; }
         if (sortBy === SORT_ACTIVATED_DATE) { useKey = "activated_date";}
         if (sortBy === SORT_CREATED_DATE)   { useKey = "created_date";  }
         if (sortBy === SORT_UPDATED_DATE)   { useKey = "last_updated";  }
@@ -187,9 +189,10 @@ const AdminUsersPage = (props) => {
                     <th onClick={() => handelHeaderClick(3)}>First Name</th>
                     <th onClick={() => handelHeaderClick(4)}>Last Name</th>
                     <th onClick={() => handelHeaderClick(5)}>Is Admin</th>
-                    <th onClick={() => handelHeaderClick(6)}>Activated Date</th>
-                    <th onClick={() => handelHeaderClick(7)}>Created Date</th>
-                    <th onClick={() => handelHeaderClick(8)}>Last Updated</th>
+                    <th onClick={() => handelHeaderClick(6)}>Is Verified</th>
+                    <th onClick={() => handelHeaderClick(7)}>Activated Date</th>
+                    <th onClick={() => handelHeaderClick(8)}>Created Date</th>
+                    <th onClick={() => handelHeaderClick(9)}>Last Updated</th>
                     <th>Edit</th>
                     <th>Edit Show Users</th>
                     <th>Delete</th>
@@ -205,15 +208,10 @@ const AdminUsersPage = (props) => {
                             <td><div className={CELL_STYLE}> {user.first_name} </div></td>
                             <td><div className={CELL_STYLE}> {user.last_name} </div></td>
                             <td><div className={CELL_STYLE}> <Boolean state={user.is_admin}/> </div></td>
+                            <td><div className={CELL_STYLE}> <Boolean state={user.verified_date !== null}/> </div></td>
                             <td><div className={CELL_STYLE}> {dateTimeFormat(user.activated_date)} </div></td>
                             <td><div className={CELL_STYLE}> {dateTimeFormat(user.created_date)} </div></td>
-                            <td><div className={CELL_STYLE}> 
-                                {
-                                    user.last_updated === null ?
-                                    <Boolean state={false}/>
-                                    :dateTimeFormat(user.last_updated)
-                                }
-                            </div></td>
+                            <td><div className={CELL_STYLE}> {dateTimeFormat(user.last_updated)} </div></td>
                             <td><div className={CELL_STYLE}>
                                 <button className='btn btn-success' onClick={(e) => openEditUser(user)}>Edit</button> 
                             </div></td>
