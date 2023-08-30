@@ -8,7 +8,7 @@ import SetNameModelBasic from './ViewerSideBarComponents/SetNameModelBasic';
 const WINDOW_LOCATION = getApi();
 
 const BasicViewer = (props) => {
-    const {token, schoolCode, setIsBasic, userData, ...rest} = props;
+    const {token, schoolCode, setIsBasic, userData, isOffline, ...rest} = props;
 
     const [data, setData] = useState(undefined);
     const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState(-1);
@@ -19,6 +19,20 @@ const BasicViewer = (props) => {
 
     
     useEffect(() => {
+        if (isOffline) {
+            try {
+				const localTimestamp = localStorage.getItem("basic-database-timestamp");
+				const localSNTimestamp = localStorage.getItem("basic-sn-database-timestamp");
+
+				if (localTimestamp !== null && localSNTimestamp !== null) {
+					setCurDatabaseTimestamp(localTimestamp);
+					setCurDatabaseSNTimestamp(localSNTimestamp);
+				}
+			} catch (error) {
+				console.log("NO SAVED TIMESTAMP!");
+			}
+            return;
+        }
         fetch(WINDOW_LOCATION + "/database-version?school_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
@@ -43,23 +57,25 @@ const BasicViewer = (props) => {
 		try {
 			if (localData !== "" && localData !== null) {
 				let parsedData = JSON.parse(localData);
-                console.log(parsedData, curDatabaseTimestamp, curDatabaseSNTimestamp);
+                // console.log(parsedData, curDatabaseTimestamp, curDatabaseSNTimestamp);
 
 				// Check version number
-				for (let i = 0; i < parsedData.dots.length; i++) {
-					let timestamp = parsedData.dots[i].timestamp;
-					if (timestamp !== curDatabaseTimestamp) {
-						// Start UPDATING THOSE SETS
-						return false;
-					}
-                    // Check set name timestamp
-                    let snTimestamp = parsedData.dots[i].set_name_timestamp;
-                    if (snTimestamp !== curDatabaseSNTimestamp) {
-                        return false;
+                if (!isOffline) {
+                    for (let i = 0; i < parsedData.dots.length; i++) {
+                        let timestamp = parsedData.dots[i].timestamp;
+                        if (timestamp !== curDatabaseTimestamp) {
+                            // Start UPDATING THOSE SETS
+                            return false;
+                        }
+                        // Check set name timestamp
+                        let snTimestamp = parsedData.dots[i].set_name_timestamp;
+                        if (snTimestamp !== curDatabaseSNTimestamp) {
+                            return false;
+                        }
                     }
-				}
+                }
 
-				// console.log("USING LOCAL DATA!");
+				// console.log("USING LOCAL BASIC DATA!");
 				// console.log(parsedData);
 				setData(parsedData);
 
