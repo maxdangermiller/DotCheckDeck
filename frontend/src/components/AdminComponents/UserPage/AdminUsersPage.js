@@ -207,7 +207,13 @@ const AdminUsersPage = (props) => {
                             <td><div className={CELL_STYLE}> <Boolean state={user.is_admin}/> </div></td>
                             <td><div className={CELL_STYLE}> {dateTimeFormat(user.activated_date)} </div></td>
                             <td><div className={CELL_STYLE}> {dateTimeFormat(user.created_date)} </div></td>
-                            <td><div className={CELL_STYLE}> {dateTimeFormat(user.last_updated)} </div></td>
+                            <td><div className={CELL_STYLE}> 
+                                {
+                                    user.last_updated === null ?
+                                    <Boolean state={false}/>
+                                    :dateTimeFormat(user.last_updated)
+                                }
+                            </div></td>
                             <td><div className={CELL_STYLE}>
                                 <button className='btn btn-success' onClick={(e) => openEditUser(user)}>Edit</button> 
                             </div></td>
