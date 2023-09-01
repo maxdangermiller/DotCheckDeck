@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState} from 'react';
 import { Autocomplete, TextField } from '@mui/material';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const SelectLabelPage = (props) => {
     const sortLabels = (value) => {
         return value.sort(function(a, b) {

@@ -1,4 +1,5 @@
 import React, {useRef, useEffect, useState} from 'react'
+import 'bootstrap/dist/css/bootstrap.css';
 
 const SimpleCanvas = (props) => {
     const { 

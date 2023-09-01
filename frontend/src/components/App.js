@@ -24,6 +24,8 @@ import Page404 from './utils/Page404';
 
 import axios from "axios";
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 
 const WINDOW_LOCATION = getApi();
 
@@ -149,9 +151,11 @@ function App() {
 		let path = window.location.pathname;
 		if (path.length < 9) { return false; }
 
-		if (path.substring(0, 9) !== "/activate") { return false; }
+		if (path.substring(0, 9) === "/activate") { return true; }
+		if (path.substring(0, 18) === "/accept-invitation") { return true; }
+		console.log(path.substring(0, 18))
 
-		return true;
+		return false;
 	}
 
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);

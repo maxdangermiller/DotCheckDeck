@@ -9,6 +9,7 @@ import AdminPropsPage from './AdminComponents/PropsPage/AdminPropsPage';
 import getApi from './getApi';
 
 import './Admin.css';
+import 'bootstrap/dist/css/bootstrap.css';
 
 const WINDOW_LOCATION = getApi();
 

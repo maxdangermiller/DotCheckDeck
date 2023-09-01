@@ -15,7 +15,7 @@
 }
 
 .loginHeight {
-    height: 92vh;
+    height: 92vh!important;
 }
 
 .loginFormHeight {

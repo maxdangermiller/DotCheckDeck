@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography';
 
 import Box from '@mui/material/Box';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+import 'bootstrap/dist/css/bootstrap.css';
 
 // Defined a custom nicer looking progress bar
 // Taken from MUI

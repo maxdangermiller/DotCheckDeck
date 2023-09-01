@@ -5,6 +5,8 @@ import { AutoTextSize } from 'auto-text-size'
 import { Switch, FormControlLabel, Stack, Typography } from '@mui/material';
 import SetNameModelBasic from './ViewerSideBarComponents/SetNameModelBasic';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const WINDOW_LOCATION = getApi();
 
 const BasicViewer = (props) => {
@@ -33,7 +35,7 @@ const BasicViewer = (props) => {
 			}
             return;
         }
-        fetch(WINDOW_LOCATION + "/database-version?school_code=" + props.schoolCode + "&token=" + props.token)
+        fetch(WINDOW_LOCATION + "/database-version?show_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
 				(result) => {

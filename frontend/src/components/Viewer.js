@@ -10,9 +10,12 @@ import getApi from './getApi';
 import logo from '../logo.svg';
 import CustomDownloadProgress from './CustomDownloadProgress';
 import UserInfoDialogue from './utils/UserInfoDialogue';
+import UpdatePrompt from './utils/UpdatePrompt';
 
 import {ReactComponent as FindUserButton} from '../circle-question.svg';
 import UserSectionSelection from './utils/UserSectionSelection';
+
+import 'bootstrap/dist/css/bootstrap.css';
 
 // https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
 const WINDOW_LOCATION = getApi();
@@ -25,7 +28,7 @@ const darkTheme = createTheme({
 
 let audio = null;
 let lastCheckedVersionTime = 0;
-const MIN_TIMESTAMP_INTERVAL = 30000;  // 30 seconds
+const MIN_TIMESTAMP_INTERVAL = 120000;  // 2 minutes
 
 const Viewer = (props) => {
 	const [data, setData] = useState([]);
@@ -40,6 +43,8 @@ const Viewer = (props) => {
 	const [curPlayTime, setCurPlayTime] = useState(20000);
 	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
 	const [displayUserInfo, setDisplayUserInfo] = useState({show: false, dot: null});
+	const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
+	const [newestTimestamps, setNewestTimestamps] = useState({"data": -1, "sn": -1});
 	// const [audio, setAudio] = useState(null);
 
 	const [isDownloading, setIsDownloading] = useState(false);
@@ -62,29 +67,92 @@ const Viewer = (props) => {
 	const setInput = useRef(null);
 	const canvasRef = useRef(null);
 
+	const getLocalDatabaseTimestamp = () => {
+		try {
+			const localTimestamp = parseInt(localStorage.getItem("database-timestamp"));
+			return localTimestamp; 
+		} catch (error) {
+			console.log("NO SAVED TIMESTAMP!");
+		}
+		return null;
+	}
+	
+	const getLocalSNDatabaseTimestamp = () => {
+		try {
+			const localTimestamp = parseInt(localStorage.getItem("sn-database-timestamp"));
+			return localTimestamp; 
+		} catch (error) {
+			console.log("NO SAVED TIMESTAMP!");
+		}
+		return null;
+	}
+
+	const changeTimestampsToNewUpdate = () => {
+		console.log("did a thing")
+		setCurDatabaseTimestamp(newestTimestamps.data);
+        setCurDatabaseSNTimestamp(newestTimestamps.sn);
+		setShowUpdatePrompt(false);
+
+		console.log(newestTimestamps.data)
+
+		localStorage.setItem("database-timestamp", newestTimestamps.data);
+		localStorage.setItem("sn-database-timestamp", newestTimestamps.sn);
+
+		setIsDownloading(true);
+	}
+
+
 	const getDatabaseVersion = () => {
+		let localTimestamp = getLocalDatabaseTimestamp();
+		let localSNTimestamp = getLocalSNDatabaseTimestamp();
+
+		console.log(localTimestamp, localSNTimestamp);
+
 		if (props.isOffline) {
-			try {
-				const localTimestamp = localStorage.getItem("database-timestamp");
-				if (localTimestamp !== null) {
-					setCurDatabaseTimestamp(localTimestamp);
-				}
-			} catch (error) {
-				console.log("NO SAVED TIMESTAMP!");
+			if (localTimestamp !== null && localSNTimestamp !== null) {
+				setCurDatabaseTimestamp(localTimestamp);
+				setCurDatabaseSNTimestamp(localSNTimestamp);
+			} else {
+				window.location.href = "/login";
 			}
 			return;
 		}
+
 		// If we just updated less than MIN_TIMESTAMP_INTERVAL seconds ago, don't update
 		let curTime = (new Date()).getTime();
 		if (curTime - lastCheckedVersionTime <= MIN_TIMESTAMP_INTERVAL) { return; }
 
-		fetch(WINDOW_LOCATION + "/database-version?school_code=" + props.schoolCode + "&token=" + props.token)
+		fetch(WINDOW_LOCATION + "/database-version?show_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
 				(result) => {
 					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
-					setCurDatabaseTimestamp(result.timestamp);
-                    setCurDatabaseSNTimestamp(result.set_name_timestamp)
+					
+					console.log(localTimestamp, localTimestamp === NaN)
+
+					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
+						console.log(localTimestamp, localSNTimestamp)
+						setCurDatabaseTimestamp(result.timestamp);
+                    	setCurDatabaseSNTimestamp(result.set_name_timestamp);
+						localStorage.setItem("database-timestamp", result.timestamp);
+						localStorage.setItem("sn-database-timestamp", result.set_name_timestamp);
+					}
+					else if (localTimestamp !== result.timestamp || localSNTimestamp !== result.set_name_timestamp) {
+						setShowUpdatePrompt(true);
+					 	setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
+
+						if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
+							console.log("Using old data")
+							setCurDatabaseTimestamp(localTimestamp);
+							setCurDatabaseSNTimestamp(localSNTimestamp);
+						}
+					} 
+					else if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
+						console.log("Using old data")
+						setCurDatabaseTimestamp(localTimestamp);
+                    	setCurDatabaseSNTimestamp(localSNTimestamp);
+					}
+
 					lastCheckedVersionTime = curTime;
 				},
 				// Note: it's important to handle errors here
@@ -127,15 +195,17 @@ const Viewer = (props) => {
 	 * @param {array} _sets 
 	 * @returns int
 	 */
-	const findFirstBufferHole = (_data, _sets) => {
+	const findFirstBufferHole = (_data, _sets, checkTimestamp) => {
 		const BUFFER_SIZE = 4;
 		
-		for (let i = 0; i < _sets.length; i++) {
-			if (_data[i] === undefined  || _data[i] === null || _data[i].update_timestamp !== curDatabaseTimestamp) {
+		for (let i = 0; i < sets.length; i++) {
+			if (_data[i] === undefined  || _data[i] === null || (checkTimestamp && _data[i].update_timestamp !== curDatabaseTimestamp)) {
+				console.log(_data[i])
 				let value = i + BUFFER_SIZE;
-				return value < _sets.length ? value : i;
+				return value < sets.length ? value : i;
 			}
 		}
+		console.log(_data)
 
 		return -1;
 	}
@@ -278,21 +348,16 @@ const Viewer = (props) => {
 	const downloadPoints = (localData, depth, lastIndex) => {
 		if (depth >= 20) {
 			console.log("REACHED MAX DEPTH!")
-			window.location.reload();
-			return; 
-		}
-
-		let useSetIndex = findFirstBufferHole(localData, sets);
-
-		if (useSetIndex === lastIndex) {
-			console.log("Reloading because we're trying to load the same data again for some reason!")
 			// window.location.reload();
-			// return
+			return; 
 		}
 
 		// Don't do it again if we've already sent out a request and it's not pressing because it's already buffered
 		// "|| (useSetIndex - 4 >= curSet && useSetIndex + 4 <= curSet)" NOT SURE WHY THIS WAS HERE
 		if (sentRequest) { return; }  
+
+		let useSetIndex = findFirstBufferHole(localData, sets, false);
+		console.log(localData.length);
 
 		// If we're buffered then don't worry about calling the API
 		if (useSetIndex === -1) { 
@@ -301,6 +366,13 @@ const Viewer = (props) => {
 			saveLocalData(localData);
 			setIsDownloading(false); 
 			return; 
+		}
+
+		if (useSetIndex === lastIndex) {
+			console.log("Reloading because we're trying to load the same data again for some reason!", useSetIndex)
+			alert("An Error Occurred")
+			// window.location.reload();
+			return;
 		}
 		
 		if (sets.length !== 0 && useSetIndex !== -1) {
@@ -329,11 +401,11 @@ const Viewer = (props) => {
 					setDownloadingProgress(parseInt(dataBackup.length / sets.length * 100));
 					console.log(dataBackup);
 					
-					saveLocalData(dataBackup);
+					saveLocalData(localData);
 					setSentRequest(false);
 					
 					// Recurse
-					downloadPoints(dataBackup, depth + 1, useSetIndex);
+					downloadPoints(JSON.parse(JSON.stringify(dataBackup)), depth + 1, useSetIndex);
 				}).catch((error) => {
 					console.log(error)
 					if (error.response && error.response.status === 401 || error.response.status === 400) {
@@ -361,6 +433,11 @@ const Viewer = (props) => {
 
 		if (checkLocalData()) {
 			return;
+		}
+
+		if (isDownloading) {
+			setDownloadingProgress(0);
+			downloadPoints([], 0, -1);
 		}
 
 		if (data.length !== 0) {
@@ -392,7 +469,7 @@ const Viewer = (props) => {
 			return;
 		}
 
-		let useSetIndex = findFirstBufferHole(data, sets);
+		let useSetIndex = findFirstBufferHole(data, sets, true);
 		let curSetBuffered = alreadyBuffered(data, curSet);
 
 		// console.log(useSetIndex, curSetBuffered);
@@ -515,6 +592,7 @@ const Viewer = (props) => {
 
 	const saveLocalSetNames = (newData) => {
 		window.localStorage.setItem("local-set-name-data", JSON.stringify(newData));
+		window.localStorage.setItem("sn-database-timestamp", curDatabaseSNTimestamp);
 	}
 
 	const retrieveNewSetNames = () => {
@@ -755,6 +833,11 @@ const Viewer = (props) => {
 					userData={props.userData}
 					showID={props.showID}
 				/>
+				<UpdatePrompt
+					show={showUpdatePrompt}
+					setShow={setShowUpdatePrompt}
+					update={changeTimestampsToNewUpdate}
+				/>
 			</div>
 		);
 	}
@@ -819,6 +902,11 @@ const Viewer = (props) => {
 				token={props.token} 
 				userData={props.userData}
 				showID={props.showID}
+			/>
+			<UpdatePrompt
+				show={showUpdatePrompt}
+				setShow={setShowUpdatePrompt}
+				update={changeTimestampsToNewUpdate}
 			/>
 		</div>
 	);

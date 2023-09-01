@@ -5,6 +5,8 @@ import axios from "axios";
 import './Login.css'
 import getApi from './getApi';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',

@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import 'bootstrap/dist/css/bootstrap.css';
 
 const useCanvas = (draw, options={}) => {
 

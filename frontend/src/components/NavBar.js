@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState} from 'react';
 import './Nav.css';
 import logo from '../logo.svg';
 import {Nav,  Navbar, NavDropdown, Container } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.css';
 
 const NavBar = (props) => {
     const { token, loggedIn, logout, isAdminAuthorized, isBasic, setIsBasic, ...rest } = props

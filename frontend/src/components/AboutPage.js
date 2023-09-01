@@ -3,6 +3,8 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import photo from '../MaxMiller.png'
 import getApi from './getApi';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const WINDOW_LOCATION = getApi();
 
 const darkTheme = createTheme({

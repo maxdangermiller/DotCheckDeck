@@ -13,6 +13,8 @@ import {ReactComponent as RightArrow} from '../circle-arrow-right.svg';
 import {ReactComponent as PauseIcon} from '../circle-pause.svg';
 import {ReactComponent as PlayIcon} from '../circle-play.svg';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const ViewerSideBar = (props) => {
     const { 
         curSetInfo, curSetNumb, setInput, 

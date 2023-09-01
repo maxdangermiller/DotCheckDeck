@@ -24,7 +24,7 @@
 }
 
 .activateFormHeight {
-    max-height: min(80vh, 120vw);
+    max-height: min(80vh, 120vw)!important;
     overflow: auto;
 }
 

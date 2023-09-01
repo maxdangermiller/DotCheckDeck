@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState} from 'react';
 import { TextField } from '@mui/material';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const SchoolCodePage = (props) => {
 
     const [schoolCode, setSchoolCode] = useState(props.schoolCode ? props.schoolCode : "");

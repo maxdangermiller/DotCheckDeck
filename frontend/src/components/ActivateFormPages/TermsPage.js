@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState} from 'react';
 
 import { FormControlLabel, Checkbox } from '@mui/material/';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const TermsPage = (props) => {
     const { agreedToTerms, setAgreedToTerms } = props;
 

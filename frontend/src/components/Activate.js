@@ -12,6 +12,8 @@ import LoginPage from './ActivateFormPages/LoginPage';
 import WaitForVerify from './ActivateFormPages/WaitForVerify';
 import getApi from './getApi';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',

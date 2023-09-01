@@ -3,6 +3,8 @@ import { TextField, Icon } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const RegisterPage = (props) => {
 
     const { userOptions, registrationData, setRegistrationData, ...rest } = props

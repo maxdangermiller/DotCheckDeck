@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState} from 'react';
 import getApi from '../getApi';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 const WINDOW_LOCATION = getApi();
 
 const WaitForVerify = (props) => {

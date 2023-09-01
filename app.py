@@ -18,6 +18,7 @@ import os
 import sys
 import string
 import random
+import time
 import math
 from cryptography.fernet import Fernet
 
@@ -78,6 +79,7 @@ CORS(app)
 
 verify_key = b'm1cfKgmOA07WEUVdK5BJqm2QW5pX5y8ms8aRezyzd3Q='
 
+
 forgot_password_code_reference = [
 	{
 		'user_id': 1, 
@@ -95,7 +97,64 @@ invite_user_code_reference = [
 		'code': 'gAAAAABkpflSIxncRf0nzYS1mzSvLe5TLIty8xZZsAJ27aLmtXtRfM-rHGadMoKcbjcLiXIt2TQ1_okqLY7PsuZ1sE-J6HgtQhAzsSwgtkOH9ICVROvHUq4='
 	}
 ]
+
+
+# Show update tracker
+show_update_reference = [
+	"""
+	{
+		'id': 0,
+		'updates': [
+			{
+				'timestamp_code': 12345678,
+				'time': datetime.datetime.now()
+			}
+		]
+	}
+	"""
+]
+
+def addUpdate(updateShow, code):
+	DELETE_THRESHOLD = 86400 # 1 Day
+
+	update_dict = {
+		'timestamp_code': code,
+		'time': time.time()
+	}
+
+	for i in range(len(show_update_reference)):
+		if show_update_reference[i]["id"] == updateShow.id:
+			newUpdatesList = list()
+			# Check for any outdated updates
+			for update in show_update_reference[i]["updates"]:
+				if update_dict["time"] - update["time"] < DELETE_THRESHOLD:
+					newUpdatesList.append(update)
+			
+			newUpdatesList.append(update_dict)
+
+			show_update_reference[i]["updates"] = newUpdatesList
+			return
 	
+	show_update_reference.append({
+		'id': updateShow.id,
+		'updates': [update_dict]
+	})
+
+def getUpdatesForShow(show) -> list:
+	for _show in show_update_reference:
+		if _show["id"] == show.id:
+			return _show["updates"]
+	return []
+
+def getUpdateCodeTime(show, curCode: int) -> int:
+	updates = getUpdatesForShow(show)
+
+	for update in updates:
+		if update["timestamp_code"] == curCode:
+			return update["time"]
+		
+	return -1
+
 
 # Create the EmailClient object that you use to send Email messages.
 email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
@@ -386,6 +445,7 @@ class Show(CacheableMixin, db.Model):
 		newUpdateCode = generateUpdateCode()
 		print("UPDATE!!!!!!", newUpdateCode)
 		self.last_update = newUpdateCode
+		# addUpdate(self, newUpdateCode)
 	
 	def changeSetNameUpdateTime(self):
 		newUpdateCode = generateUpdateCode()
@@ -2715,14 +2775,14 @@ class UpdateShowResource(Resource):
 class GetLastUpdateResource(Resource):
 	@jwt_required()
 	def get(self):
-		schoolCode = request.args.get('school_code', None) # TODO: Change name to show_code
+		showCode = request.args.get('show_code', None)
 
-		# REQUIRE A SCHOOL CODE
-		if schoolCode is None:
-			return "Missing School Code", 404
+		# REQUIRE A SHOW CODE
+		if showCode is None:
+			return "Missing Show Code", 404
 
 		# CHECK IF CODE IS VALID
-		show = Show.query.filter(Show.code == schoolCode).first()
+		show = Show.query.filter(Show.code == showCode).first()
 		if show is None:
 			return "INVALID SHOW CODE", 404
 
