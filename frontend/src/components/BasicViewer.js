@@ -4,6 +4,7 @@ import axios from "axios";
 import { AutoTextSize } from 'auto-text-size'
 import { Switch, FormControlLabel, Stack, Typography } from '@mui/material';
 import SetNameModelBasic from './ViewerSideBarComponents/SetNameModelBasic';
+import UpdatePrompt from './utils/UpdatePrompt';
 
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -18,18 +19,52 @@ const BasicViewer = (props) => {
     const [useCollegeHash, setUseCollegeHash] = useState(false);
     const [showEditSetName, setShowEditSetName] = useState(false);
     const [tempCurSetInfo, setTempCurSetInfo] = useState({});
+    const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
+	const [newestTimestamps, setNewestTimestamps] = useState({"data": -1, "sn": -1});
 
-    
+    const getLocalDatabaseTimestamp = () => {
+		try {
+			const localTimestamp = parseInt(localStorage.getItem("basic-database-timestamp"));
+			return localTimestamp; 
+		} catch (error) {
+			console.log("NO SAVED TIMESTAMP!");
+		}
+		return null;
+	}
+	
+	const getLocalSNDatabaseTimestamp = () => {
+		try {
+			const localTimestamp = parseInt(localStorage.getItem("basic-sn-database-timestamp"));
+			return localTimestamp; 
+		} catch (error) {
+			console.log("NO SAVED TIMESTAMP!");
+		}
+		return null;
+	}
+
+	const changeTimestampsToNewUpdate = () => {
+		console.log("did a thing")
+		setCurDatabaseTimestamp(newestTimestamps.data);
+        setCurDatabaseSNTimestamp(newestTimestamps.sn);
+		setShowUpdatePrompt(false);
+        
+		localStorage.setItem("basic-database-timestamp", newestTimestamps.data);
+		localStorage.setItem("basic-sn-database-timestamp", newestTimestamps.sn);
+	}
+
+
     useEffect(() => {
+        let localTimestamp = getLocalDatabaseTimestamp();
+		let localSNTimestamp = getLocalSNDatabaseTimestamp();
+
         if (isOffline) {
             try {
-				const localTimestamp = localStorage.getItem("basic-database-timestamp");
-				const localSNTimestamp = localStorage.getItem("basic-sn-database-timestamp");
-
 				if (localTimestamp !== null && localSNTimestamp !== null) {
 					setCurDatabaseTimestamp(localTimestamp);
 					setCurDatabaseSNTimestamp(localSNTimestamp);
-				}
+				} else {
+                    window.location.href = "/login";
+                }
 			} catch (error) {
 				console.log("NO SAVED TIMESTAMP!");
 			}
@@ -40,8 +75,29 @@ const BasicViewer = (props) => {
 			.then(
 				(result) => {
 					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
-					setCurDatabaseTimestamp(result.timestamp);
-                    setCurDatabaseSNTimestamp(result.set_name_timestamp)
+
+                    if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
+						console.log(localTimestamp, localSNTimestamp)
+						setCurDatabaseTimestamp(result.timestamp);
+                    	setCurDatabaseSNTimestamp(result.set_name_timestamp);
+						localStorage.setItem("basic-database-timestamp", result.timestamp);
+						localStorage.setItem("basic-sn-database-timestamp", result.set_name_timestamp);
+					}
+					else if (localTimestamp !== result.timestamp || localSNTimestamp !== result.set_name_timestamp) {
+						setShowUpdatePrompt(true);
+					 	setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
+
+						if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
+							console.log("Using old data")
+							setCurDatabaseTimestamp(localTimestamp);
+							setCurDatabaseSNTimestamp(localSNTimestamp);
+						}
+					} 
+					else if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
+						console.log("Using old data")
+						setCurDatabaseTimestamp(localTimestamp);
+                    	setCurDatabaseSNTimestamp(localSNTimestamp);
+					}
 				},
 				// Note: it's important to handle errors here
 				// instead of a catch() block so that we don't swallow
@@ -267,6 +323,11 @@ const BasicViewer = (props) => {
                 data={data}
                 setData={setData}
             />
+            <UpdatePrompt
+				show={showUpdatePrompt}
+				setShow={setShowUpdatePrompt}
+				update={changeTimestampsToNewUpdate}
+			/>
 		</div>
     );
 }
