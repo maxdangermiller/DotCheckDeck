@@ -21,6 +21,7 @@ import ForgotPassword from './utils/ForgotPassword';
 import AcceptInvitation from './utils/AcceptInvitation';
 import AboutPage from './AboutPage';
 import Page404 from './utils/Page404';
+import ErrorPage from './utils/ErrorPage';
 
 import axios from "axios";
 
@@ -260,7 +261,9 @@ function App() {
 						<AboutPage/>
 					} />
 					
-
+					<Route path="/error" exact element={
+						<ErrorPage/>
+					} />
 					<Route path="*" element={<Page404 />} />
 				</Routes>
 			</Router>

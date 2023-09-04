@@ -349,6 +349,7 @@ const Viewer = (props) => {
 		if (depth >= 20) {
 			console.log("REACHED MAX DEPTH!")
 			// window.location.reload();
+			window.location.href = "/error?message=Too many bad requests&return=" + window.location.href;
 			return; 
 		}
 
@@ -370,8 +371,7 @@ const Viewer = (props) => {
 
 		if (useSetIndex === lastIndex) {
 			console.log("Reloading because we're trying to load the same data again for some reason!", useSetIndex)
-			alert("An Error Occurred")
-			// window.location.reload();
+			window.location.href = "/error?message=Tried to load the same data again, probably is memory related&return=" + window.location.href;
 			return;
 		}
 		
