@@ -1117,6 +1117,15 @@ const Canvas = props => {
                         drawPoint(useX, useY, color, dot.userLabel);
                     }
                 }
+                
+                else if (dot.dot.dot_icon_id !== null && !isOffline) {
+                    let img = new Image();
+                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
+                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+
+                    context.drawImage(img, useX - width / 2, useY - height / 2, width, height);
+                }
 
                 // Since nothing is selected, just highlight all
                 else {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useLocation } from 'react-router-dom';
 
 import './Viewer.css';
 import Canvas from './Canvas'
@@ -52,6 +53,8 @@ const Viewer = (props) => {
 	
 	const [curDatabaseTimestamp, setCurDatabaseTimestamp] = useState(-1);
 	const [curDatabaseSNTimestamp, setCurDatabaseSNTimestamp] = useState(-1);
+
+	const location = useLocation()
 
 	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
 	const [userOptions, setUserOptions] = useState({
@@ -109,6 +112,7 @@ const Viewer = (props) => {
 		console.log(localTimestamp, localSNTimestamp);
 
 		if (props.isOffline) {
+			console.log("Detected offline usage")
 			if (localTimestamp !== null && localSNTimestamp !== null) {
 				setCurDatabaseTimestamp(localTimestamp);
 				setCurDatabaseSNTimestamp(localSNTimestamp);
@@ -120,8 +124,16 @@ const Viewer = (props) => {
 
 		// If we just updated less than MIN_TIMESTAMP_INTERVAL seconds ago, don't update
 		let curTime = (new Date()).getTime();
-		if (curTime - lastCheckedVersionTime <= MIN_TIMESTAMP_INTERVAL) { return; }
+		if (curTime - lastCheckedVersionTime <= MIN_TIMESTAMP_INTERVAL) { 
+			if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
+				console.log("Using old data")
+				setCurDatabaseTimestamp(localTimestamp);
+				setCurDatabaseSNTimestamp(localSNTimestamp);
+			}
+			return;
+		}
 
+		console.log("Getting updated database version")
 		fetch(WINDOW_LOCATION + "/database-version?show_code=" + props.schoolCode + "&token=" + props.token)
 			.then(res => res.json())
 			.then(
@@ -427,6 +439,7 @@ const Viewer = (props) => {
 	const retrievePointsNew = (useBuffer) => {
 		// Wait until both sets and curDatabaseTimestamp are loaded
 		if (sets.length === 0 || curDatabaseTimestamp === "") {
+			console.log("Currently missing sets and or timestamp", sets.length, curDatabaseTimestamp)
 			// Stall for time
 			return;
 		} 
@@ -619,7 +632,7 @@ const Viewer = (props) => {
 		getDatabaseVersion();
 		retrievePointsNew(true);
 		retrieveNewSetNames();
-	}, [curSet, sets, curDatabaseTimestamp])
+	}, [curSet, sets, curDatabaseTimestamp, location])
 
 	/*
 	useEffect(() => {
@@ -656,7 +669,7 @@ const Viewer = (props) => {
 		if (props.isOffline) { return; }
 		audio = new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token);
 		audio.load();
-	}, [])
+	}, [location])
 
 	useEffect(() => {
 		if (audio === null) { return; }
@@ -666,7 +679,7 @@ const Viewer = (props) => {
 		} else {
 			audio.pause();
 		}
-	}, [audioPlaying])
+	}, [audioPlaying, location])
 
 	// Automatically Grab The Users Info and select them for highlighting
 	useEffect(() => {
@@ -698,7 +711,7 @@ const Viewer = (props) => {
 		} else {
 			setUserOptions({...parsedData,  "highlightUser": null, "followingUser": false});
 		}
-	}, [props.userData])
+	}, [props.userData, location])
 
 	// Check to see if we're in landscape, if not display a "Rotate Please" message
 	useEffect(() => {
