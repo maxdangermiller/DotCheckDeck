@@ -5,16 +5,16 @@ import {Nav,  Navbar, NavDropdown, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 const NavBar = (props) => {
-    const { token, loggedIn, logout, isAdminAuthorized, isBasic, setIsBasic, ...rest } = props
+    const { token, loggedIn, logout, isAdminAuthorized, ...rest } = props
 
 	const getViewerOptions = () => {
-		if (window.location.pathname !== "/") {
-			return <></>
+		if (window.location.pathname === "/basic") {
+			return <Nav.Link href="/">Normal</Nav.Link>;
 		}
-		if (isBasic) {
-			return <Nav.Link onClick={() => setIsBasic(!isBasic)} href="#basic">Normal</Nav.Link>;
+		if (window.location.pathname === "/") {
+			return <Nav.Link href="/basic">Basic</Nav.Link>;
 		}
-		return <Nav.Link onClick={() => setIsBasic(!isBasic)} href="#normal">Basic</Nav.Link>;
+		return <></>;
 	}
 
 	return (

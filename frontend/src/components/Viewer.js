@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 
 import './Viewer.css';
 import Canvas from './Canvas'
@@ -32,6 +32,9 @@ let lastCheckedVersionTime = 0;
 const MIN_TIMESTAMP_INTERVAL = 120000;  // 2 minutes
 
 const Viewer = (props) => {
+	const {set_numb_param} = useParams();
+	const [queryParams, setQueryParams] = useSearchParams();
+
 	const [data, setData] = useState([]);
 	const [curSet, setCurSet]  = useState(0);
 	const [curSetNumb, setCurSetNumb]  = useState("1");
@@ -436,6 +439,18 @@ const Viewer = (props) => {
 		}
 	}
 
+	const setCurrentSetWithSetNumber = (setNumb) => {
+		for (let i = 0; i < sets.length; i++) {
+			if (sets[i].set_numb === setNumb) {
+				setCurSet(i);
+				setCurSetNumb(setNumb);
+				setCurSetInfo(sets[i]);
+				return;
+			}
+		}
+		console.log("Couldn't find requested set!");
+	}
+
 	const retrievePointsNew = (useBuffer) => {
 		// Wait until both sets and curDatabaseTimestamp are loaded
 		if (sets.length === 0 || curDatabaseTimestamp === "") {
@@ -445,6 +460,10 @@ const Viewer = (props) => {
 		} 
 
 		if (checkLocalData()) {
+			if (set_numb_param !== undefined) {
+				setCurrentSetWithSetNumber(set_numb_param);
+			}
+
 			return;
 		}
 
@@ -455,6 +474,11 @@ const Viewer = (props) => {
 
 		if (data.length !== 0) {
 			retrievePoints(useBuffer);
+
+			if (set_numb_param !== undefined) {
+				setCurrentSetWithSetNumber(set_numb_param);
+			}
+
 			return;	
 		}
 
@@ -808,6 +832,17 @@ const Viewer = (props) => {
 		return "#311d6e"; 
 	}
 
+	const getReturnURL = () => {
+		return queryParams.get("return");
+	}
+
+	const checkIfReturnURLExists = () => {
+		if (getReturnURL() !== null) {
+			return true;
+		}
+		return false;
+	}
+
 
 	if (isDownloading) {
 		return (
@@ -837,7 +872,7 @@ const Viewer = (props) => {
 			<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
 				<h1>Rotate Please</h1>
 				<h2>or switch to basic mode</h2>
-				<button className='btn btn-primary' onClick={(e) => props.setIsBasic(true)}>Open Basic</button>
+				<button className='btn btn-primary' onClick={(e) => {window.location.href = "/basic"}}>Open Basic</button>
 				<UserSectionSelection 
 					data={data} 
 					curSet={curSet} 
@@ -907,6 +942,14 @@ const Viewer = (props) => {
 				style={{color: getSetFollowingUserBtnColor()}}
 				onClick={() => setFollowingUser(!userOptions.followingUser)}
 			><FindUserButton height="100%" fill="currentColor"/></button>
+
+			{
+				checkIfReturnURLExists() ?
+				<div className="alert alert-danger alert-dismissible customAlert" role="alert">
+					<p className="mb-0"><a href={getReturnURL()} className="text-black fw-bold">Go Back</a></p>
+				</div>
+				: null
+			}
 
 			<UserSectionSelection 
 				data={data} 

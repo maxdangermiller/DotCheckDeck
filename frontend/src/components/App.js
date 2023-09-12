@@ -22,6 +22,7 @@ import AcceptInvitation from './utils/AcceptInvitation';
 import AboutPage from './AboutPage';
 import Page404 from './utils/Page404';
 import ErrorPage from './utils/ErrorPage';
+import ResendVerifyEmail from './utils/ResendVerifyEmail'
 
 import axios from "axios";
 
@@ -36,7 +37,6 @@ function App() {
 	const [ userData, setUserData ] = useState({});
 	const [ schoolCode, setSchoolCode ] = useState("");
 	const [ showID, setShowID ] = useState(-1);
-	const [ isBasic, setIsBasic ] = useState(false);
 	const [ isOffline, setIsOffline ] = useState(false);
 
 	const attemptOffline = () => {
@@ -178,8 +178,6 @@ function App() {
 					loggedIn={token !== "" && token !== undefined} 
 					logout={logout}
 					isAdminAuthorized={isAdminAuthorized}
-					isBasic={isBasic}
-					setIsBasic={setIsBasic}
 				/>
 				{
 					isMobile && !isPWAAdded && !isOnActivatePage() ?
@@ -190,9 +188,17 @@ function App() {
 					<Route path="/" exact element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
-						: isBasic
-							? <BasicViewer token={token} schoolCode={schoolCode} setIsBasic={setIsBasic} userData={userData} isOffline={isOffline}/>
-							: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} setIsBasic={setIsBasic} isOffline={isOffline}/>
+						: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
+					} />
+					<Route path="/basic" exact element={
+						(token === "" && !isOffline) || schoolCode === ""
+						? <Navigate to="/login" />
+						: <BasicViewer token={token} schoolCode={schoolCode} userData={userData} isOffline={isOffline}/>
+					} />
+					<Route path="/viewer-quick-display/:set_numb_param" exact element={
+						(token === "" && !isOffline) || schoolCode === ""
+						? <Navigate to="/login" />
+						: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
 					} />
 					<Route path="/activate/:join_code" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
@@ -250,6 +256,9 @@ function App() {
 					} />
 					<Route path="/forgot-password" exact element={
 						<ForgotPassword/>
+					} />
+					<Route path="/resent-verify-email" exact element={
+						<ResendVerifyEmail/>
 					} />
 					<Route path="/forgot-password/:enc_id" exact element={
 						<ResetPassword/>

@@ -286,11 +286,16 @@ const BasicViewer = (props) => {
                             <div className='mb-2'>For {dotData.counts} counts</div>
                             <div className='mb-2'>Measures: {dotData.measure}</div>
                         </div>
-                        {
-                            userData.is_section_leader ?
-                            <button className='btn btn-secondary' onClick={(e) => openEditSetName(dotData)} style={{right: "1rem", bottom: "1rem", position: "absolute"}}>Edit</button>
-                            : null
-                        }
+                        <div style={{right: "1rem", bottom: "1rem", position: "absolute"}}>    
+                            {
+                                userData.is_section_leader ?
+                                <button className='btn btn-secondary' onClick={(e) => openEditSetName(dotData)}>Edit</button>
+                                : null
+                            }
+                            <button className='btn btn-success' onClick={(e) => {
+                                window.location.href = "/viewer-quick-display/" + dotData.set_numb + "?return=" + window.location.href
+                            }} >View</button>
+                        </div>
                     </li>
 
                 )
@@ -310,7 +315,7 @@ const BasicViewer = (props) => {
                     <Typography>College</Typography>
                 </Stack>
 
-                <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Open Normal</button>
+                <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Normal</button>
             </div>
             
 
