@@ -1,0 +1,26 @@
+.ViewerFullScreen {
+    width: 100vw;
+    height: 92vh;
+    height: var( — app-height) * 0.92;
+    overflow: hidden!important;
+}
+
+.canvasDivClass {
+    width: 80vw;
+    height: 92vh;
+    height: var( — app-height) * 0.92;
+    border-style: solid;
+    border-width: 5px;
+}
+
+.followUserBtn {
+    position: absolute;
+    bottom: 4vh;
+    left: 4vh;
+    background: none;
+    border: none; 
+    height: min(8vh, 40px); 
+    padding: 0;
+    color: #311d6e;
+}
+  

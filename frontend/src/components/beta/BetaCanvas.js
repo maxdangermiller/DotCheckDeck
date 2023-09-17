@@ -1,7 +1,7 @@
 import React, {useRef, useEffect, useState} from 'react'
-import convertDotToCords from './utils/ConvertDotToCords';
-import './font.css'
-import getApi from './getApi';
+import convertDotToCords from '../utils/ConvertDotToCords';
+import '../font.css'
+import getApi from '../getApi';
 import 'bootstrap/dist/css/bootstrap.css';
 
 const FUTURE_DOT_COLOR = "rgba(0, 100, 0, 0.8)";
@@ -36,13 +36,13 @@ const COLLAGE_HASH_COLOR = "rgb(100, 0, 0)";
 
 const WINDOW_LOCATION = getApi();
 
-const Canvas = props => {
 
-    const { 
-        draw, setDimensions, curDimensions, 
-        curSet, sets, loading, curPlayTime, 
+const BetaCanvas = (props) => {
+	const { 
+        data, curSet, sets, curPlayTime, 
         audioPlaying, userOptions, setUserOptions, 
-        userData, token, displayUserInfo, setDisplayUserInfo, isOffline, ...rest 
+        userData, token, hoverUserInfo, 
+        setHoverUserInfo, isOffline, loading, loopCallback
     } = props;
 
     const canvasRef = useRef(null)
@@ -51,6 +51,7 @@ const Canvas = props => {
     const [hoverDot, setHoverDot] = useState({});
     const [followDot, setFollowDot] = useState(undefined);
     const [cameraOffset, setCameraOffset] = useState({x: 0, y: 0});
+    const [curDimensions, setDimensions]  = useState({"w": 0, "h": 0});
 
     const [cameraZoom, setCameraZoom] = useState(1);
 
@@ -73,8 +74,8 @@ const Canvas = props => {
 
         const canvas = canvasRef.current
         const context = canvas.getContext('2d')
-        let frameCount = 0
         let animationFrameId
+        let frameCount = 0
         let followDotCords = {x: 0, y: 0};
 
         const steps_to_px = (steps, height) => {
@@ -422,11 +423,11 @@ const Canvas = props => {
         }
 
         const drawUserName = (dot) => {
-            if (displayUserInfo.dot === null || displayUserInfo.dot.dot.id !== dot.dot.id) {
+            if (hoverUserInfo.dot === null || hoverUserInfo.dot.dot.id !== dot.dot.id) {
                 if (dot.userID !== userData.show_user_id) {
-                    setDisplayUserInfo({show: true, dot: dot})
+                    setHoverUserInfo({show: true, dot: dot})
                 } else {
-                    setDisplayUserInfo({show: false, dot: dot})
+                    setHoverUserInfo({show: false, dot: dot})
                 }
             }
         }
@@ -1045,11 +1046,10 @@ const Canvas = props => {
         }
 
         // Takes data from API and draws them, used to condense the render method
-        const drawDots = (_draw, data, index) => {
+        const drawDots = (data, index) => {
             let newDots = [];
             let drawBracket = {useX:null, useY:null, dot:null};
             let curSetData = data[index].dots;
-            let userOptions = _draw.userOptions;
 
             let highlightedUserData = getHighlightedUserData(curSetData, userOptions);
 
@@ -1152,7 +1152,7 @@ const Canvas = props => {
         }
 
         // Takes data from API, and draws the animation
-        const drawAnimation = (_draw) => {
+        const drawAnimation = () => {
             // This is so if we're playing the show, the sets don't overlap
             const MARGIN = 100;
 
@@ -1239,7 +1239,7 @@ const Canvas = props => {
                         }
 
                         // Check if we're highlighting the section
-                        else if (_draw.userOptions.highlightSection) {
+                        else if (userOptions.highlightSection) {
                             let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
                             let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
 
@@ -1309,6 +1309,8 @@ const Canvas = props => {
             // Dynamic resizing!
             dynamicResize();
 
+            // console.log(curDimensions);
+
             if (curDimensions["w"] !== canvas.width || curDimensions["h" !== canvas.height]) {
                 setDimensions({"w": canvas.width, "h": canvas.height});
                 setHadResize(true);
@@ -1321,15 +1323,11 @@ const Canvas = props => {
             // Pan and zoom
             doPanAndZoom(ctx);
             
-            // clear();
-            
-            // Calls a function provided in props that returns a dict of values
-            let _draw = draw();
-            // let data = _draw.dots;
-            let data = _draw.data;
-            let userOptions = _draw.userOptions;
+            if (loopCallback !== undefined) {
+                loopCallback();
+            }
 
-            if (data.length !== 0 || isAnimation)  { clear(); }
+            clear();
 
             let isNewFrame = lastSetID !== curSet && animationDirection !== 0 && !loading  && data.length !== 0;
             let isRerender = hadResize && !loading && data.length !== 0 && data !== drawInfo;
@@ -1338,7 +1336,7 @@ const Canvas = props => {
             if (isAnimation) {
                 // Sometimes there's problems
                 try {
-                    drawAnimation(_draw);
+                    drawAnimation();
                 } catch (error) {
                     console.log("CAUGHT ERROR")
                     console.log(error)
@@ -1353,7 +1351,7 @@ const Canvas = props => {
 
                 if (hadResize) { setHadResize(false); }
 
-                let newDots = drawDots(_draw, data, curSet);
+                let newDots = drawDots(data, curSet);
                 setDots(newDots)
 
                 if (hoverDot.x !== undefined) {
@@ -1363,7 +1361,7 @@ const Canvas = props => {
 
             // If it isn't a new frame, used a buffered frame. This is so we don't set vars and overwrite things.
             else if (drawInfo.length > curSet && drawInfo[curSet] !== undefined)  {
-                let newDots = drawDots(_draw, drawInfo, curSet);
+                let newDots = drawDots(drawInfo, curSet);
                 setDots(newDots)
 
                 if (hoverDot.x !== undefined) {
@@ -1380,7 +1378,7 @@ const Canvas = props => {
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
-    }, [draw, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot])
+    }, [data, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot])
 
     useEffect(() => {
         setAnimationStartTime(Date.now());
@@ -1464,7 +1462,6 @@ const Canvas = props => {
     }
 
     const onPointerMove = (e) => {
-        // console.log("MOUSE")
         if (isDragging) {
             setCameraOffset({x: getEventLocation(e).x/cameraZoom - dragStart.x, y: getEventLocation(e).y/cameraZoom - dragStart.y});
         }
@@ -1543,4 +1540,4 @@ const Canvas = props => {
     />;
 }
 
-export default Canvas
+export default BetaCanvas;

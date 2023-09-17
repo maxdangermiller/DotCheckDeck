@@ -24,6 +24,9 @@ import Page404 from './utils/Page404';
 import ErrorPage from './utils/ErrorPage';
 import ResendVerifyEmail from './utils/ResendVerifyEmail'
 
+// Beta
+import BetaViewer from './beta/BetaViewer';
+
 import axios from "axios";
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -190,6 +193,13 @@ function App() {
 						? <Navigate to="/login" />
 						: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
 					} />
+
+					<Route path="/beta/" exact element={
+						(token === "" && !isOffline) || schoolCode === ""
+						? <Navigate to="/login" />
+						: <BetaViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
+					} />
+					
 					<Route path="/basic" exact element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />

@@ -4,7 +4,6 @@ import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 
 import './Viewer.css';
 import Canvas from './Canvas'
-import SimpleCanvas from './SimpleCanvas'
 import ViewerSideBar from './ViewerSideBar';
 import axios from "axios";
 import getApi from './getApi';
@@ -59,7 +58,7 @@ const Viewer = (props) => {
 
 	const location = useLocation()
 
-	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js fine
+	// This will be set by the OptionsDropDown.js file, passing through the ViewerSideBar.js file
 	const [userOptions, setUserOptions] = useState({
 		"showNextSet": false, "showLastSet": false, "drawPath": false,
 		"highlightSection": false,
