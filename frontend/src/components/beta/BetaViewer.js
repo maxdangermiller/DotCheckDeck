@@ -206,6 +206,7 @@ const BetaViewer = (props) => {
             for (let j = 0; j < indices.length; j++) {
                 const correctIndex = _sets[i]["showIndex"] === indices[j];
                 const correctTimestamp = _sets[i]["update_timestamp"] === curDatabaseTimestamp || !checkTimestamp;
+                console.log(correctIndex, correctTimestamp, _sets[i], curDatabaseTimestamp)
                 if (correctIndex && correctTimestamp) {
                     foundValid = true;
                     indices.pop(i);
@@ -216,7 +217,7 @@ const BetaViewer = (props) => {
             if (!foundValid) {
                 let value = i + BUFFER_SIZE;
                 let out = value < sets.length ? value : i;
-                console.log(out, indices);
+                console.log(out, indices, sets.length);
 				return out;
             }
         }
@@ -276,7 +277,7 @@ const BetaViewer = (props) => {
         }
  
         // Get the first place that needs to be updated
-        let useSetIndex = findFirstBufferHole(localData, sets, false);
+        let useSetIndex = findFirstBufferHole(localData, sets, true);
 
         // Base Case
         // If we're buffered then don't worry about calling the API
@@ -476,11 +477,6 @@ const BetaViewer = (props) => {
 		if (x >= 0 && x < sets.length && !loading) {
 			// console.log("Changing set");
 			setCurSet(x);
-
-            if (audio !== null) {
-				audio.currentTime = sets[x]["start_time_code"] / 1000;
-				setCurPlayTime(sets[x]["start_time_code"] / 1000);
-			}
 		}
 	}
 
@@ -493,6 +489,11 @@ const BetaViewer = (props) => {
 			if (!audioPlaying) {
 				changeCurSet(x);
 			} 
+
+            if (audio !== null) {
+				audio.currentTime = sets[x]["start_time_code"] / 1000;
+				setCurPlayTime(sets[x]["start_time_code"] / 1000);
+			}
 		}
 	}
 
