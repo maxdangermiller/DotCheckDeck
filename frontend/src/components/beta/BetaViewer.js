@@ -205,7 +205,7 @@ const BetaViewer = (props) => {
 
             for (let j = 0; j < indices.length; j++) {
                 const correctIndex = _sets[i]["showIndex"] === indices[j];
-                const correctTimestamp = _sets[i]["update_timestamp"] === curDatabaseTimestamp || !checkTimestamp;
+                const correctTimestamp = _data[i]["update_timestamp"] === curDatabaseTimestamp || !checkTimestamp;
                 console.log(correctIndex, correctTimestamp, _sets[i], curDatabaseTimestamp)
                 if (correctIndex && correctTimestamp) {
                     foundValid = true;

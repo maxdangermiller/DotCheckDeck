@@ -1381,7 +1381,9 @@ const BetaCanvas = (props) => {
     }, [data, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot])
 
     useEffect(() => {
-        setAnimationStartTime(Date.now());
+        if (audioPlaying) {
+            setAnimationStartTime(Date.now());
+        }
         setIsAnimation(true);
     }, [curSet]);
 
