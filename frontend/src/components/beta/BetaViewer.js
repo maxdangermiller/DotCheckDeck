@@ -90,7 +90,7 @@ const BetaViewer = (props) => {
 		setShowUpdatePrompt(false);
 
 		console.log(newestTimestamps.data)
-		startCaptiveDownload();
+		startCaptiveDownload(newestTimestamps.data);
 	}
 
     /**
@@ -189,10 +189,11 @@ const BetaViewer = (props) => {
      * Gets the first hole in the loaded valid data
      * @param {Array} _data 
      * @param {Array} _sets 
+     * @param {Integer} timestamp 
      * @param {Boolean} checkTimestamp 
      * @returns {Integer} index that needs to be loaded
      */
-    const findFirstBufferHole = (_data, _sets, checkTimestamp) => {
+    const findFirstBufferHole = (_data, _sets, timestamp, checkTimestamp) => {
         const BUFFER_SIZE = 4;
         
 		let indices = [];
@@ -205,11 +206,11 @@ const BetaViewer = (props) => {
 
             for (let j = 0; j < indices.length; j++) {
                 const correctIndex = _sets[i]["showIndex"] === indices[j];
-                const correctTimestamp = _data[i]["update_timestamp"] === curDatabaseTimestamp || !checkTimestamp;
-                console.log(correctIndex, correctTimestamp, _sets[i], curDatabaseTimestamp)
+                const correctTimestamp = _data[i]["update_timestamp"] === timestamp || !checkTimestamp;
+                // console.log(correctIndex, correctTimestamp, _sets[i], _data[i], timestamp)
                 if (correctIndex && correctTimestamp) {
                     foundValid = true;
-                    indices.pop(i);
+                    indices.splice(j, 1);
                     break;
                 }
             }
@@ -217,7 +218,6 @@ const BetaViewer = (props) => {
             if (!foundValid) {
                 let value = i + BUFFER_SIZE;
                 let out = value < sets.length ? value : i;
-                console.log(out, indices, sets.length);
 				return out;
             }
         }
@@ -265,8 +265,9 @@ const BetaViewer = (props) => {
      * Recursive method for processing a captive download
      * @param {Array} localData 
      * @param {Array} localSets 
+     * @param {Integer} timestamp 
      */
-    const captiveDownload = (localData, localSets, depth) => {
+    const captiveDownload = (localData, localSets, timestamp, depth) => {
         if (depth >= 10) {
             return;
         }
@@ -277,7 +278,7 @@ const BetaViewer = (props) => {
         }
  
         // Get the first place that needs to be updated
-        let useSetIndex = findFirstBufferHole(localData, sets, true);
+        let useSetIndex = findFirstBufferHole(localData, sets, timestamp, false);
 
         // Base Case
         // If we're buffered then don't worry about calling the API
@@ -285,6 +286,8 @@ const BetaViewer = (props) => {
 			console.log("DATA FULLY DOWNLOADED! Set count: " + localData.length);
 			saveData(localData);
 			setIsDownloading(false); 
+            setShowUpdatePrompt(false);
+            saveCurTimestamps(newestTimestamps.data, newestTimestamps.sn);
 			return; 
 		}
 
@@ -303,7 +306,7 @@ const BetaViewer = (props) => {
                 saveLocalData(localData);
                 
                 // Recurse
-                captiveDownload(localData, localSets, depth + 1);
+                captiveDownload(localData, localSets, timestamp, depth + 1);
             }).catch((error) => {
                 console.log(error)
                 if (error.response && error.response.status === 401 || error.response.status === 400) {
@@ -326,11 +329,11 @@ const BetaViewer = (props) => {
     /**
      * Start Captive Download
      */
-    const startCaptiveDownload = () => {
+    const startCaptiveDownload = (timestamp) => {
         setIsDownloading(true);
 		setDownloadingProgress(0);
 
-		captiveDownload([], sets, 0);
+		captiveDownload([], sets, timestamp, 0);
     }
 
     /**
@@ -354,7 +357,7 @@ const BetaViewer = (props) => {
 		}
 
 		// START DOWNLOAD
-		startCaptiveDownload();
+		startCaptiveDownload(curDatabaseTimestamp);
     }
     
     /**
