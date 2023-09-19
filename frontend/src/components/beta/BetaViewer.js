@@ -3,7 +3,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axios from "axios";
 
 import BetaCanvas from './BetaCanvas'
-import ViewerSideBar from '../ViewerSideBar';
+import ViewerSideBar from './ViewerComponents/ViewerSideBar';
 import getApi from '../getApi';
 import CustomDownloadProgress from '../CustomDownloadProgress';
 import UserInfoDialogue from './ViewerComponents/UserInfoDialogue';
@@ -99,7 +99,7 @@ const BetaViewer = (props) => {
 	const getDatabaseVersion = () => {
         const { localTimestamp, localSNTimestamp } = getLocalTimestamps();
 
-		console.log(localTimestamp, localSNTimestamp);
+		// console.log(localTimestamp, localSNTimestamp);
 
 		if (isOffline) {
 			console.log("Detected offline usage")
@@ -398,7 +398,7 @@ const BetaViewer = (props) => {
                 .then(res => res.json())
                 .then(
                     (result) => {
-                        console.log(result)
+                        // console.log(result)
                         saveSets(result);
                     },
                     // Note: it's important to handle errors here
@@ -493,7 +493,7 @@ const BetaViewer = (props) => {
 				changeCurSet(x);
 			} 
 
-            if (audio !== null) {
+            if (audio !== null && sets[x]["start_time_code"] !== null) {
 				audio.currentTime = sets[x]["start_time_code"] / 1000;
 				setCurPlayTime(sets[x]["start_time_code"] / 1000);
 			}
@@ -505,15 +505,16 @@ const BetaViewer = (props) => {
      * @param {Event} event 
      */
 	const changeCurSetNumb = (event) => {
-		if (event.key !== "Enter") { return; }
+        if (event.key !== "Enter") { return; }
 		event.preventDefault();
 		for (let x = 0; x < sets.length; x++) {
 			if (sets[x]["set_numb"] === event.target.value) {
-				setCurSet(x);
+				handelSetBtnControls(x);
+                setInput.current.blur();
 				return;
 			}
 		}
-		setInput.current.blur();
+        console.log("Didn't find set number: " + event.target.value);
 	}
 
     /**
@@ -594,20 +595,6 @@ const BetaViewer = (props) => {
         return sets[curSet]["set_numb"];
     }
 
-    /**
-     * Set Current Set Index with Set Number String
-     * @param {String} set_numb set number
-     */
-    const setCurSetNumb = (set_numb) => {
-        for (let i = 0; i < sets.length; i++) {
-            if (sets[i]["set_numb"] == set_numb) {
-                setCurSet(i);
-                return;
-            }
-        }
-        console.log("Failed To Find Set " + set_numb);
-    }
-
     // Return if downloading
 	if (isDownloading) {
 		return (
@@ -680,7 +667,7 @@ const BetaViewer = (props) => {
 			</div>
 			<ViewerSideBar 
 				curSetInfo={getCurSetInfo()} 
-				curSetNumb={getCurSetNumb()} 
+				getCurSetNumb={getCurSetNumb()} 
 				setInput={setInput} 
 				curSet={curSet} 
 				sets={sets} 
@@ -688,7 +675,6 @@ const BetaViewer = (props) => {
 				changeCurSet={changeCurSet}
 				handelSetBtnControls={handelSetBtnControls}
 				loading={loading}
-				setCurSetNumb={setCurSetNumb}
 				changeCurSetNumb={changeCurSetNumb}
 				userOptions={userOptions}
 				setUserOptions={setUserOptions}

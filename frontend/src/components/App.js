@@ -64,8 +64,8 @@ function App() {
 
 	const refreshToken = () => {
 		if (token == null) {
-			console.log("Token: " + token);
-			console.log("Ref Token: " + refToken);
+			// console.log("Token: " + token);
+			// console.log("Ref Token: " + refToken);
 			if (refToken != null) {
 				try {
 
@@ -77,7 +77,7 @@ function App() {
 						},
 						timeout: 5000
 					}).then((response) => {
-						console.log(response.data)
+						// console.log(response.data)
 						if (response.status === 202) {
 							setToken(response.data.access_token);
 							setUserData(response.data.user);
@@ -157,7 +157,6 @@ function App() {
 
 		if (path.substring(0, 9) === "/activate") { return true; }
 		if (path.substring(0, 18) === "/accept-invitation") { return true; }
-		console.log(path.substring(0, 18))
 
 		return false;
 	}

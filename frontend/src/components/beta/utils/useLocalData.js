@@ -77,7 +77,7 @@ function useLocalData(isOffline) {
 					return false;
 				}
 
-				console.log("USING COMPLETE LOCAL DATA!");
+				// console.log("USING COMPLETE LOCAL DATA!");
 				setData(parsedData);
 
 				return true;
