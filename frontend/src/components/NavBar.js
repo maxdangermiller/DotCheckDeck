@@ -17,6 +17,8 @@ const NavBar = (props) => {
 		return <></>;
 	}
 
+	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
 	return (
 		<Navbar bg="dark" variant="dark" style={{height: "8vh", minHeight: "36px"}}>
 			<Container fluid>
@@ -24,12 +26,18 @@ const NavBar = (props) => {
 					<Navbar.Brand href="/">
 						<img src={logo} alt="" height="30px" width="30px"/>
 					</Navbar.Brand>
+					<Nav.Link href="/beta">Beta</Nav.Link>
+
 					{getViewerOptions()}
 					{
 						isAdminAuthorized() ?
 						<>
 							<Nav.Link href="/admin">Admin</Nav.Link>
-							<Nav.Link href="/admin-timeline">Admin Timeline</Nav.Link>
+							{
+								!isMobile ? 
+								<Nav.Link href="/admin-timeline">Admin Timeline</Nav.Link>
+								: null
+							}
 							<Nav.Link href="/admin-join-code">Join Code</Nav.Link>
 						</>
 						: null
