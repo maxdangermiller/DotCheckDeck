@@ -5,7 +5,7 @@ import getApi from '../../getApi';
 const WINDOW_LOCATION = getApi();
 
 const AdminCreateUser = (props) => {
-    const {token, show, setShow, ...rest} = props;
+    const {token, show, setShow} = props;
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -14,7 +14,6 @@ const AdminCreateUser = (props) => {
     const [isAdmin, setIsAdmin] = useState(false);
 
     const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
 
     const handleSave = () => {
         console.log(JSON.stringify({
@@ -24,33 +23,37 @@ const AdminCreateUser = (props) => {
             "last_name": lastName,
             "is_admin": isAdmin
         }));
-        fetch(WINDOW_LOCATION + '/create-user', {
-            method: 'POST',
-            body: JSON.stringify({
-                "email": email,
-                "password": password,
-                "first_name": firstName,
-                "last_name": lastName,
-                "is_admin": isAdmin
-            }),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/create-user', {
+                method: 'POST',
+                body: JSON.stringify({
+                    "email": email,
+                    "password": password,
+                    "first_name": firstName,
+                    "last_name": lastName,
+                    "is_admin": isAdmin
+                }),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     return (

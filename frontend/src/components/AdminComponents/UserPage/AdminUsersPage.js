@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import Boolean from '../Boolean';
 import AdminEditUser from './AdminEditUser';
 import AdminEditShowUser from './AdminEditShowUser';
-import AdminCreateUser from './AdminCreateUser';
 import AdminInviteUser from './AdminInviteUser';
 import AdminDeleteUser from './AdminDeleteUser';
 import getApi from '../../getApi';
@@ -26,7 +25,7 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminUsersPage = (props) => {
-    const {token, users, setUsers, sections, shows,...rest} = props;
+    const {token, users, setUsers, sections, shows} = props;
 
     const [showEditUser, setShowEditUser] = useState(false);
     const [showEditShowUser, setShowEditShowUser] = useState(false);
@@ -73,7 +72,7 @@ const AdminUsersPage = (props) => {
 
         for (let i = 0; i < user.show_users.length; i++) {
             out = out + user.show_users[i].label;
-            if (i != user.show_users.length - 1) { out += ", " }
+            if (i !== user.show_users.length - 1) { out += ", " }
         }
 
         return out;
@@ -94,29 +93,33 @@ const AdminUsersPage = (props) => {
     }
 
     const handleSave = (userData) => {
-        fetch(WINDOW_LOCATION + '/users', {
-            method: 'POST',
-            body: JSON.stringify(userData),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    setShowEditShowUser(false);
-                    setShowEditUser(false);
-                    updateUser(userData);
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/users', {
+                method: 'POST',
+                body: JSON.stringify(userData),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        setShowEditShowUser(false);
+                        setShowEditUser(false);
+                        updateUser(userData);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     const sortLabels = (data) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import AdminEditSection from './AdminEditSection';
 import AdminCreateSection from './AdminCreateSection';
@@ -15,7 +15,7 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminSectionsPage = (props) => {
-    const {token, sections, setSections, ...rest} = props;
+    const {token, sections, setSections} = props;
 
     const [sortBy, setSortBy] = useState(0);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
@@ -49,30 +49,34 @@ const AdminSectionsPage = (props) => {
     }
 
     const handleSave = (section) => {
-        fetch(WINDOW_LOCATION + '/update-section', {
-            method: 'POST',
-            body: JSON.stringify(section),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result)
-                    setShowEdit(false);
-
-                    updateSection(section);
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/update-section', {
+                method: 'POST',
+                body: JSON.stringify(section),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result)
+                        setShowEdit(false);
+    
+                        updateSection(section);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     const getColor = (section) => {

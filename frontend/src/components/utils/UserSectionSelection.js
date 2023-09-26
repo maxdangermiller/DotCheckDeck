@@ -1,19 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {Modal, Button, ListGroup} from 'react-bootstrap/';
+import React, { useState, useEffect } from 'react';
+import {Modal, Button} from 'react-bootstrap/';
 import { Autocomplete, TextField } from '@mui/material';
 import getApi from '../getApi';
 
 const WINDOW_LOCATION = getApi();
 
 const UserSectionSelection = (props) => {
-    const {data, curSet, schoolCode, token, userData, showID, ...rest} = props;
+    const {schoolCode, token, userData, showID} = props;
 
     const [show, setShow] = useState(true);
     const [sections, setSections] = useState(null);
     const [section, setSection] = useState(null);
 
     const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
 
     useEffect(() => {
         // console.log(getShowUser())
@@ -29,20 +28,25 @@ const UserSectionSelection = (props) => {
 
         setShow(true);
 
-        fetch(WINDOW_LOCATION + "/get-sections?token=" + token + "&school_code=" + schoolCode)
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error('INVALID SCHOOL CODE');
-            }
-            return response.json();
-        })
-        .then((data) => {
-            // console.log(data);
-            setSections(data);
-        })
-        .catch((error) => {
-            alert(error);
-        });
+        try {
+            fetch(WINDOW_LOCATION + "/get-sections?token=" + token + "&school_code=" + schoolCode)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('INVALID SCHOOL CODE');
+                }
+                return response.json();
+            })
+            .then((data) => {
+                // console.log(data);
+                setSections(data);
+            })
+            .catch((error) => {
+                alert(error);
+            });
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userData, showID]);
 
     const getShowUser = () => {
@@ -63,31 +67,35 @@ const UserSectionSelection = (props) => {
     const update = () => {
         if (section.id === null || section.id === undefined) { return; }
         if (getShowUser() === undefined) { return; }
-        fetch(WINDOW_LOCATION + '/update-user-section', {
-            method: 'POST',
-            body: JSON.stringify({
-                id: getShowUser().id,
-                section_id: section.id
-            }),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result)
-                    setShow(false);
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/update-user-section', {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: getShowUser().id,
+                    section_id: section.id
+                }),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-        );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result)
+                        setShow(false);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+            );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     const getSectionOptions = () => {

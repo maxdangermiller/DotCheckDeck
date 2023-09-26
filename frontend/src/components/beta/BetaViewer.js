@@ -37,8 +37,6 @@ const BetaViewer = (props) => {
 	const { token, showCode, userData, showID, isOffline } = props;
 
 	const [curSet, setCurSet]  = useState(0);                                                   // Store current index of the show
-	const [loading, setLoading] = useState(false);                                              // Show Spinny thing?
-	const [sentRequest, setSentRequest] = useState(false);                                      // Prevent sending multiple requests
 	const [audioPlaying, setAudioPlaying] = useState(false);                                    // Is the audio playing?
 	const [curPlayTime, setCurPlayTime] = useState(0);                                          // Current Play Time in Show
 	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);     // Check if we're in landscape
@@ -53,7 +51,6 @@ const BetaViewer = (props) => {
         // Methods
         checkLocalSets,
 		checkLocalData,
-		getLocalData,
 		saveData,
         saveLocalData,
 		saveSets,
@@ -73,7 +70,7 @@ const BetaViewer = (props) => {
 
     // Use Local Options
     const {
-        setUserOptions, userOptions, selectUserForHighlighting
+        setUserOptions, userOptions
     } = useUserOptions(userData);
 
 
@@ -129,8 +126,6 @@ const BetaViewer = (props) => {
 			.then(
 				(result) => {
 					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
-					
-					console.log(localTimestamp, localTimestamp === NaN)
 
 					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
 						console.log(localTimestamp, localSNTimestamp)
@@ -309,7 +304,7 @@ const BetaViewer = (props) => {
                 captiveDownload(localData, localSets, timestamp, depth + 1);
             }).catch((error) => {
                 console.log(error)
-                if (error.response && error.response.status === 401 || error.response.status === 400) {
+                if (error.response && (error.response.status === 401 || error.response.status === 400)) {
                     console.log(error.response)
 
                     window.location.href = "/login";
@@ -364,51 +359,65 @@ const BetaViewer = (props) => {
      * Check Set Names
      */
     const checkSetNames = () => {
-		if (sets.length === 0) { return; }
-		if (checkLocalSetNames()) { return; }
-		fetch(WINDOW_LOCATION + "/get-set-names?school_code=" + props.schoolCode + "&token=" + props.token)
-			.then(res => res.json())
-			.then(
-				(result) => {
-					console.log(result);
-					saveLocalSetNames(result);
-					updateSetNames(result);
-				},
-				// Note: it's important to handle errors here
-				// instead of a catch() block so that we don't swallow
-				// exceptions from actual bugs in components.
-				(error) => {
-					console.log(error);
-				}
-		);
+		try {
+			if (sets.length === 0) { return; }
+			if (checkLocalSetNames()) { return; }
+			fetch(WINDOW_LOCATION + "/get-set-names?school_code=" + props.schoolCode + "&token=" + props.token)
+				.then(res => res.json())
+				.then(
+					(result) => {
+						console.log(result);
+						saveLocalSetNames(result);
+						updateSetNames(result);
+					},
+					// Note: it's important to handle errors here
+					// instead of a catch() block so that we don't swallow
+					// exceptions from actual bugs in components.
+					(error) => {
+						console.log(error);
+					}
+			);
+		} catch (error) {
+			console.log("ERROR " + error);
+		}
 	}
 
     // Update Viewer Effect
     useEffect(() => {
-        getDatabaseVersion();
-        checkCurData();
-		checkSetNames();
+		try {
+			getDatabaseVersion();
+			checkCurData();
+			checkSetNames();
+		} catch (error) {
+			console.log("ERROR " + error);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [curSet, sets, curDatabaseTimestamp])
     
     // On initial open, call the API and get all of the sets
     useEffect(() => {
-        if (curDatabaseTimestamp === -1) { return; }
-        if (!checkLocalSets()) {
-            fetch(WINDOW_LOCATION + "/sets?school_code=" + showCode + "&token=" + token)
-                .then(res => res.json())
-                .then(
-                    (result) => {
-                        // console.log(result)
-                        saveSets(result);
-                    },
-                    // Note: it's important to handle errors here
-                    // instead of a catch() block so that we don't swallow
-                    // exceptions from actual bugs in components.
-                    (error) => {
-                        console.log(error);
-                    }
-            );
-        }
+		try {
+			if (curDatabaseTimestamp === -1) { return; }
+			if (!checkLocalSets()) {
+				fetch(WINDOW_LOCATION + "/sets?school_code=" + showCode + "&token=" + token)
+					.then(res => res.json())
+					.then(
+						(result) => {
+							// console.log(result)
+							saveSets(result);
+						},
+						// Note: it's important to handle errors here
+						// instead of a catch() block so that we don't swallow
+						// exceptions from actual bugs in components.
+						(error) => {
+							console.log(error);
+						}
+				);
+			}
+		} catch (error) {
+			console.log("ERROR " + error);
+		}
+    	// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [curDatabaseTimestamp])
 
 	// Get Audio From API
@@ -416,6 +425,7 @@ const BetaViewer = (props) => {
 		if (isOffline) { return; }
 		audio = new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + showCode + "&token=" + token);
 		audio.load();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
     // If audio isn't null, play if audioPlaying is true
@@ -440,7 +450,7 @@ const BetaViewer = (props) => {
 			}
 			// console.log("Successfully loaded user preferences")
 		} catch {
-			console.log("DIDN'T Find Saved User Prefs, creating new ones")
+			console.log("DIDN'T Find Saved User Preferences, creating new ones")
 			parsedData = {
 				"showNextSet": false, "showLastSet": false, "drawPath": false,
 				"highlightSection": false,
@@ -459,6 +469,7 @@ const BetaViewer = (props) => {
 		} else {
 			setUserOptions({...parsedData,  "highlightUser": null, "followingUser": false});
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [userData])
 
 	// Check to see if we're in landscape, if not display a "Rotate Please" message
@@ -477,8 +488,8 @@ const BetaViewer = (props) => {
      * @param {Integer} x set index
      */
 	const changeCurSet = (x) => {
-		if (x >= 0 && x < sets.length && !loading) {
-			// console.log("Changing set");
+		if (x >= 0 && x < sets.length && curSet !== x) {
+			console.log("Changing set");
 			setCurSet(x);
 		}
 	}
@@ -488,7 +499,7 @@ const BetaViewer = (props) => {
      * @param {Integer} x set index
      */
 	const handelSetBtnControls = (x) => {
-		if (x >= 0 && x < sets.length && !loading) {
+		if (x >= 0 && x < sets.length) {
 			if (!audioPlaying) {
 				changeCurSet(x);
 			} 
@@ -496,6 +507,9 @@ const BetaViewer = (props) => {
             if (audio !== null && sets[x]["start_time_code"] !== null) {
 				audio.currentTime = sets[x]["start_time_code"] / 1000;
 				setCurPlayTime(sets[x]["start_time_code"] / 1000);
+				console.log("Changing cur play time to " + sets[x]["start_time_code"] / 1000)
+			} else {
+				console.log("Something is wrong with audio or start_time_code for this set!", audio, sets[x])
 			}
 		}
 	}
@@ -572,9 +586,42 @@ const BetaViewer = (props) => {
 		}
 	}
 
-    const canvasLoopCallback = () => {
-        getAudioSyncedSet();
-    }
+	/**
+	 * With a time code, sync the set
+	 * @param {Integer} time_code in milliseconds!
+	 */
+	const updateSetBasedOnAudioTime = (time_code) => {
+		// Find if we're within the current set
+        if (isSetWithinTime(sets[curSet], time_code)) {
+            return;
+        }
+
+        let start = 0;
+
+        // If the msElapsed is already past the current set, we know it must be past in the array
+        if (sets[curSet]["end_time_code"] < time_code) {
+            start = curSet;
+        }
+
+
+		for (let i = start; i < sets.length; i++) {
+			if (sets[i]["start_time_code"] !== null && sets[i]["end_time_code"] !== null) {
+				let startTime = sets[i]["start_time_code"];
+				let endTime = sets[i]["end_time_code"];
+
+				if(time_code >= startTime && time_code < endTime) {
+					// sets[i] is currently active
+					if (curSet !== i) {
+						// console.log("Setting " + sets[i].set_numb + " to cur set (syncing with audio)", i)
+						setCurSet(i);
+						return;
+					} else {
+						console.log("THIS SHOULDN'T HAPPEN!")
+					}
+				}
+			}
+		}
+	}
 
     /**
      * Get all the set data at curSet
@@ -650,7 +697,6 @@ const BetaViewer = (props) => {
 				<BetaCanvas 
 					data={data} 
 					curSet={curSet} 
-					sets={sets} 
 					curPlayTime={curPlayTime}
 					audioPlaying={audioPlaying}
 					userOptions={userOptions}
@@ -660,8 +706,6 @@ const BetaViewer = (props) => {
 					hoverUserInfo={hoverUserInfo}
 					setHoverUserInfo={setHoverUserInfo}
 					isOffline = {isOffline}
-                    loading = {loading}
-                    loopCallback = {canvasLoopCallback}
 				/>
 				<UserInfoDialogue hoverUserInfo={hoverUserInfo} canvasRef={canvasRef}/>
 			</div>
@@ -672,9 +716,7 @@ const BetaViewer = (props) => {
 				curSet={curSet} 
 				sets={sets} 
 				setSets={saveSets}
-				changeCurSet={changeCurSet}
 				handelSetBtnControls={handelSetBtnControls}
-				loading={loading}
 				changeCurSetNumb={changeCurSetNumb}
 				userOptions={userOptions}
 				setUserOptions={setUserOptions}
@@ -686,6 +728,7 @@ const BetaViewer = (props) => {
 				setCurPlayTime={setCurPlayTime}
 				token={token}
 				userData={userData}
+				updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
 			/>
 			<FollowUserBtn userOptions={userOptions}/>
 

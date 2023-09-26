@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React from 'react'
 
 const UserInfoDialogue = (props) => {
     const { hoverUserInfo, canvasRef } = props

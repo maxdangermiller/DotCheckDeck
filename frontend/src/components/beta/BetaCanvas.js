@@ -17,7 +17,7 @@ const SCROLL_SENSITIVITY = 0.0005;
 
 const STEPS_TO_5_MAJOR = 2;
 const STEPS_TO_5_MINOR = 8;
-const HEIGHT_DIVIDED_INTO_5_YARDS = (53 + 1/3) / 5;
+// const HEIGHT_DIVIDED_INTO_5_YARDS = (53 + 1/3) / 5;
 
 // Reversed because it draws top to bottom
 const FRONT_HASH_RATIO = 2/3;
@@ -25,8 +25,8 @@ const BACK_HASH_RATIO = 1/3;
 const FRONT_COLLAGE_HASH_RATIO = 10/16;
 const BACK_COLLAGE_HASH_RATIO = 6/16;
 
-const DISTANCE_BETWEEN_HASHES_IN_YDS = (53 + 1/3) / 3;
-const HEIGHT_IN_YDS = 53 + 1/3;
+// const DISTANCE_BETWEEN_HASHES_IN_YDS = (53 + 1/3) / 3;
+// const HEIGHT_IN_YDS = 53 + 1/3;
 const RELATIVE_HASH_HEIGHT = 0.01;
 const RELATIVE_HASH_WIDTH = 0.005;
 
@@ -39,10 +39,10 @@ const WINDOW_LOCATION = getApi();
 
 const BetaCanvas = (props) => {
 	const { 
-        data, curSet, sets, curPlayTime, 
+        data, curSet, curPlayTime, 
         audioPlaying, userOptions, setUserOptions, 
         userData, token, hoverUserInfo, 
-        setHoverUserInfo, isOffline, loading, loopCallback
+        setHoverUserInfo, isOffline, loading
     } = props;
 
     const canvasRef = useRef(null)
@@ -75,7 +75,6 @@ const BetaCanvas = (props) => {
         const canvas = canvasRef.current
         const context = canvas.getContext('2d')
         let animationFrameId
-        let frameCount = 0
         let followDotCords = {x: 0, y: 0};
 
         const steps_to_px = (steps, height) => {
@@ -85,7 +84,7 @@ const BetaCanvas = (props) => {
 
         // Takes the side and line and give the percentage out of 100
         const sideLineRatioConvert = (side, line) => {
-            if (side == 1) { return parseInt(line) / 100; }
+            if (side === 1) { return parseInt(line) / 100; }
 
             switch (line) {
                 case "50":
@@ -118,14 +117,14 @@ const BetaCanvas = (props) => {
 
         // Takes the string of the hash and converts it to a percentage
         const hashRatioConvert = (hash, useCollegeHash) => {
-            if (hash == "Front side") { return 1; }
-            if (hash == "Front Hash") { 
+            if (hash === "Front side") { return 1; }
+            if (hash === "Front Hash") { 
                 if (useCollegeHash) {
                     return FRONT_COLLAGE_HASH_RATIO;
                 }
                 return FRONT_HASH_RATIO; 
             }
-            if (hash == "Back Hash") {
+            if (hash === "Back Hash") {
                 if (useCollegeHash) {
                     return BACK_COLLAGE_HASH_RATIO;
                 }
@@ -140,7 +139,7 @@ const BetaCanvas = (props) => {
 
             // console.log(hashY, altHashY, y)
 
-            if (hash == "Front Hash") { 
+            if (hash === "Front Hash") { 
                 // Past College Hash
                 if (altHashY - y >= 0) {
                     return Math.abs(steps - 4);
@@ -152,7 +151,7 @@ const BetaCanvas = (props) => {
                 // Before HS Hash
                 return steps + 4;
             }
-            if (hash == "Back Hash") {
+            if (hash === "Back Hash") {
                 // Past HS Hash
                 if (hashY - y >= 0) {
                     return steps + 4;
@@ -166,34 +165,6 @@ const BetaCanvas = (props) => {
             }
 
             return steps;
-        }
-
-        const drawTextBetween = (x, y, maxWidth, maxHeight, text, color) => {
-            
-            const MAX_SIZE = 24;
-            const MIN_SIZE = 4;
-            const DECREASE_INTERVAL = 2; 
-
-            context.fillStyle = color;
-            context.textBaseline = "middle";
-            context.textAlign = "center";
-
-            let startIndex = maxHeight === -1 ? MAX_SIZE : (maxHeight > MAX_SIZE ? MAX_SIZE : maxHeight);
-            let width = 0;
-
-            for (let x = startIndex; x >= MIN_SIZE; x -= DECREASE_INTERVAL) {
-                context.font = x + 'px ArialBlack';
-
-                width = context.measureText(text).width;
-                
-                if ((width <= maxWidth || maxWidth == -1) && (x <= maxHeight || maxHeight == -1) && !(maxWidth == -1 && maxHeight == -1)) {
-                    break;
-                }
-                
-            }
-
-
-            context.fillText(text, x, y);
         }
 
         const drawMovementBracketText = (x0, y0, x1, y1, xDirection, yDirection, text, color) => {
@@ -249,7 +220,7 @@ const BetaCanvas = (props) => {
 
             const DASH_LENGTH = 5;
             const BRACKET_SEPARATION = 10;
-            const TEXT_OFFSET = Math.min(canvas.width, canvas.height) * 0.04;         // Equivalent to max width/height
+            // const TEXT_OFFSET = Math.min(canvas.width, canvas.height) * 0.04;         // Equivalent to max width/height
         
 
             context.beginPath();
@@ -259,16 +230,13 @@ const BetaCanvas = (props) => {
             if (x !== lineX) {
                 const distanceFromHash = Math.abs(y - hashY) + BRACKET_SEPARATION;
                 let useY = 0;
-                let textY = 0;
                 let xDirection = 0;
 
                 if (y - hashY <= 0) {
                     useY = hashY - distanceFromHash
-                    textY = useY - TEXT_OFFSET;
                     xDirection = -1;
                 } else {
                     useY = hashY + distanceFromHash
-                    textY = useY + TEXT_OFFSET;
                     xDirection = 1;
                 }
 
@@ -290,16 +258,13 @@ const BetaCanvas = (props) => {
             if (y !== hashY) {
                 const distanceFromHash = Math.abs(x - lineX) + BRACKET_SEPARATION;
                 let useX = 0;
-                let textX = 0;
                 let yDirection = 0;
 
                 if (x - lineX <= 0) {
                     useX = lineX - distanceFromHash;
-                    textX = useX - TEXT_OFFSET * 2;
                     yDirection = -1;
                 } else {
                     useX = lineX + distanceFromHash;
-                    textX = useX + TEXT_OFFSET * 2;
                     yDirection = 1;
                 }
 
@@ -480,7 +445,7 @@ const BetaCanvas = (props) => {
             let size = canvas.height * 0.012;
 
             // let preDef = data[curSetIndex - 1]  != undefined && data[curSetIndex - 1].dots[curUserIndex]    != undefined;
-            let curDef = data[curSetIndex]      != undefined && data[curSetIndex].dots[curUserIndex]        != undefined;
+            let curDef = data[curSetIndex] !== undefined && data[curSetIndex].dots[curUserIndex] !== undefined;
             // let nextDef = data[curSetIndex + 1] != undefined && data[curSetIndex + 1].dots[curUserIndex]    != undefined;
 
             let preDot = getMatchingUserDot(data, curSetIndex - 1, data[curSetIndex].dots[curUserIndex]);
@@ -701,7 +666,7 @@ const BetaCanvas = (props) => {
         // This draws the little hash marks
         const drawHash = (startX, endX, y, color) => {
             // Draw little lines for each yard | There are 5 yards between each major yard line 
-            for (var i = 0; i < 5; i++) {
+            for (let i = 0; i < 5; i++) {
                 const x = ((endX - startX) / 5) * i + startX;
 
                 drawLine(x, y - canvas.height * RELATIVE_HASH_HEIGHT, x, y + canvas.height * RELATIVE_HASH_HEIGHT, color, 1)
@@ -710,14 +675,14 @@ const BetaCanvas = (props) => {
 
         // This draw all the Vertical grid lines
         const drawVerticalGrid = (startX, endX, major) => {
-            for (var i = 1; i < STEPS_TO_5_MAJOR; i++) {
+            for (let i = 1; i < STEPS_TO_5_MAJOR; i++) {
                 const x = ((endX - startX) / STEPS_TO_5_MAJOR) * i + startX;
 
                 if (major) {
                     drawVerticalGirdLine(x, GRID_MAJOR_DIVISION_COLOR, 1);
                 } else {
                      // Draw all the minor division grid lines between the major divisions
-                    for (var ii = 1; ii < STEPS_TO_5_MINOR; ii++) {
+                    for (let ii = 1; ii < STEPS_TO_5_MINOR; ii++) {
                         const x2 = ((endX - startX) / STEPS_TO_5_MINOR) * ii + startX;
 
                         if (x2 !== x) {
@@ -745,7 +710,7 @@ const BetaCanvas = (props) => {
             const endY = hashLocation + hashDistance;
             // console.log(hashes);
             
-            for (var i = 1; i < majorHashes; i++) {
+            for (let i = 1; i < majorHashes; i++) {
                 // const y = ((endY - startY) / (majorHashes + 1)) * i + startY;
                 // const nextY = ((endY - startY) / (majorHashes + 1)) * (i + 1) + startY;
                 const y = startY + oneStep * i * 4;
@@ -757,7 +722,7 @@ const BetaCanvas = (props) => {
                 }
                 // Draw all the minor division grid lines between the major divisions
                 else if (nextY <= endY) {
-                    for (var ii = 1; ii < (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR); ii++) {
+                    for (let ii = 1; ii < (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR); ii++) {
                         const y2 = ((nextY - y) /  (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR)) * ii + y;
     
                         if (y2 !== y && y2 !== nextY && y2 > 0 && y2 < canvas.height) {
@@ -777,9 +742,9 @@ const BetaCanvas = (props) => {
             drawHorizontalGrid(BACK_HASH_RATIO, false);
             drawHorizontalGrid(1, false);
 
-            for (var x = 0; x < 21; x++) {
-                var val = x * (canvas.width / 20);
-                var nextVal = (x + 1) * (canvas.width / 20);
+            for (let x = 0; x < 21; x++) {
+                let val = x * (canvas.width / 20);
+                let nextVal = (x + 1) * (canvas.width / 20);
 
                 if (nextVal <= canvas.width) {
                     drawVerticalGrid(val, nextVal, false);
@@ -791,9 +756,9 @@ const BetaCanvas = (props) => {
             drawHorizontalGrid(BACK_HASH_RATIO, true);
             drawHorizontalGrid(1, true);
 
-            for (var x = 0; x < 21; x++) {
-                var val = x * (canvas.width / 20);
-                var nextVal = (x + 1) * (canvas.width / 20);
+            for (let x = 0; x < 21; x++) {
+                let val = x * (canvas.width / 20);
+                let nextVal = (x + 1) * (canvas.width / 20);
 
                 if (nextVal <= canvas.width) {
                     drawVerticalGrid(val, nextVal, true);
@@ -807,9 +772,9 @@ const BetaCanvas = (props) => {
             drawGridLines();
 
             // This draws the 5 yard lines up through the 50, from the left
-            for (var x = 0; x < 21; x++) {
-                var val = x * (canvas.width / 20);
-                var nextVal = (x + 1) * (canvas.width / 20);
+            for (let x = 0; x < 21; x++) {
+                let val = x * (canvas.width / 20);
+                let nextVal = (x + 1) * (canvas.width / 20);
 
                 drawVerticalGirdLine(val, "black", 2);
                 
@@ -865,9 +830,9 @@ const BetaCanvas = (props) => {
                 context.textBaseline = "middle";
                 context.textAlign = "center";
 
-                if (x > 10 && x != 20) {
+                if (x > 10 && x !== 20) {
                     context.fillText((20 - x) * 5, val, canvas.height * 0.75);
-                } else if (x != 0 && x != 20) {
+                } else if (x !== 0 && x !== 20) {
                     context.fillText(x * 5, val, canvas.height * 0.75);
                 }
             
@@ -1184,7 +1149,7 @@ const BetaCanvas = (props) => {
 
                 // If the duration is 0, then just end the animation here. 
                 // This is because below when it finds curTime it divides and you cannot divide by zero
-                if (durationInSecs == 0) { setIsAnimation(false); setAnimationStartTime(0); return; }
+                if (durationInSecs === 0) { setIsAnimation(false); setAnimationStartTime(0); return; }
 
                 let counts = drawInfo[curSet].counts;
 
@@ -1322,18 +1287,16 @@ const BetaCanvas = (props) => {
 
             // Pan and zoom
             doPanAndZoom(ctx);
-            
-            if (loopCallback !== undefined) {
-                loopCallback();
-            }
 
             clear();
+            // console.log(lastSetID !== curSet, animationDirection !== 0, !loading, data.length !== 0, isAnimation);
 
             let isNewFrame = lastSetID !== curSet && animationDirection !== 0 && !loading  && data.length !== 0;
             let isRerender = hadResize && !loading && data.length !== 0 && data !== drawInfo;
 
             // If it is an animation, draw the animation
             if (isAnimation) {
+                // console.log("DRAWING ANIMATION between "+ lastSetID + " and " + curSet);
                 // Sometimes there's problems
                 try {
                     drawAnimation();
@@ -1345,12 +1308,13 @@ const BetaCanvas = (props) => {
             
             // Check to see if we have a new frame (right after an animation)
             else if ((isNewFrame || isRerender) && data[curSet].dots !== undefined) {
+                console.log("NEW FRAME!")
                 setDrawInfo(data);
                 setLastSetID(curSet);
                 setAnimationDirection(0);
 
                 if (hadResize) { setHadResize(false); }
-
+                
                 let newDots = drawDots(data, curSet);
                 setDots(newDots)
 
@@ -1361,6 +1325,10 @@ const BetaCanvas = (props) => {
 
             // If it isn't a new frame, used a buffered frame. This is so we don't set vars and overwrite things.
             else if (drawInfo.length > curSet && drawInfo[curSet] !== undefined)  {
+                if (lastSetID !== curSet) {
+                    console.log(lastSetID !== curSet, animationDirection !== 0, !loading, data.length !== 0);
+                }
+                console.log(curSet, lastSetID)
                 let newDots = drawDots(drawInfo, curSet);
                 setDots(newDots)
 
@@ -1370,7 +1338,6 @@ const BetaCanvas = (props) => {
             }
 
             ctx.restore()
-            frameCount++
             animationFrameId = requestAnimationFrame(() => render(ctx))
         }
         render(context)
@@ -1378,15 +1345,14 @@ const BetaCanvas = (props) => {
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot])
 
     useEffect(() => {
         console.log("Canvas Updating")
-        if (audioPlaying) {
-            setAnimationStartTime(Date.now());
-        }
         setAnimationStartTime(Date.now());
         setIsAnimation(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [curSet]);
 
     const dotHover = (event) => {
@@ -1501,7 +1467,7 @@ const BetaCanvas = (props) => {
 
     const adjustZoom = (zoomAmount, zoomFactor) => {
         if (!isDragging) {
-            var tempCameraZoom = cameraZoom;
+            let tempCameraZoom = cameraZoom;
             if (zoomAmount) {
                 tempCameraZoom = tempCameraZoom + zoomAmount;
             } else if (zoomFactor) {
@@ -1529,6 +1495,7 @@ const BetaCanvas = (props) => {
         } else if (!userOptions.followingUser && followDot !== undefined) {
             setFollowDot(undefined);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userOptions, dots])
 
     return <canvas

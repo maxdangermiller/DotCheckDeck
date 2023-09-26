@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import AdminEditShow from './AdminEditShow';
 import AdminAddPDF from './AdminAddPDF';
 import getApi from '../../getApi';
@@ -6,7 +6,7 @@ import getApi from '../../getApi';
 const WINDOW_LOCATION = getApi();
 
 const AdminShowPage = (props) => {
-    const {token, shows, setShows, ...rest} = props;
+    const {token, shows, setShows} = props;
 
     const [showEdit, setShowEdit] = useState(false);
     const [curEdit, setCurEdit] = useState({});
@@ -35,33 +35,36 @@ const AdminShowPage = (props) => {
     }
 
     const handleSave = (item) => {
-        
-        fetch(WINDOW_LOCATION + '/update-show', {
-            method: 'POST',
-            body: JSON.stringify(item),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result)
-                    setShowEdit(false);
-
-                    updateItem(item);
-
-                    alert(result)
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {     
+            fetch(WINDOW_LOCATION + '/update-show', {
+                method: 'POST',
+                body: JSON.stringify(item),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result)
+                        setShowEdit(false);
+    
+                        updateItem(item);
+    
+                        alert(result)
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     return (

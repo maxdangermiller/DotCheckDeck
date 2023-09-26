@@ -6,48 +6,51 @@ import getApi from '../getApi';
 const WINDOW_LOCATION = getApi();
 
 const SetNameModel = (props) => {
-    const {show, setShow, token, curSetInfo, setCurSetInfo, sets, setSets, ...rest} = props;
+    const {show, setShow, token, curSetInfo, setCurSetInfo, sets, setSets} = props;
 
     const setSetName = (value) => {
         setCurSetInfo({...curSetInfo,  "set_name": value});
     }
 
     const saveSetName = () => {
-        fetch(WINDOW_LOCATION + '/update-set-name', {
-            method: 'POST',
-            body: JSON.stringify(curSetInfo),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    let newSets = sets.map((value, index) => {
-                        if (value.id === curSetInfo.id) {
-                            console.log(value);
-                            value.set_name = curSetInfo.set_name;
-                        }
-
-                        return value;
-                    })
-
-                    setSets(newSets);
-                    setShow(false);
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/update-set-name', {
+                method: 'POST',
+                body: JSON.stringify(curSetInfo),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        let newSets = sets.map((value, index) => {
+                            if (value.id === curSetInfo.id) {
+                                console.log(value);
+                                value.set_name = curSetInfo.set_name;
+                            }
+    
+                            return value;
+                        })
+    
+                        setSets(newSets);
+                        setShow(false);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
 
     let setName = curSetInfo !== null ? curSetInfo.set_name : "";
 

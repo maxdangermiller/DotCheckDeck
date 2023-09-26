@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
-import IconButton from '@mui/material/IconButton';
+import React, { useState, useEffect } from 'react'
 
 import './ViewerSideBar.css';
 import OptionsModal from '../../ViewerSideBarComponents/OptionsModal';
 import SetNameModel from '../../ViewerSideBarComponents/SetNameModel';
 import NotesModel from '../../ViewerSideBarComponents/NotesModel';
-import AudioProgressBar from '../../AdminComponents/TimelinePage/AudioProgressBar';
-import Spinner from '../../utils/Spinner';
+import AudioProgressBar from './ViewerSideBarComponents/AudioProgressBar';
 
 import {ReactComponent as LeftArrow} from '../../../circle-arrow-left.svg';
 import {ReactComponent as RightArrow} from '../../../circle-arrow-right.svg';
@@ -18,11 +16,11 @@ import 'bootstrap/dist/css/bootstrap.css';
 const ViewerSideBar = (props) => {
     const { 
         curSetInfo, getCurSetNumb, setInput, 
-        curSet, sets, setSets, changeCurSet, handelSetBtnControls, 
-        loading, changeCurSetNumb, 
+        curSet, sets, setSets, handelSetBtnControls, changeCurSetNumb, 
         userOptions, setUserOptions, data,
         audioPlaying, setAudioPlaying, audio, 
-        curPlayTime, setCurPlayTime, token, userData, ...rest 
+        curPlayTime, setCurPlayTime, token, userData,
+        updateSetBasedOnAudioTime
     } = props;
 
     const [showSettings, setShowSettings] = useState(false);
@@ -43,29 +41,23 @@ const ViewerSideBar = (props) => {
     
     useEffect(() => {
 		setCurSetNumb(getCurSetNumb);
+	    // eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [curSet, sets])
 
     return (
         <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
             <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "35vh", width: "100%", maxWidth:"20vw"}}>
                 <h1 className='viewerSideBarHeader'>Current Set:</h1>
-                {
-                    !loading ?
                     <input 
                         ref={setInput} 
                         value={curSetNumb} 
                         className="invisibleInput" 
                         onChange={(e) => setCurSetNumb(e.target.value)} 
                         onKeyDown={(e) => changeCurSetNumb(e)}>
-                    </input> :
-                    <div className='d-flex flex-column justify-content-center align-items-center spinnerSuspender'>
-                        <Spinner />
-                    </div>
-                }
+                    </input> 
                 <div onClick={(e) => setShowNotes(true)} style={{cursor: "pointer", maxWidth:"95%"}}>
                     {
-                        // Add Other conditions here
-                        !loading && curSetInfo !== null && curSetInfo !== undefined?
+                        curSetInfo !== null && curSetInfo !== undefined?
                         <div style={{width: "100%"}}>
                             <h1 className='centerText' style={{textOverflow: "ellipsis"}}><strong>Name:</strong> {setName}</h1>
                             <h1 className='centerText'><strong>Measure:</strong> {curSetInfo["measure"]}</h1>
@@ -119,6 +111,7 @@ const ViewerSideBar = (props) => {
                             audio={audio} 
                             isPlaying={audioPlaying} 
                             setIsPlaying={setAudioPlaying}
+                            updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
                         />
                         : null
                     }
@@ -160,7 +153,7 @@ const ViewerSideBar = (props) => {
 export default ViewerSideBar;
 
 const PausePlayBtn = (props) => {
-    const {isPlaying, setIsPlaying, ...rest} = props;
+    const {isPlaying, setIsPlaying} = props;
 
     if (isPlaying) {
         return (

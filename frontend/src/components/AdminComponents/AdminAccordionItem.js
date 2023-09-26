@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { TextField } from '@mui/material';
 
 const WINDOW_LOCATION = window.location.protocol + "//" + window.location.hostname + ":5000";
 
 const AdminAccordionItem = (props) => {
-    const { accordionItem, accordionState, index, setAccordionState, token, ...rest } = props
+    const { accordionItem, accordionState, index, setAccordionState, token } = props
 
     const setAccordionItem = () => {
         const newAccordionState = accordionState.map((value, i) => {
@@ -48,34 +48,38 @@ const AdminAccordionItem = (props) => {
     }
 
     const saveData = () => {
-        fetch(WINDOW_LOCATION + '/update-set', {
-            method: 'POST',
-            body: JSON.stringify({
-                id: accordionItem.id,
-                set_numb: accordionItem.setNumb,
-                measure: accordionItem.measure, 
-                counts: accordionItem.counts, 
-                start_time_code: MSToSecs(accordionItem.start_time_code), 
-                end_time_code: MSToSecs(accordionItem.end_time_code)
-            }),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result);
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/update-set', {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: accordionItem.id,
+                    set_numb: accordionItem.setNumb,
+                    measure: accordionItem.measure, 
+                    counts: accordionItem.counts, 
+                    start_time_code: MSToSecs(accordionItem.start_time_code), 
+                    end_time_code: MSToSecs(accordionItem.end_time_code)
+                }),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     return (

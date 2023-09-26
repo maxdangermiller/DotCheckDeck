@@ -36,7 +36,7 @@ function useUserOptions(userData) {
 			options = getLocalUserOptions();
 			// console.log("Successfully loaded user preferences")
 		} catch {
-			// console.log("DIDN'T Find Saved User Prefs, creating new ones")
+			// console.log("DIDN'T Find Saved User preferences, creating new ones")
 			options = {
 				"showNextSet": false, "showLastSet": false, "drawPath": false,
 				"highlightSection": false,
@@ -59,6 +59,7 @@ function useUserOptions(userData) {
      // Automatically Grab The Users Info and select them for highlighting
 	useEffect(() => {
 		selectUserForHighlighting();
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [userData])
 
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import getApi from '../../getApi';
 
@@ -19,13 +19,12 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminSetsPage = (props) => {
-    const {token, sets, setSets, ...rest} = props;
+    const {token, sets, setSets} = props;
 
     const [sortBy, setSortBy] = useState(0);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
     const [showEdit, setShowEdit] = useState(false);
     const [showNotes, setShowNotes] = useState(false);
-    const [showCreate, setShowCreate] = useState(false);
     const [curEdit, setCurEdit] = useState({});
     const [curNotes, setCurNotes] = useState("");
 
@@ -60,30 +59,34 @@ const AdminSetsPage = (props) => {
     }
 
     const handleSave = (set) => {
-        fetch(WINDOW_LOCATION + '/update-set', {
-            method: 'POST',
-            body: JSON.stringify(set),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result)
-                    setShowEdit(false);
-
-                    updateSet(set);
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/update-set', {
+                method: 'POST',
+                body: JSON.stringify(set),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result)
+                        setShowEdit(false);
+    
+                        updateSet(set);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
 

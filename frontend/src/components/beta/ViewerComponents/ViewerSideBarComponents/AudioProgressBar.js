@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 
 const AudioProgressBar = (props) => {
-    const {curPlayTime, setCurPlayTime, audio, isPlaying, setIsPlaying} = props;
+    const {curPlayTime, setCurPlayTime, audio, isPlaying, setIsPlaying, updateSetBasedOnAudioTime} = props;
 
     const intervalRef = useRef();
 
@@ -38,8 +38,10 @@ const AudioProgressBar = (props) => {
         intervalRef.current = setInterval(() => {
             if (audio.ended || !isPlaying) {
                 // Do nothing
-            } else {
+            } else if (isPlaying) {
+                // console.log(audio.currentTime)
                 setCurPlayTime(audio.currentTime);
+                updateSetBasedOnAudioTime(audio.currentTime * 1000);
             }
         }, [100]);
     };

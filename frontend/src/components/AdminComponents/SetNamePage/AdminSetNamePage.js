@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import AdminEditSetName from './AdminEditSetName';
 import AdminCreateSetName from './AdminCreateSetName';
@@ -15,7 +15,7 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminSetNamePage = (props) => {
-    const {token, sections, setSections, allData, ...rest} = props;
+    const {token, sections, setSections, allData} = props;
 
     const [sortBy, setSortBy] = useState(1);
     const [sortDirection, setSortDirection] = useState(SORT_UP);
@@ -67,59 +67,65 @@ const AdminSetNamePage = (props) => {
     }
 
     const handleSave = (setName) => {
-        
-        fetch(WINDOW_LOCATION + '/update-set-name-admin', {
-            method: 'POST',
-            body: JSON.stringify(setName),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result)
-                    setShowEdit(false);
-
-                    updateItem(setName);
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/update-set-name-admin', {
+                method: 'POST',
+                body: JSON.stringify(setName),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result)
+                        setShowEdit(false);
+    
+                        updateItem(setName);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     const handleCreate = (setName) => {
-        
-        fetch(WINDOW_LOCATION + '/update-set-name-admin', {
-            method: 'POST',
-            body: JSON.stringify(setName),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result)
-                    setShowEdit(false);
-
-                    updateItem(setName);
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/update-set-name-admin', {
+                method: 'POST',
+                body: JSON.stringify(setName),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result)
+                        setShowEdit(false);
+    
+                        updateItem(setName);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     const sort = (data) => {

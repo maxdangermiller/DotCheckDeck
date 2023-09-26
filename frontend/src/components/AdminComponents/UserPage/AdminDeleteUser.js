@@ -1,42 +1,45 @@
 import React, { useState } from 'react';
-import {Modal, Button, FloatingLabel, Form } from 'react-bootstrap/';
+import {Modal, Button } from 'react-bootstrap/';
 import getApi from '../../getApi';
 
 const WINDOW_LOCATION = getApi();
 
 const AdminDeleteUser = (props) => {
-    const {show, setShow, user, handleSave, token, ...rest} = props;
+    const {show, setShow, user, token} = props;
 
     const [confirmed, setConfirmed] = useState(false);
 
     const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
 
     const handelDelete = () => {
-        fetch(WINDOW_LOCATION + '/create-user', {
-            method: 'DELETE',
-            body: JSON.stringify({
-                "id": user.id,
-            }),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    setShow(false);
-                    window.location.reload();
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/create-user', {
+                method: 'DELETE',
+                body: JSON.stringify({
+                    "id": user.id,
+                }),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        setShow(false);
+                        window.location.reload();
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     return (

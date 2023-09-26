@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import AdminAccordionItem from './AdminComponents/AdminAccordionItem';
+/* eslint-disable jsx-a11y/anchor-is-valid */
+import React, { useState, useEffect } from 'react';
 import AdminUsersPage from './AdminComponents/UserPage/AdminUsersPage';
 import AdminSectionsPage from './AdminComponents/SectionPage/AdminSectionsPage';
 import AdminSetNamePage from './AdminComponents/SetNamePage/AdminSetNamePage';
@@ -17,7 +17,7 @@ const Admin = (props) => {
     const [data, setData] = useState({"school": {}, "sections": [], "sets": [], "shows": [], "users": [], "prop_show_users": [], "default_show": {}});
     const [menuIndex, setMenuIndex] = useState(0);
 
-    const { schoolCode, token, ...rest } = props
+    const { token } = props
 
     const getActivePage = () => {
         console.log(data);
@@ -68,31 +68,36 @@ const Admin = (props) => {
     }
 
     useEffect(() => {
-		fetch(WINDOW_LOCATION + "/get-all?token=" + token)
-			.then(res => res.json())
-			.then(
-				(result) => {
-                    console.log(result);
-                    if (result === "NO SHOWS") {
-                        window.location.href = "admin-create-show";
-                    } else {
-                        setData(result);
+        try {
+            fetch(WINDOW_LOCATION + "/get-all?token=" + token)
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result);
+                        if (result === "NO SHOWS") {
+                            window.location.href = "admin-create-show";
+                        } else {
+                            setData(result);
+                        }
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        if (error === "NO SHOWS") {
+                            window.location.href = "admin-create-show";
+                        }
                     }
-				},
-				// Note: it's important to handle errors here
-				// instead of a catch() block so that we don't swallow
-				// exceptions from actual bugs in components.
-				(error) => {
-					console.log(error);
-                    if (error === "NO SHOWS") {
-                        window.location.href = "admin-create-show";
-                    }
-				}
-		);
+            );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
     const getActiveClassName = (target) => {
-        if (menuIndex == target) {
+        if (menuIndex === target) {
             return "nav-link active";
         }
         return "nav-link";

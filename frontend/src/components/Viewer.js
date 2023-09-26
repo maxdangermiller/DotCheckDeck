@@ -32,6 +32,7 @@ const MIN_TIMESTAMP_INTERVAL = 120000;  // 2 minutes
 
 const Viewer = (props) => {
 	const {set_numb_param} = useParams();
+	// eslint-disable-next-line no-unused-vars
 	const [queryParams, setQueryParams] = useSearchParams();
 
 	const [data, setData] = useState([]);
@@ -142,7 +143,7 @@ const Viewer = (props) => {
 				(result) => {
 					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
 					
-					console.log(localTimestamp, localTimestamp === NaN)
+					console.log(localTimestamp, isNaN(localTimestamp))
 
 					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
 						console.log(localTimestamp, localSNTimestamp)
@@ -336,16 +337,6 @@ const Viewer = (props) => {
 		}
 	}
 
-	const getLocalData = () => {
-		try {
-			let localData = window.localStorage.getItem("local-data");
-			let parsedData = JSON.parse(localData);
-			return parsedData;
-		} catch {
-			return [];
-		}
-	}
-
 	const saveLocalData = (newData) => {
 		try {
 			localStorage.setItem("local-data", JSON.stringify(newData));
@@ -422,7 +413,7 @@ const Viewer = (props) => {
 					downloadPoints(JSON.parse(JSON.stringify(dataBackup)), depth + 1, useSetIndex);
 				}).catch((error) => {
 					console.log(error)
-					if (error.response && error.response.status === 401 || error.response.status === 400) {
+					if (error.response && (error.response.status === 401 || error.response.status === 400)) {
 						console.log(error.response)
 	
 						window.location.href = "/login";
@@ -563,7 +554,7 @@ const Viewer = (props) => {
 				setSentRequest(false);
 				if (!curSetBuffered || loading) { setLoading(false); }
 			}).catch((error) => {
-				if (error.response && error.response.status === 401 || error.response.status === 400) {
+				if (error.response && (error.response.status === 401 || error.response.status === 400)) {
 					console.log(error.response)
 
 					window.location.href = "/login";
@@ -652,9 +643,14 @@ const Viewer = (props) => {
 	}
 
 	useEffect(() => {
-		getDatabaseVersion();
-		retrievePointsNew(true);
-		retrieveNewSetNames();
+		try {
+			getDatabaseVersion();
+			retrievePointsNew(true);
+			retrieveNewSetNames();
+		} catch (error) {
+			console.log("ERROR " + error);
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [curSet, sets, curDatabaseTimestamp, location])
 
 	/*
@@ -666,25 +662,30 @@ const Viewer = (props) => {
 
 	// On initial open, call the API and get all of the sets
 	useEffect(() => {
-		if (curDatabaseTimestamp === -1) { return; }
-		if (!checkLocalSets()) {
-			fetch(WINDOW_LOCATION + "/sets?school_code=" + props.schoolCode + "&token=" + props.token)
-				.then(res => res.json())
-				.then(
-					(result) => {
-						console.log(result)
-						setSets(result);
-						saveLocalSets(result);
-						setCurSetInfo(result[0]);
-					},
-					// Note: it's important to handle errors here
-					// instead of a catch() block so that we don't swallow
-					// exceptions from actual bugs in components.
-					(error) => {
-						console.log(error);
-					}
-			);
+		try {
+			if (curDatabaseTimestamp === -1) { return; }
+			if (!checkLocalSets()) {
+				fetch(WINDOW_LOCATION + "/sets?school_code=" + props.schoolCode + "&token=" + props.token)
+					.then(res => res.json())
+					.then(
+						(result) => {
+							console.log(result)
+							setSets(result);
+							saveLocalSets(result);
+							setCurSetInfo(result[0]);
+						},
+						// Note: it's important to handle errors here
+						// instead of a catch() block so that we don't swallow
+						// exceptions from actual bugs in components.
+						(error) => {
+							console.log(error);
+						}
+				);
+			}
+		} catch (error) {
+			console.log("ERROR " + error);
 		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [curDatabaseTimestamp])
 
 	// Get audio!
@@ -692,6 +693,7 @@ const Viewer = (props) => {
 		if (props.isOffline) { return; }
 		audio = new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + props.schoolCode + "&token=" + props.token);
 		audio.load();
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [location])
 
 	useEffect(() => {
@@ -715,7 +717,7 @@ const Viewer = (props) => {
 			}
 			console.log("Successfully loaded user preferences")
 		} catch {
-			console.log("DIDN'T Find Saved User Prefs, creating new ones")
+			console.log("DIDN'T Find Saved User preferences, creating new ones")
 			parsedData = {
 				"showNextSet": false, "showLastSet": false, "drawPath": false,
 				"highlightSection": false,
@@ -734,6 +736,7 @@ const Viewer = (props) => {
 		} else {
 			setUserOptions({...parsedData,  "highlightUser": null, "followingUser": false});
 		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [props.userData, location])
 
 	// Check to see if we're in landscape, if not display a "Rotate Please" message

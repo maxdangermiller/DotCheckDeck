@@ -1,39 +1,43 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import QRCode from "react-qr-code";
 import getApi from '../getApi';
 
 const WINDOW_LOCATION = getApi();
 
 const AdminJoinCodeDisplay = (props) => {
-    const { schoolCode, token, ...rest } = props
+    const { token } = props
 
     const [isLoading, setIsLoading] = useState(false);
     const [schoolInfo, setSchoolInfo] = useState("");
 
     useState(() => {
         setIsLoading(true);
-        fetch(WINDOW_LOCATION + '/default-join-code', {
-                method: 'GET',
-                headers: {
-                    'Content-type': 'application/json; charset=UTF-8',
-                    'Authorization': 'Bearer ' + token
+        try {
+            fetch(WINDOW_LOCATION + '/default-join-code', {
+                    method: 'GET',
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8',
+                        'Authorization': 'Bearer ' + token
+                    }
+            })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('INVALID SCHOOL CODE');
                 }
-        })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error('INVALID SCHOOL CODE');
-            }
-            return response.json();
-        })
-        .then((data) => {
-            console.log(data);
-            setIsLoading(false);
-            setSchoolInfo(data)
-        })
-        .catch((error) => {
-            setIsLoading(false);
-            alert(error);
-        });
+                return response.json();
+            })
+            .then((data) => {
+                console.log(data);
+                setIsLoading(false);
+                setSchoolInfo(data)
+            })
+            .catch((error) => {
+                setIsLoading(false);
+                alert(error);
+            });
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }, []);
 
     console.log(window.location);

@@ -4,7 +4,6 @@ import AdminTimelineTimestamp from './AdminTimelineTimestamp';
 import PausePlayBtn from './PausePlayBtn';
 import AudioProgressBar from './AudioProgressBar';
 import './AdminTimeline.css';
-import { fontSize } from '@mui/system';
 import getApi from '../../getApi';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
@@ -16,11 +15,11 @@ const MIN_SIZE = 1;
 const TIMESTAMP_INTERVAL = 10;
 
 const DRAG_STATE_NONE = 0;
-const DRAG_STATE_LEFT = 1;
+// const DRAG_STATE_LEFT = 1;
 const DRAG_STATE_RIGHT = 2;
 
 const AdminTimeline = (props) => {
-    const { schoolCode, token, ...rest } = props
+    const { schoolCode, token } = props
 
     const [curPlayTime, setCurPlayTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -59,23 +58,29 @@ const AdminTimeline = (props) => {
     }
 
     useEffect(() => {
-		fetch(WINDOW_LOCATION + "/sets?school_code=" + schoolCode + "&token=" + token)
-			.then(res => res.json())
-			.then(
-				(result) => {
-                    setData(result);
-				},
-				// Note: it's important to handle errors here
-				// instead of a catch() block so that we don't swallow
-				// exceptions from actual bugs in components.
-				(error) => {
-					console.log(error);
-				}
-		);
+        try {
+            fetch(WINDOW_LOCATION + "/sets?school_code=" + schoolCode + "&token=" + token)
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        setData(result);
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                    }
+            );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
     useEffect(() => {
 		setAudio(new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + schoolCode + "&token=" + token));
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
     const dragStart = (e, index) => {
@@ -122,7 +127,7 @@ const AdminTimeline = (props) => {
     const dragEnd = (e) => {
         const newData = data.map((_value, i) => {
             if (i === dragItem.current) {
-                if (dragInTimeline && _value["start_time_code"] == null || _value["end_time_code"] == null) {
+                if (dragInTimeline && (_value["start_time_code"] == null || _value["end_time_code"] == null)) {
                     let lastSetEnd = 0;
                     if (i > 0) {
                         lastSetEnd = data[i - 1]["end_time_code"];
@@ -247,28 +252,32 @@ const AdminTimeline = (props) => {
     }
 
     const saveData = () => {
-        fetch(WINDOW_LOCATION + '/update-sets', {
-            method: 'POST',
-            body: JSON.stringify({data}),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer ' + token
-            }
-            })
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    console.log(result);
-                    window.location.reload();
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    console.log(error);
-                    alert(error)
+        try {
+            fetch(WINDOW_LOCATION + '/update-sets', {
+                method: 'POST',
+                body: JSON.stringify({data}),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': 'Bearer ' + token
                 }
-            );
+                })
+                .then(res => res.json())
+                .then(
+                    (result) => {
+                        console.log(result);
+                        window.location.reload();
+                    },
+                    // Note: it's important to handle errors here
+                    // instead of a catch() block so that we don't swallow
+                    // exceptions from actual bugs in components.
+                    (error) => {
+                        console.log(error);
+                        alert(error)
+                    }
+                );
+        } catch (error) {
+            console.log("ERROR " + error);
+        }
     }
 
     return(

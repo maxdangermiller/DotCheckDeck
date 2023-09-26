@@ -1,11 +1,11 @@
-import React, { useRef, useEffect, useState} from 'react';
+import React from 'react';
 import './Nav.css';
 import logo from '../logo.svg';
-import {Nav,  Navbar, NavDropdown, Container } from 'react-bootstrap';
+import {Nav,  Navbar, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 const NavBar = (props) => {
-    const { token, loggedIn, logout, isAdminAuthorized, ...rest } = props
+    const { loggedIn, logout, isAdminAuthorized } = props
 
 	const getViewerOptions = () => {
 		if (window.location.pathname === "/basic") {
@@ -26,7 +26,11 @@ const NavBar = (props) => {
 					<Navbar.Brand href="/">
 						<img src={logo} alt="" height="30px" width="30px"/>
 					</Navbar.Brand>
-					<Nav.Link href="/beta">Beta</Nav.Link>
+					{
+						window.location.pathname !== "/beta" ?
+						<Nav.Link href="/beta">Beta</Nav.Link>
+						: null
+					}
 
 					{getViewerOptions()}
 					{

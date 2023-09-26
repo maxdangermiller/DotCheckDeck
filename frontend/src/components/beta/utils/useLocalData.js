@@ -92,6 +92,7 @@ function useLocalData(isOffline) {
      * Gets data from local storage
      * @returns {Array} Local Data
      */
+	// eslint-disable-next-line no-unused-vars
 	const getLocalData = () => {
 		try {
 			let localData = window.localStorage.getItem(LOCAL_DATA_KEY);
@@ -252,7 +253,6 @@ function useLocalData(isOffline) {
 	return {
 		checkLocalSets: checkLocalSets,
 		checkLocalData: checkLocalData,
-		getLocalData: getLocalData,
 		saveData: saveData,
         saveLocalData: saveLocalData,
 		saveSets: saveSets,
