@@ -522,7 +522,7 @@ const BetaViewer = (props) => {
         if (event.key !== "Enter") { return; }
 		event.preventDefault();
 		for (let x = 0; x < sets.length; x++) {
-			if (sets[x]["set_numb"] === event.target.value) {
+			if (sets[x]["set_numb"].toLowerCase() === event.target.value.toLowerCase()) {
 				handelSetBtnControls(x);
                 setInput.current.blur();
 				return;

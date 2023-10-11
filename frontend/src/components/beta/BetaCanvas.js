@@ -1,5 +1,8 @@
 import React, {useRef, useEffect, useState} from 'react'
 import convertDotToCords from '../utils/ConvertDotToCords';
+import canvasConversions from './CanvasComponents/canvasConversions';
+import drawHashes from './CanvasComponents/drawHashes';
+import drawInfoDisplays from './CanvasComponents/drawInfoDisplays';
 import '../font.css'
 import getApi from '../getApi';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -8,31 +11,11 @@ const FUTURE_DOT_COLOR = "rgba(0, 100, 0, 0.8)";
 const PREVIOUS_DOT_COLOR = "rgba(100, 0, 0, 0.8)";
 const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
 const CURRENT_DOT_HIGHLIGHT_COLOR = "rgba(0, 0, 255, 0.4)";  // This is the value given if another thing is highlighted
-const HIGHLIGHT_USER_COLOR = "rgb(255, 0, 0)";
 
 const MAX_ZOOM = 5;
 const MIN_ZOOM = 0.9;
 const FOLLOWING_USER_ZOOM = 5;
 const SCROLL_SENSITIVITY = 0.0005;
-
-const STEPS_TO_5_MAJOR = 2;
-const STEPS_TO_5_MINOR = 8;
-// const HEIGHT_DIVIDED_INTO_5_YARDS = (53 + 1/3) / 5;
-
-// Reversed because it draws top to bottom
-const FRONT_HASH_RATIO = 2/3;
-const BACK_HASH_RATIO = 1/3;
-const FRONT_COLLAGE_HASH_RATIO = 10/16;
-const BACK_COLLAGE_HASH_RATIO = 6/16;
-
-// const DISTANCE_BETWEEN_HASHES_IN_YDS = (53 + 1/3) / 3;
-// const HEIGHT_IN_YDS = 53 + 1/3;
-const RELATIVE_HASH_HEIGHT = 0.01;
-const RELATIVE_HASH_WIDTH = 0.005;
-
-const GRID_MAJOR_DIVISION_COLOR = "rgba(100, 100, 255, 0.6)";
-const GRID_MINOR_DIVISION_COLOR = "rgba(200, 200, 255, 0.4)";
-const COLLAGE_HASH_COLOR = "rgb(100, 0, 0)";
 
 const WINDOW_LOCATION = getApi();
 
@@ -70,347 +53,35 @@ const BetaCanvas = (props) => {
 
     const [hadResize, setHadResize] = useState(false);
 
-    useEffect(() => {
+    const {
+        steps_to_px,
+        sideLineRatioConvert,
+        hashRatioConvert,
+        hashStepsCorrect
+    } = canvasConversions(userOptions);
 
+    /**
+     * Main Rendering Function
+     */
+    useEffect(() => {
         const canvas = canvasRef.current
         const context = canvas.getContext('2d')
         let animationFrameId
         let followDotCords = {x: 0, y: 0};
-
-        const steps_to_px = (steps, height) => {
-            let oneStep = height / 1920 * 22.5;
-            return steps * oneStep;
-        }        
-
-        // Takes the side and line and give the percentage out of 100
-        const sideLineRatioConvert = (side, line) => {
-            if (side === 1) { return parseInt(line) / 100; }
-
-            switch (line) {
-                case "50":
-                    return 0.5;
-                case "45":
-                    return 0.55;
-                case "40":
-                    return 0.6;
-                case "35":
-                    return 0.65;
-                case "30":
-                    return 0.7;
-                case "25":
-                    return 0.75;
-                case "20":
-                    return 0.8;
-                case "15":
-                    return 0.85;
-                case "10":
-                    return 0.9;
-                case "5":
-                    return 0.95;
-                case "0":
-                    return 1;
-            
-                default:
-                    return -1;
-            }
-        };
-
-        // Takes the string of the hash and converts it to a percentage
-        const hashRatioConvert = (hash, useCollegeHash) => {
-            if (hash === "Front side") { return 1; }
-            if (hash === "Front Hash") { 
-                if (useCollegeHash) {
-                    return FRONT_COLLAGE_HASH_RATIO;
-                }
-                return FRONT_HASH_RATIO; 
-            }
-            if (hash === "Back Hash") {
-                if (useCollegeHash) {
-                    return BACK_COLLAGE_HASH_RATIO;
-                }
-                return BACK_HASH_RATIO;
-            }
-
-            return 0;
-        }
-
-        const hashStepsCorrect = (steps, hash, hashY, altHashY, y) => {
-            if (!userOptions.useCollegeHash) { return steps; }
-
-            // console.log(hashY, altHashY, y)
-
-            if (hash === "Front Hash") { 
-                // Past College Hash
-                if (altHashY - y >= 0) {
-                    return Math.abs(steps - 4);
-                }
-                // Between College Hash and HS Hash
-                if (hashY - y >= 0) {
-                    return 4 - steps;
-                }
-                // Before HS Hash
-                return steps + 4;
-            }
-            if (hash === "Back Hash") {
-                // Past HS Hash
-                if (hashY - y >= 0) {
-                    return steps + 4;
-                }
-                // Between College Hash and HS Hash
-                if (altHashY - y >= 0) {
-                    return 4 - steps;
-                }
-                // Before College Hash
-                return steps - 4;
-            }
-
-            return steps;
-        }
-
-        const drawMovementBracketText = (x0, y0, x1, y1, xDirection, yDirection, text, color) => {
-            const MIN_CLEAR = 5;
-
-            if (x0 !== x1 && y0 === y1 && xDirection !== 0 && yDirection === 0) {  
-                context.fillStyle = color;
-                context.textAlign = "center";
-
-                if (xDirection === 1) {
-                    context.textBaseline = "top";
-                } else if (xDirection === -1) {
-                    context.textBaseline = "bottom";
-                }
-
-                context.font = 24 + 'px ArialBlack';
-
-                let centerX = (x0 - x1) / 2 + x1;
-                let useY = y0 + (MIN_CLEAR * xDirection);
-
-                context.fillText(text, centerX, useY);
-            }
-            else if (x0 === x1 && y0 !== y1 && xDirection === 0 && yDirection !== 0) {
-                context.fillStyle = color;
-                context.textBaseline = "middle";
-
-                if (yDirection === 1) {
-                    context.textAlign = "left";
-                } else if (yDirection === -1) {
-                    context.textAlign = "right";
-                }
-
-                context.font = 24 + 'px ArialBlack';
-
-                let useX = x0 + (MIN_CLEAR * yDirection);
-                let centerY = (y0 - y1) / 2 + y1;
-
-                context.fillText(text, useX, centerY);
-            }
-        }
-
-        const drawMovementBrackets = (x, y, dot) => {
-            if (dot === null) { return; }
-            // Find the cords of the closest line and hash
-            const lineRatio = sideLineRatioConvert( dot["side"], dot["line"] );
-            const hashRatio = hashRatioConvert(dot["use_hash"], userOptions.useCollegeHash);
-            const hashRatioHS = hashRatioConvert(dot["use_hash"], false);
-            const lineX = lineRatio * canvas.width;
-            const hashY = hashRatio * canvas.height;
-            const hashY_HS = hashRatioHS * canvas.height;
-
-            // console.log("Drawing Brackets: " + lineRatio + " : " + lineX)
-
-            const DASH_LENGTH = 5;
-            const BRACKET_SEPARATION = 10;
-            // const TEXT_OFFSET = Math.min(canvas.width, canvas.height) * 0.04;         // Equivalent to max width/height
         
+        const {
+            drawMovementBrackets,
+            drawUserDialogue,
+            drawUserName
+        } = drawInfoDisplays(canvasRef.current, context, userOptions, userData, hoverUserInfo, setHoverUserInfo)
 
-            context.beginPath();
-            context.strokeStyle=HIGHLIGHT_USER_COLOR;
-            context.lineWidth="2";
-            
-            if (x !== lineX) {
-                const distanceFromHash = Math.abs(y - hashY) + BRACKET_SEPARATION;
-                let useY = 0;
-                let xDirection = 0;
-
-                if (y - hashY <= 0) {
-                    useY = hashY - distanceFromHash
-                    xDirection = -1;
-                } else {
-                    useY = hashY + distanceFromHash
-                    xDirection = 1;
-                }
-
-                // Draw the actual line to the line
-                context.moveTo(lineX, useY); 
-                context.lineTo(x, useY);
-
-                // Draw Little dashes on the ends
-                context.moveTo(lineX, useY - DASH_LENGTH);
-                context.lineTo(lineX, useY + DASH_LENGTH);
-
-                context.moveTo(x, useY - DASH_LENGTH);
-                context.lineTo(x, useY + DASH_LENGTH);
-
-                // Draw text
-                drawMovementBracketText(lineX, useY, x, useY, xDirection, 0, dot.steps, HIGHLIGHT_USER_COLOR);
-            }
-
-            if (y !== hashY) {
-                const distanceFromHash = Math.abs(x - lineX) + BRACKET_SEPARATION;
-                let useX = 0;
-                let yDirection = 0;
-
-                if (x - lineX <= 0) {
-                    useX = lineX - distanceFromHash;
-                    yDirection = -1;
-                } else {
-                    useX = lineX + distanceFromHash;
-                    yDirection = 1;
-                }
-
-                // Draw the actual line to the hash
-                context.moveTo(useX, hashY);
-                context.lineTo(useX, y);
-
-                // Draw Little dashes on the ends
-                context.moveTo(useX + DASH_LENGTH, hashY);
-                context.lineTo(useX - DASH_LENGTH, hashY);
-
-                context.moveTo(useX + DASH_LENGTH, y);
-                context.lineTo(useX - DASH_LENGTH, y);
-
-                let steps = hashStepsCorrect(dot.fb_steps, dot.use_hash, hashY_HS, hashY, y);
-
-                // Draw text
-                drawMovementBracketText(useX, hashY, useX, y, 0, yDirection, steps, HIGHLIGHT_USER_COLOR);
-            }
-
-            context.stroke();
-            context.closePath();
-        }
-
-        const drawUserDialogue = (dotX, dotY, dot) => {
-            // console.log("drawing dialogue: " + dot["userLabel"])
-            const w = canvas.width * 0.075;
-            const h = canvas.height * 0.075;
-            const x = dotX + canvas.height * 0.01;
-            const y = dotY - h - canvas.height * 0.01;
-            const radius = 5;
-
-            const r = x + w;
-            const b = y + h;
-
-            // Draw rounded rectangle
-            context.beginPath();
-            context.strokeStyle="black";
-            context.fillStyle="rgb(240, 240, 240)";
-            context.lineWidth="4";
-            context.moveTo(x+radius, y);
-            context.lineTo(r-radius, y);
-            context.quadraticCurveTo(r, y, r, y+radius);
-            context.lineTo(r, y+h-radius);
-            context.quadraticCurveTo(r, b, r-radius, b);
-            context.lineTo(x+radius, b);
-            context.quadraticCurveTo(x, b, x, b-radius);
-            context.lineTo(x, y+radius);
-            context.quadraticCurveTo(x, y, x+radius, y);
-            context.stroke();
-            context.fill();
-            context.closePath();
-
-            context.beginPath();
-            context.font = canvas.height * 0.02 + 'px ArialBlack';
-            context.fillStyle = "black";
-            context.textBaseline = "middle";
-            context.textAlign = "center";
-            context.fillText(dot["userLabel"], x + w * 0.2, y + h * 0.25);
-
-            if (dot["userName"] !== "None None" && dot["userName"] !== "") {
-                context.font = canvas.height * 0.015 + 'px ArialBlack';
-
-                const MAX_LENGTH = 12;
-                if (dot["userName"].length > MAX_LENGTH) {
-                    let split = dot["userName"].split(" ");
-                    
-                    if (split.length < 2) {
-                        console.log("PROBLEM WITH NAME!", dot);
-                    }
-
-                    let shortenedName = split[0] + " " + split[1][0] + "."
-
-                    if (shortenedName.length > MAX_LENGTH) {
-                        shortenedName = shortenedName.substring(0, MAX_LENGTH - 1) + ".";
-                    }
-
-                    context.fillText(shortenedName, x + w * 0.65, y + h * 0.25);
-                    
-                } else {
-                    context.fillText(dot["userName"], x + w * 0.65, y + h * 0.25);
-                }
-
-                context.closePath();
-            } else {
-                context.font = canvas.height * 0.0125 + 'px ArialBlack';
-                context.fillStyle = "red";
-
-                context.fillText("Inactivated", x + w * 0.65, y + h * 0.25);
-                context.closePath();
-            }
-            
-            // {self.steps} {self.direction} {self.line} on {self.side}; {self.fbSteps} {self.fbDirection} {self.useHash}, for {self.counts} counts"
-            context.beginPath();
-            context.font = canvas.height * 0.0125 + 'px Arial Black';
-            context.fillStyle = "black";
-
-            const dotI = dot["dot"]
-            // const dotStr = dotI["direction"] + " " + dotI["line"] + " on "+ dotI["side"] + "; " + 
-            //         dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dot["counts"] + " counts"
-
-            if (dotI["steps"] !== 0) {
-                const textStr = dotI["steps"] + " steps " + dotI["direction"] + " " + dotI["line"] + " side " + dotI["side"] + "; ";
-                context.fillText(textStr, x + w * 0.5, y + h * 0.5, w * 0.9);
-            } else {
-                const textStr = "On " + dotI["line"] + ", on side " + dotI["side"] + "; "
-                context.fillText(textStr, x + w * 0.5, y + h * 0.5, w * 0.9);
-            }
-
-            if (dotI["fb_steps"] !== 0) {
-                const fbDirection = dotI["fb_direction"] === "Front" ? "in front of" : dotI["fb_direction"];
-                const textStr = dotI["fb_steps"] + " steps " + fbDirection + " " + dotI["use_hash"];
-
-                context.fillText(textStr, x + w * 0.5, y + h * 0.65, w * 0.9);
-            } else {
-                context.fillText("On " + dotI["use_hash"], x + w * 0.5, y + h * 0.65, w * 0.9);
-            }
-            context.fillText("for " + dot["counts"] + " counts", x + w * 0.5, y + h * 0.8, w * 0.9);
-            // console.log(dot);
-            context.closePath();
-        }
-
-        const drawUserName = (dot) => {
-            if (hoverUserInfo.dot === null || hoverUserInfo.dot.dot.id !== dot.dot.id) {
-                if (dot.userID !== userData.show_user_id) {
-                    setHoverUserInfo({show: true, dot: dot})
-                } else {
-                    setHoverUserInfo({show: false, dot: dot})
-                }
-            }
-        }
-
-        const drawLine = (x0, y0, x1, y1, color, thickness) => {
-            // console.log("(" + x0, ", " + y0 + ") -> (" + x1 + ", " + y1 + ")");
-            context.beginPath();
-            context.moveTo(x0, y0);
-            context.lineTo(x1, y1);
-            context.strokeStyle = color;
-            context.lineWidth = thickness;
-            context.stroke();
-            context.closePath();
-
-            // const w = canvas.width;
-            // const h = canvas.height;
-        };
-        
+        /**
+         * Draw a User Point
+         * @param {Float} x 
+         * @param {Float} y 
+         * @param {Color} color 
+         * @param {String} userLabel 
+         */
         const drawPoint = (x, y, color, userLabel) => {
             context.beginPath();
             context.fillStyle = color;
@@ -426,6 +97,13 @@ const BetaCanvas = (props) => {
             context.closePath();
         };
 
+        /**
+         * Get Matching User Dot Given the current Dot and the data for the next set
+         * @param {Dot Data} data all the sets with all the dots 
+         * @param {Integer} index index of the current set
+         * @param {Dot} curDot current user dot for current set
+         * @returns 
+         */
         const getMatchingUserDot = (data, index, curDot) => {
             if (data[index] === undefined || data[index].dots === undefined) { return undefined; }
             if (curDot === undefined || curDot.userID === undefined) { return undefined; }
@@ -438,6 +116,15 @@ const BetaCanvas = (props) => {
             return undefined;
         }
 
+        /**
+         * Draw Highlighted User Dot
+         * @param {Dot Data} data all the sets with all the dots
+         * @param {Integer} curSetIndex index of the current set
+         * @param {Integer} curUserIndex index of the user
+         * @param {Object} userOptions
+         * @param {Color} color
+         * @param {String} userLabel 
+         */
         const drawHighlightedPoint = (data, curSetIndex, curUserIndex, userOptions, color, userLabel) => {
             // This will draw the previous, current, and next points
             // As well as draw paths if selected
@@ -585,6 +272,19 @@ const BetaCanvas = (props) => {
             }
         }
 
+        /**
+         * Draw Point Animation
+         * @param {Float} x0 start x
+         * @param {Float} y0 start y
+         * @param {Float} x1 end x
+         * @param {Float} y1 end y
+         * @param {Integer} counts 
+         * @param {Integer} count 
+         * @param {Color} color 
+         * @param {String} userLabel 
+         * @param {Boolean} isHighlighted 
+         * @param {Dot} dot dot info of the user
+         */
         const drawPointAnimation = (x0, y0, x1, y1, counts, count, color, userLabel, isHighlighted, dot) => {
             // y = mx + b
             if (x1 - x0 !== 0) {
@@ -641,209 +341,9 @@ const BetaCanvas = (props) => {
             
         };
 
-        // This draws a vertical line across the screen
-        const drawVerticalGirdLine = (x, color, thickness) => {
-            context.beginPath();
-            context.moveTo(x, 0);
-            context.lineTo(x, canvas.height);
-            context.strokeStyle = color;
-            context.lineWidth = thickness;
-            context.stroke();
-            context.closePath();
-        };
-
-        // This draws a horizontal line across the screen
-        const drawHorizontalGirdLine = (y, color, thickness) => {
-            context.beginPath();
-            context.moveTo(0, y);
-            context.lineTo(canvas.width, y);
-            context.strokeStyle = color;
-            context.lineWidth = thickness;
-            context.stroke();
-            context.closePath();
-        };
-
-        // This draws the little hash marks
-        const drawHash = (startX, endX, y, color) => {
-            // Draw little lines for each yard | There are 5 yards between each major yard line 
-            for (let i = 0; i < 5; i++) {
-                const x = ((endX - startX) / 5) * i + startX;
-
-                drawLine(x, y - canvas.height * RELATIVE_HASH_HEIGHT, x, y + canvas.height * RELATIVE_HASH_HEIGHT, color, 1)
-            }
-        }
-
-        // This draw all the Vertical grid lines
-        const drawVerticalGrid = (startX, endX, major) => {
-            for (let i = 1; i < STEPS_TO_5_MAJOR; i++) {
-                const x = ((endX - startX) / STEPS_TO_5_MAJOR) * i + startX;
-
-                if (major) {
-                    drawVerticalGirdLine(x, GRID_MAJOR_DIVISION_COLOR, 1);
-                } else {
-                     // Draw all the minor division grid lines between the major divisions
-                    for (let ii = 1; ii < STEPS_TO_5_MINOR; ii++) {
-                        const x2 = ((endX - startX) / STEPS_TO_5_MINOR) * ii + startX;
-
-                        if (x2 !== x) {
-                            drawVerticalGirdLine(x2, GRID_MINOR_DIVISION_COLOR, 1);
-                        }
-                    
-                    }
-                }
-            
-            }
-            
-        }
-
-        // This draws all the Horizontal grid lines centered on the hashRatio var which is a ratio less than 1
-        const drawHorizontalGrid = (hashRatio, major) => {
-            const majorHashes = 8;
-            const hashLocation = hashRatio * canvas.height;
-            // height(px) -> ?height/1" 
-            // 22.5" = 1 step
-            // 90" = 4 steps
-            // 1920" = 
-            const oneStep = canvas.height / 1920 * 22.5;
-            const hashDistance = oneStep * 16;
-            const startY = hashLocation - hashDistance;
-            const endY = hashLocation + hashDistance;
-            // console.log(hashes);
-            
-            for (let i = 1; i < majorHashes; i++) {
-                // const y = ((endY - startY) / (majorHashes + 1)) * i + startY;
-                // const nextY = ((endY - startY) / (majorHashes + 1)) * (i + 1) + startY;
-                const y = startY + oneStep * i * 4;
-                const nextY = startY + oneStep * (i + 1) * 4;
-                // console.log(y, nextY, oneStep);
-                
-                if (major && y > 0 && y < canvas.height) {
-                    drawHorizontalGirdLine(y, GRID_MAJOR_DIVISION_COLOR, 1);
-                }
-                // Draw all the minor division grid lines between the major divisions
-                else if (nextY <= endY) {
-                    for (let ii = 1; ii < (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR); ii++) {
-                        const y2 = ((nextY - y) /  (STEPS_TO_5_MINOR / STEPS_TO_5_MAJOR)) * ii + y;
-    
-                        if (y2 !== y && y2 !== nextY && y2 > 0 && y2 < canvas.height) {
-                            drawHorizontalGirdLine(y2, GRID_MINOR_DIVISION_COLOR, 1);
-                        }
-                    
-                    }
-                }
-                
-            }
-        }
-
-        // This draws the Grid Lines
-        const drawGridLines = () => {
-            drawHorizontalGrid(0, false);
-            drawHorizontalGrid(FRONT_HASH_RATIO, false);
-            drawHorizontalGrid(BACK_HASH_RATIO, false);
-            drawHorizontalGrid(1, false);
-
-            for (let x = 0; x < 21; x++) {
-                let val = x * (canvas.width / 20);
-                let nextVal = (x + 1) * (canvas.width / 20);
-
-                if (nextVal <= canvas.width) {
-                    drawVerticalGrid(val, nextVal, false);
-                }
-            }
-
-            drawHorizontalGrid(0, true);
-            drawHorizontalGrid(FRONT_HASH_RATIO, true);
-            drawHorizontalGrid(BACK_HASH_RATIO, true);
-            drawHorizontalGrid(1, true);
-
-            for (let x = 0; x < 21; x++) {
-                let val = x * (canvas.width / 20);
-                let nextVal = (x + 1) * (canvas.width / 20);
-
-                if (nextVal <= canvas.width) {
-                    drawVerticalGrid(val, nextVal, true);
-                }
-            }
-        }
-
-        // This draws the Yard Lines, hashes, and Grid Lines
-        const drawGrid = () => {
-            // Draw Grid Lines
-            drawGridLines();
-
-            // This draws the 5 yard lines up through the 50, from the left
-            for (let x = 0; x < 21; x++) {
-                let val = x * (canvas.width / 20);
-                let nextVal = (x + 1) * (canvas.width / 20);
-
-                drawVerticalGirdLine(val, "black", 2);
-                
-                
-                if (nextVal <= canvas.width) {
-                    drawHash(val, nextVal, canvas.height * FRONT_HASH_RATIO, "black");
-                    drawHash(val, nextVal, canvas.height * BACK_HASH_RATIO, "black");
-                    if (userOptions.showCollegeHash) {
-                        drawHash(val, nextVal, canvas.height * FRONT_COLLAGE_HASH_RATIO, COLLAGE_HASH_COLOR);
-                        drawHash(val, nextVal, canvas.height * BACK_COLLAGE_HASH_RATIO, COLLAGE_HASH_COLOR);
-                    }
-                }
-
-                // Draw little lines on the hash marks | FRONT HASH
-                drawLine(
-                    val - canvas.width * RELATIVE_HASH_WIDTH, 
-                    canvas.height * FRONT_HASH_RATIO, 
-                    val + canvas.width * RELATIVE_HASH_WIDTH, 
-                    canvas.height * FRONT_HASH_RATIO,
-                    "black", 1
-                );
-                // Draw little lines on the hash marks | BACK HASH
-                drawLine(
-                    val - canvas.width * RELATIVE_HASH_WIDTH, 
-                    canvas.height * BACK_HASH_RATIO, 
-                    val + canvas.width * RELATIVE_HASH_WIDTH, 
-                    canvas.height * BACK_HASH_RATIO,
-                    "black", 1
-                );
-                
-                if (userOptions.showCollegeHash) {
-                    // Draw little lines on the hash marks | FRONT COLLAGE HASH
-                    drawLine(
-                        val - canvas.width * RELATIVE_HASH_WIDTH, 
-                        canvas.height * FRONT_COLLAGE_HASH_RATIO, 
-                        val + canvas.width * RELATIVE_HASH_WIDTH, 
-                        canvas.height * FRONT_COLLAGE_HASH_RATIO,
-                        COLLAGE_HASH_COLOR, 1
-                    );
-                    // Draw little lines on the hash marks | BACK COLLAGE HASH
-                    drawLine(
-                        val - canvas.width * RELATIVE_HASH_WIDTH, 
-                        canvas.height * BACK_COLLAGE_HASH_RATIO, 
-                        val + canvas.width * RELATIVE_HASH_WIDTH, 
-                        canvas.height * BACK_COLLAGE_HASH_RATIO,
-                        COLLAGE_HASH_COLOR, 1
-                    );
-                }
-                
-                context.beginPath();
-                context.fillStyle = "black";
-                context.font = canvas.height * 0.05 + 'px serif';
-                context.textBaseline = "middle";
-                context.textAlign = "center";
-
-                if (x > 10 && x !== 20) {
-                    context.fillText((20 - x) * 5, val, canvas.height * 0.75);
-                } else if (x !== 0 && x !== 20) {
-                    context.fillText(x * 5, val, canvas.height * 0.75);
-                }
-            
-                context.closePath();
-            }
-
-            // Draw top and bottom borders
-            drawHorizontalGirdLine(0, "black", 2);
-            drawHorizontalGirdLine(canvas.height, "black", 2);
-        }
-
+        /**
+         * Clears the screen
+         */
         const clear = () => {
             setDots([]);
             const outScale = MIN_ZOOM - 1; // Default will be 0
@@ -855,10 +355,17 @@ const BetaCanvas = (props) => {
                 canvas.height + canvas.height * MIN_ZOOM
             );
             
-            drawGrid();
+            drawHashes(canvas, context, userOptions);
         };
 
-        const findBounds = (ctx, transX, transY) => {
+        /**
+         * Check if a given Translation X and Translation Y is within the given context
+         * @param {CanvasRenderingContext2D} ctx Context
+         * @param {Float} transX Translation X
+         * @param {Float} transY Translation Y
+         * @returns {Boolean|Boolean|Boolean|Boolean}  xInBound, yInBound, xOutBounds, yOutBounds
+         */
+        const checkIfInBounds = (ctx, transX, transY) => {
             ctx.translate(transX, transY);
             const m = ctx.getTransform();
             const translationX = m.e;
@@ -901,6 +408,9 @@ const BetaCanvas = (props) => {
             return {xInBound: xInBound, yInBound: yInBound, xOutBounds: xOutBounds, yOutBounds: yOutBounds};
         }
 
+        /**
+         * Resize Canvas when there is a change
+         */
         const dynamicResize = () => {
             if (canvas.width !== canvas.offsetWidth || canvas.height !== canvas.offsetHeight) {
                 // 15x8
@@ -928,6 +438,10 @@ const BetaCanvas = (props) => {
             }
         }
 
+        /**
+         * Handle Pan and Zoom
+         * @param {CanvasRenderingContext2D} ctx Context
+         */
         const doPanAndZoom = (ctx) => {
             if (cameraOffset !== null) {    
                 if (followDot !== undefined) {
@@ -948,7 +462,7 @@ const BetaCanvas = (props) => {
                 ctx.scale(cameraZoom, cameraZoom)                           // Zoom
                 ctx.translate( -canvas.width / 2, -canvas.height / 2 )      // Go back
 
-                const boundCalc = findBounds(ctx, cameraOffset.x, cameraOffset.y);
+                const boundCalc = checkIfInBounds(ctx, cameraOffset.x, cameraOffset.y);
                 
                 const xInBound = boundCalc.xInBound;
                 const yInBound = boundCalc.yInBound;
@@ -980,6 +494,13 @@ const BetaCanvas = (props) => {
             }
         }
 
+        /**
+         * Get Color of Dot
+         * @param {Object} _dotData 
+         * @param {Boolean} highlighted 
+         * @param {Boolean} useSectionColors 
+         * @returns {Color} color of user
+         */
         const getDotColor = (_dotData, highlighted, useSectionColors) => {
             let color = "rgb(" + _dotData.r + ", " + _dotData.g + ", " + _dotData.b + ")";
             if (!useSectionColors && highlighted) {
@@ -995,6 +516,12 @@ const BetaCanvas = (props) => {
             return color
         }
 
+        /**
+         * Get Highlighted User Data
+         * @param {Object} data 
+         * @param {Object} userOptions 
+         * @returns {Object} dot data
+         */
         const getHighlightedUserData = (data, userOptions) => {
             if (userOptions.highlightUser !== null) {
                 for (let x = 0; x < data.length; x++) {
@@ -1010,7 +537,12 @@ const BetaCanvas = (props) => {
             return null;
         }
 
-        // Takes data from API and draws them, used to condense the render method
+        /**
+         * Takes data from API and draws them, used to condense the render method
+         * @param {Object} data 
+         * @param {Integer} index 
+         * @returns {Object} new dots
+         */
         const drawDots = (data, index) => {
             let newDots = [];
             let drawBracket = {useX:null, useY:null, dot:null};
@@ -1107,7 +639,13 @@ const BetaCanvas = (props) => {
             return newDots;
         }
 
-        const getMatchingLabel = (data, id) => {
+        /**
+         * Get Matching User With ID
+         * @param {Object} data 
+         * @param {Integer} id 
+         * @returns {Object} data
+         */
+        const getMatchingUserWithID = (data, id) => {
             for (let i = 0; i < data.length; i++) {
                 if (data[i]["userID"] === id) {
                     return data[i];
@@ -1115,28 +653,30 @@ const BetaCanvas = (props) => {
             }
             return undefined;
         }
-
-        // Takes data from API, and draws the animation
+        /**
+         * Takes data from API, and draws the animation
+         */
         const drawAnimation = () => {
             // This is so if we're playing the show, the sets don't overlap
             const MARGIN = 100;
 
             if (drawInfo.length !== 0 && curSet !== lastSetID && drawInfo[curSet] !== undefined) {
                 let startTime = animationStartTime;
+                let curActualTime = audioPlaying ? curPlayTime * 1000 : Date.now();
                 
                 if (audioPlaying) {
                     startTime = drawInfo[curSet]["start_time_code"];
-                }
-
-                if (startTime === 0) {
-                    if (audioPlaying)   { startTime = curPlayTime * 1000; } 
-                    else                { startTime = Date.now();  }
-
+                    curActualTime = curPlayTime * 1000;
+                } else if (animationStartTime === 0) {
+                    startTime = Date.now();
+                    curActualTime = Date.now();
                     setAnimationStartTime(startTime); 
                 }
 
-                let curActualTime = audioPlaying ? curPlayTime * 1000 : Date.now();
+                // let curActualTime = audioPlaying ? curPlayTime * 1000 : Date.now();
                 let durationInSecs = 2000; // Default Value
+
+                // console.log(curActualTime, animationStartTime)
 
                 // Find what the API says the duration is
                 if (audioPlaying || userOptions.useActualSetLength) {
@@ -1176,7 +716,7 @@ const BetaCanvas = (props) => {
                     
                     if (dot["userID"] !== lastDot["userID"]) { 
                         // console.log("FAIL! Labels don't match between sets in animation. Attempting to fix."); 
-                        lastDot = getMatchingLabel(lastSetData, dot["userID"]);
+                        lastDot = getMatchingUserWithID(lastSetData, dot["userID"]);
 
                         // If we didn't find the last dot
                         if (lastDot === undefined) {
@@ -1268,6 +808,10 @@ const BetaCanvas = (props) => {
             } else { setIsAnimation(false); setAnimationStartTime(0); }
         }
 
+        /**
+         * Main Rendering Method
+         * @param {CanvasRenderingContext2D} ctx Context
+         */
         const render = ctx => {
             ctx.save();
 
@@ -1328,7 +872,7 @@ const BetaCanvas = (props) => {
                 if (lastSetID !== curSet) {
                     console.log(lastSetID !== curSet, animationDirection !== 0, !loading, data.length !== 0);
                 }
-                console.log(curSet, lastSetID)
+                // console.log(curSet, lastSetID)
                 let newDots = drawDots(drawInfo, curSet);
                 setDots(newDots)
 
@@ -1340,16 +884,20 @@ const BetaCanvas = (props) => {
             ctx.restore()
             animationFrameId = requestAnimationFrame(() => render(ctx))
         }
-        render(context)
+        try {
+            render(context)
+        } catch (error) {
+            console.log(error)
+        }
 
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot])
+    }, [data, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot, audioPlaying, curPlayTime])
 
     useEffect(() => {
-        console.log("Canvas Updating")
+        console.log("Canvas Updating for " + curSet)
         setAnimationStartTime(Date.now());
         setIsAnimation(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
