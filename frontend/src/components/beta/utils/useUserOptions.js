@@ -10,7 +10,8 @@ function useUserOptions(userData) {
 		"showMovementBrackets": false, "highlightUser": null,
 		"moveSpeed": 10, "useActualSetLength": false,
 		"dimOtherUsers": false, "showCollegeHash": true,
-		"followingUser": false, "useCollegeHash": false
+		"followingUser": false, "useCollegeHash": false,
+		"basicUseCollegeHash": false
 	});
 
     const saveUserOptions = (data) => {

@@ -26,6 +26,7 @@ import ResendVerifyEmail from './utils/ResendVerifyEmail'
 
 // Beta
 import BetaViewer from './beta/BetaViewer';
+import BetaBasicViewer from './beta/BetaBasicViewer';
 
 import axios from "axios";
 
@@ -198,6 +199,11 @@ function App() {
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
 						: <BetaViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
+					} />
+					<Route path="/beta/basic" exact element={
+						(token === "" && !isOffline) || schoolCode === ""
+						? <Navigate to="/login" />
+						: <BetaBasicViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
 					} />
 					
 					<Route path="/basic" exact element={
