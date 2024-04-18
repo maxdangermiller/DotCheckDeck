@@ -6,7 +6,7 @@ import AdminSetNamePage from './AdminComponents/SetNamePage/AdminSetNamePage';
 import AdminShowPage from './AdminComponents/ShowPage/AdminShowPage';
 import AdminSetsPage from './AdminComponents/SetPage/AdminSetsPage';
 import AdminPropsPage from './AdminComponents/PropsPage/AdminPropsPage';
-import getApi from './getApi';
+import getApi from './utils/getApi';
 
 import './Admin.css';
 import 'bootstrap/dist/css/bootstrap.css';

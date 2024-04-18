@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {Modal, Button, FloatingLabel, Form } from 'react-bootstrap/';
 import {Switch, FormControlLabel, FormGroup} from '@mui/material/';
-import getApi from '../../getApi';
+import getApi from '../../utils/getApi';
 import axios from "axios";
 
 const WINDOW_LOCATION = getApi();

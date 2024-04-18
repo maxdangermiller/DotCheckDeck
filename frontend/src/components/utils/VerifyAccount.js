@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import getApi from '../getApi';
+import getApi from './getApi';
 
 const WINDOW_LOCATION = getApi();
 

@@ -1,17 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import getApi from '../getApi';
 import axios from "axios";
-import { Switch, Stack, Typography } from '@mui/material';
-import UpdatePrompt from '../utils/UpdatePrompt';
-import logo from '../../logo.svg';
-import CustomDownloadProgress from '../CustomDownloadProgress';
 
+import Canvas from './Canvas'
+import ViewerSideBar from './ViewerComponents/ViewerSideBar';
+import getApi from '../utils/getApi';
+import CustomDownloadProgress from '../utils/CustomDownloadProgress';
+import UserInfoDialogue from './ViewerComponents/UserInfoDialogue';
+import UpdatePrompt from '../utils/UpdatePrompt';
+import UserSectionSelection from '../utils/UserSectionSelection';
+import FollowUserBtn from './ViewerComponents/FollowUserBtn';
+
+import logo from '../../logo.svg';
+
+// Utilities
 import useLocalData from './utils/useLocalData';
 import useUserOptions from './utils/useUserOptions';
 
-
+import './BetaViewer.css';
 import 'bootstrap/dist/css/bootstrap.css';
+
+const WINDOW_LOCATION = getApi();
 
 const darkTheme = createTheme({
 	palette: {
@@ -19,15 +28,19 @@ const darkTheme = createTheme({
 	},
 });
 
-const WINDOW_LOCATION = getApi();
-
+let audio = null;
 let lastCheckedVersionTime = 0;
 const MIN_TIMESTAMP_INTERVAL = 120000;  // 2 minutes
 
-const BetaBasicViewer = (props) => {
-    const {token, showCode, setIsBasic, userData, isOffline} = props;
 
-    const [curSet, setCurSet]  = useState(0);                                                   // Store current index of the show
+const Viewer = (props) => {
+	const { token, showCode, userData, showID, isOffline } = props;
+
+	const [curSet, setCurSet]  = useState(0);                                                   // Store current index of the show
+	const [audioPlaying, setAudioPlaying] = useState(false);                                    // Is the audio playing?
+	const [curPlayTime, setCurPlayTime] = useState(0);                                          // Current Play Time in Show
+	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);     // Check if we're in landscape
+	const [hoverUserInfo, setHoverUserInfo] = useState({show: false, dot: null});               // Store Data about the user that's being hovered over (ie Name & Label)
 	const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);                            // Show Prompt To Ask If We Should Update
 	const [newestTimestamps, setNewestTimestamps] = useState({"data": -1, "sn": -1});           // Store what the newest available timestamp is
     const [isDownloading, setIsDownloading] = useState(false);                                  // Are we CAPTIVE downloading
@@ -59,6 +72,10 @@ const BetaBasicViewer = (props) => {
     const {
         setUserOptions, userOptions
     } = useUserOptions(userData);
+
+
+    const setInput = useRef(null);
+	const canvasRef = useRef(null);
 
     /**
      * Call when an update is requested by user
@@ -403,109 +420,226 @@ const BetaBasicViewer = (props) => {
     	// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [curDatabaseTimestamp])
 
+	// Get Audio From API
+	useEffect(() => {
+		if (isOffline) { return; }
+		audio = new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + showCode + "&token=" + token);
+		audio.load();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
 
-    const convertToCollegeHash = (dot) => {
-        let hash = dot.use_hash;
-        let steps = dot.fb_steps; 
-        let direction = dot.fb_direction;   // "Behind" or "Front" or "On"
+    // If audio isn't null, play if audioPlaying is true
+	useEffect(() => {
+		if (audio === null) { return; }
+		if (audioPlaying) {
+			audio.loop = false;
+			audio.play();
+		} else {
+			audio.pause();
+		}
+	}, [audioPlaying])
 
-        
-        if (hash === "Back Hash") {
-            if (direction === "Behind") {
-                return {...dot, fb_steps: dot.fb_steps + 4};
-            }
-            if (direction === "On") {
-                return {...dot, fb_steps: 4, fb_direction: "Front"};
-            }
-            if (direction === "Front") {
-                if (dot.fb_steps < 4) {
-                    return {...dot, fb_steps: 4 - dot.fb_steps, fb_direction: "Front"};
-                }
-                return {...dot, fb_steps: dot.fb_steps - 4};
-            }
+	// Automatically Grab The Users Info and select them for highlighting
+	useEffect(() => {
+		let parsedData = userOptions;
+		try {
+			let localUserOptions = window.localStorage.getItem("localUserOptions");
+			parsedData = JSON.parse(localUserOptions);
+			if (parsedData.dimOtherUsers === undefined) {
+				throw new Error('Yeah... Sorry');
+			}
+			// console.log("Successfully loaded user preferences")
+		} catch {
+			console.log("DIDN'T Find Saved User Preferences, creating new ones")
+			parsedData = {
+				"showNextSet": false, "showLastSet": false, "drawPath": false,
+				"highlightSection": false,
+				"useSectionColors": true,
+				"showMovementBrackets": false, "highlightUser": null,
+				"moveSpeed": 10, "useActualSetLength": false,
+				"dimOtherUsers": false, "showCollegeHash": true,
+				"followingUser": false
+			};
+			window.localStorage.setItem("localUserOptions", JSON.stringify(parsedData));
+		}
+		
+		if (userData.label !== undefined) {
+			console.log(userData)
+			setUserOptions({...parsedData,  "highlightUser": {"id": userData.show_user_id, "label": userData.label}, "followingUser": false});
+		} else {
+			setUserOptions({...parsedData,  "highlightUser": null, "followingUser": false});
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [userData])
+
+	// Check to see if we're in landscape, if not display a "Rotate Please" message
+	useEffect(() => {
+		function handleResize() {
+			console.log('resized to: ', window.innerWidth, 'x', window.innerHeight)
+			setIsLandscape(window.innerWidth > window.innerHeight)
+	  	}
+	  
+		window.addEventListener('resize', handleResize)
+		window.addEventListener('orientationchange', handleResize)
+	}, [])
+
+    /**
+     * Change Current Set Index to Supplied Value and Sync Audio
+     * @param {Integer} x set index
+     */
+	const changeCurSet = (x) => {
+		if (x >= 0 && x < sets.length && curSet !== x) {
+			console.log("Changing set");
+			setCurSet(x);
+		}
+	}
+
+    /**
+     * Change Current Set Index to Supplied Value
+     * @param {Integer} x set index
+     */
+	const handelSetBtnControls = (x) => {
+		if (x >= 0 && x < sets.length) {
+			if (!audioPlaying) {
+				changeCurSet(x);
+			} 
+
+            if (audio !== null && sets[x]["start_time_code"] !== null) {
+				audio.currentTime = sets[x]["start_time_code"] / 1000;
+				setCurPlayTime(sets[x]["start_time_code"] / 1000);
+				console.log("Changing cur play time to " + sets[x]["start_time_code"] / 1000)
+			} else {
+				console.log("Something is wrong with audio or start_time_code for this set!", audio, sets[x])
+			}
+		}
+	}
+
+    /**
+     * Method to handle input from set number input
+     * @param {Event} event 
+     */
+	const changeCurSetNumb = (event) => {
+        if (event.key !== "Enter") { return; }
+		event.preventDefault();
+		for (let x = 0; x < sets.length; x++) {
+			if (sets[x]["set_numb"].toLowerCase() === event.target.value.toLowerCase()) {
+				handelSetBtnControls(x);
+                setInput.current.blur();
+				return;
+			}
+		}
+        console.log("Didn't find set number: " + event.target.value);
+	}
+
+    /**
+     * Is a given set within a given time?
+     * @param {Object} set 
+     * @param {Integer} curTime 
+     * @returns {Boolean} is the set within the curTime
+     */
+    const isSetWithinTime = (set, curTime) => {
+        if (set["start_time_code"] !== null && set["end_time_code"] !== null) {
+            let startTime = set["start_time_code"];
+            let endTime = set["end_time_code"];
+
+            return curTime >= startTime && curTime < endTime;
         }
-        if (hash === "Front Hash") { 
-            if (direction === "Behind") {
-                if (dot.fb_steps < 4) {
-                    return {...dot, fb_steps: 4 - dot.fb_steps, fb_direction: "Front"};
-                }
-                return {...dot, fb_steps: dot.fb_steps - 4};
-            }
-            if (direction === "Front") {
-                return {...dot, fb_steps: dot.fb_steps + 4};
-            }
-            if (direction === "On") {
-                return {...dot, fb_steps: 4, fb_direction: "Front"};
-            }
-        }
-
-        return dot;
-    }
-
-    const getDotText1 = (dot) => {
-        if (dot.steps !== 0) {
-            return (
-                <strong>
-                {dot.steps} steps {dot.direction} {dot.line}yd line, on side {dot.side}
-                </strong>
-            );
-        }
-        return (
-            <strong>
-            On {dot.line}yd line, on side {dot.side}
-            </strong>
-        );
-    }
-
-    const getDotText2 = (dot) => {
-        let useHash = "HS"
-        if (userOptions.basicUseCollegeHash) {
-            dot = convertToCollegeHash(dot)
-            useHash = "College"
-        }
-
-        if (dot.fb_steps !== 0) {
-            let fbDirection = dot.fb_direction === "Front" ? "in front of" : dot.fb_direction;
-            return (
-                <strong>
-                {dot.fb_steps} steps {fbDirection} {dot.use_hash} ({useHash})
-                </strong>
-            );
-        }
-        return (
-            <strong>
-            On {dot.use_hash} ({useHash})
-            </strong>
-        );
-    }
-
-    const openEditSetName = (dotData) => {
-        console.log(dotData)
-        // setShowEditSetName(true);
-        // setTempCurSetInfo(JSON.parse(JSON.stringify(dotData)));
+        return false;
     }
 
     /**
-     * Filter all the dots down to just the user's dots
-     * @returns {Object} user's dots
+     * Get the set that's synced with the audio
+     * @returns {void}
      */
-    const getOnlyUserDots = () => {
-        let userDots = [];
-        for (let i = 0; i < data.length; i++) {
-            let setDots = data[i].dots;
-            for (let j = 0; j < setDots.length; j++) {
-                if (setDots[j].dot.show_user_id === userData.show_user_id) {
-                    userDots.push(setDots[j]);
-                    break;
-                }
-            }
+	const getAudioSyncedSet = () => {
+		if (audio === null) { return; }
+        if (sets.length === 0) { return; }
+		let msElapsed = audio.currentTime * 1000;
+
+        // Find if we're within the current set
+        if (isSetWithinTime(sets[curSet], msElapsed)) {
+            return;
         }
 
-        return userDots;
-    }
+        let start = 0;
 
-    const setUseCollegeHash = (value) => {
-        setUserOptions({...userOptions,  "basicUseCollegeHash": value});
+        // If the msElapsed is already past the current set, we know it must be past in the array
+        if (sets[curSet]["end_time_code"] < msElapsed) {
+            start = curSet;
+        }
+
+
+		for (let i = start; i < sets.length; i++) {
+			if (sets[i]["start_time_code"] !== null && sets[i]["end_time_code"] !== null) {
+				let startTime = sets[i]["start_time_code"];
+				let endTime = sets[i]["end_time_code"];
+
+				if(msElapsed >= startTime && msElapsed < endTime) {
+					// console.log("Setting " + sets[i].set_numb + " to cur set (syncing with audio)")
+					// sets[i] is currently active
+					if (curSet !== i) {
+						changeCurSet(i);
+						return;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * With a time code, sync the set
+	 * @param {Integer} time_code in milliseconds!
+	 */
+	const updateSetBasedOnAudioTime = (time_code) => {
+		// Find if we're within the current set
+        if (isSetWithinTime(sets[curSet], time_code)) {
+            return;
+        }
+
+        let start = 0;
+
+        // If the msElapsed is already past the current set, we know it must be past in the array
+        if (sets[curSet]["end_time_code"] < time_code) {
+            start = curSet;
+        }
+
+
+		for (let i = start; i < sets.length; i++) {
+			if (sets[i]["start_time_code"] !== null && sets[i]["end_time_code"] !== null) {
+				let startTime = sets[i]["start_time_code"];
+				let endTime = sets[i]["end_time_code"];
+
+				if(time_code >= startTime && time_code < endTime) {
+					// sets[i] is currently active
+					if (curSet !== i) {
+						// console.log("Setting " + sets[i].set_numb + " to cur set (syncing with audio)", i)
+						setCurSet(i);
+						return;
+					} else {
+						console.log("THIS SHOULDN'T HAPPEN!")
+					}
+				}
+			}
+		}
+	}
+
+    /**
+     * Get all the set data at curSet
+     * @returns {Object} set info 
+     */
+    const getCurSetInfo = () => {
+        return sets[curSet];
+    }
+    
+    /**
+     * Get the set number at curSet
+     * @returns {String} set number 
+     */
+    const getCurSetNumb = () => {
+        if (sets[curSet] === undefined) {
+            return ""
+        }
+        return sets[curSet]["set_numb"];
     }
 
     // Return if downloading
@@ -532,76 +666,87 @@ const BetaBasicViewer = (props) => {
 		);
 	}
 
-    if (data.length === 0) {
-        return (
-            <div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
-                <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                </div>
-            </div>
-        )
-    }
+    // Return if landscape
+	if (!isLandscape) {
+		return (
+			<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
+				<h1>Rotate Please</h1>
+				<h2>or switch to basic mode</h2>
+				<button className='btn btn-primary' onClick={(e) => {window.location.href = "/basic"}}>Open Basic</button>
+				<UserSectionSelection 
+					data={data} 
+					curSet={curSet} 
+					schoolCode={showCode} 
+					token={token} 
+					userData={userData}
+					showID={showID}
+				/>
+				<UpdatePrompt
+					show={showUpdatePrompt}
+					setShow={setShowUpdatePrompt}
+					update={changeTimestampsToNewUpdate}
+				/>
+			</div>
+		);
+	}
 
-    return (
-        <div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
-            <div className="overflow-auto" style={{height: '80vh', width:'min(100%, 800px'}}>
-            <ul className="list-group">
-            {
-                getOnlyUserDots().map((dotData, index) =>
-                    <li className="list-group-item flex-row justify-content-between d-flex align-items-center" key={index} style={{width:'100%', height:'180px'}}>
-                        <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'30%', height:'100%'}}>
-                            <div style={{width:'100%', height:'60%', fontSize:'32px'}} className='flex-column justify-content-center d-flex align-items-center'>
-                                {sets[index].set_numb}
-                            </div>
-                            <div style={{width:'100%', height:'40%', textAlign:'center'}} className='flex-column justify-content-center d-flex align-items-center'>
-                                {sets[index].set_name}
-                            </div>
-                        </div>
-                        <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'65%'}}>
-                            <div className='mb-2'>{getDotText1(dotData.dot)}</div>
-                            <div className='mb-2'>{getDotText2(dotData.dot)}</div>
-                            <div className='mb-2'>For {dotData.counts} counts</div>
-                            <div className='mb-2'>Measures: {dotData.measure}</div>
-                        </div>
-                        <div style={{right: "1rem", bottom: "1rem", position: "absolute"}}>    
-                            {
-                                userData.is_section_leader ?
-                                <button className='btn btn-secondary' onClick={(e) => openEditSetName(dotData)}>Edit</button>
-                                : null
-                            }
-                            <button className='btn btn-success' onClick={(e) => {
-                                window.location.href = "/viewer-quick-display/" + dotData.set_numb + "?return=" + window.location.href
-                            }} >View</button>
-                        </div>
-                    </li>
 
-                )
-            }
-            </ul>
-            </div>
-            <br />
-            <div className='d-flex flex-row justify-content-between align-items-center' style={{width:"100%", padding:"1rem"}}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography>High School</Typography>
-                    <Switch
-                        checked={userOptions.basicUseCollegeHash}
-                        onChange={(e) => setUseCollegeHash(e.target.checked)}
-                        inputProps={{ 'aria-label': 'controlled' }}
-                        size='xl'
-                    />
-                    <Typography>College</Typography>
-                </Stack>
+	return (
+		<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
+			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass" ref={canvasRef}>
+				<Canvas 
+					data={data} 
+					curSet={curSet} 
+					curPlayTime={curPlayTime}
+					audioPlaying={audioPlaying}
+					userOptions={userOptions}
+					setUserOptions={setUserOptions}
+					userData={userData}
+					token={token}
+					hoverUserInfo={hoverUserInfo}
+					setHoverUserInfo={setHoverUserInfo}
+					isOffline = {isOffline}
+				/>
+				<UserInfoDialogue hoverUserInfo={hoverUserInfo} canvasRef={canvasRef}/>
+			</div>
+			<ViewerSideBar 
+				curSetInfo={getCurSetInfo()} 
+				getCurSetNumb={getCurSetNumb()} 
+				setInput={setInput} 
+				curSet={curSet} 
+				sets={sets} 
+				setSets={saveSets}
+				handelSetBtnControls={handelSetBtnControls}
+				changeCurSetNumb={changeCurSetNumb}
+				userOptions={userOptions}
+				setUserOptions={setUserOptions}
+				data={data}
+				audioPlaying={audioPlaying}
+				setAudioPlaying={setAudioPlaying}
+				audio={audio}
+				curPlayTime={curPlayTime}
+				setCurPlayTime={setCurPlayTime}
+				token={token}
+				userData={userData}
+				updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
+			/>
+			<FollowUserBtn userOptions={userOptions}/>
 
-                <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Normal</button>
-            </div>
-            
-            <UpdatePrompt
+			<UserSectionSelection 
+				data={data} 
+				curSet={curSet} 
+				schoolCode={showCode} 
+				token={token} 
+				userData={userData}
+				showID={showID}
+			/>
+			<UpdatePrompt
 				show={showUpdatePrompt}
 				setShow={setShowUpdatePrompt}
 				update={changeTimestampsToNewUpdate}
 			/>
 		</div>
-    );
+	);
 }
 
-export default BetaBasicViewer;
+export default Viewer;

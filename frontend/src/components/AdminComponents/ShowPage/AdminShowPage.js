@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AdminEditShow from './AdminEditShow';
 import AdminAddPDF from './AdminAddPDF';
-import getApi from '../../getApi';
+import getApi from '../../utils/getApi';
 
 const WINDOW_LOCATION = getApi();
 

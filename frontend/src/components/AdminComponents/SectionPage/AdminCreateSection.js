@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {Modal, Button, FloatingLabel, Form } from 'react-bootstrap/';
-import getApi from '../../getApi';
+import getApi from '../../utils/getApi';
 import { RgbColorPicker } from "react-colorful";
 
 const WINDOW_LOCATION = getApi();

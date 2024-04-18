@@ -4,7 +4,7 @@ import AdminTimelineTimestamp from './AdminTimelineTimestamp';
 import PausePlayBtn from './PausePlayBtn';
 import AudioProgressBar from './AudioProgressBar';
 import './AdminTimeline.css';
-import getApi from '../../getApi';
+import getApi from '../../utils/getApi';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 const WINDOW_LOCATION = getApi();

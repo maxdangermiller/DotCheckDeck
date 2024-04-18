@@ -1,5 +1,5 @@
 import React from 'react';
-import getApi from '../getApi';
+import getApi from '../utils/getApi';
 
 import 'bootstrap/dist/css/bootstrap.css';
 

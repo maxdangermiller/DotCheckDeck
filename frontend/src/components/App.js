@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import './App.css';
-import Viewer from './Viewer';
+// import Viewer from './Viewer';
 import Activate from './Activate';
-import useToken from './useToken';
+import useToken from './utils/useToken';
 import Login from './Login';
 import NavBar from './NavBar';
 import Admin from './Admin';
 import AdminTimeline from './AdminComponents/TimelinePage/AdminTimeline';
-import PWAInstructions from './PWAInstructions';
-import getApi from './getApi';
+import PWAInstructions from './utils/PWAInstructions';
+import getApi from './utils/getApi';
 import AdminJoinCodeDisplay from './AdminComponents/AdminJoinCodeDisplay';
 import AdminCreateShow from './AdminComponents/AdminCreateShow';
 import AdminAddProp from './AdminComponents/AdminAddProp';
 import AdminConvertToProp from './AdminComponents/AdminConvertToProp';
-import BasicViewer from './BasicViewer';
+// import BasicViewer from './BasicViewer';
 import VerifyAccount from './utils/VerifyAccount';
 import ResetPassword from './utils/ResetPassword';
 import ForgotPassword from './utils/ForgotPassword';
@@ -24,9 +24,9 @@ import Page404 from './utils/Page404';
 import ErrorPage from './utils/ErrorPage';
 import ResendVerifyEmail from './utils/ResendVerifyEmail'
 
-// Beta
-import BetaViewer from './beta/BetaViewer';
-import BetaBasicViewer from './beta/BetaBasicViewer';
+// Main App
+import Viewer from './MainApp/Viewer';
+import BasicViewer from './MainApp/BasicViewer';
 
 import axios from "axios";
 
@@ -198,12 +198,12 @@ function App() {
 					<Route path="/beta/" exact element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
-						: <BetaViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
+						: <Viewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
 					} />
 					<Route path="/beta/basic" exact element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
-						: <BetaBasicViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
+						: <BasicViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
 					} />
 					
 					<Route path="/basic" exact element={
@@ -211,11 +211,13 @@ function App() {
 						? <Navigate to="/login" />
 						: <BasicViewer token={token} schoolCode={schoolCode} userData={userData} isOffline={isOffline}/>
 					} />
+
 					<Route path="/viewer-quick-display/:set_numb_param" exact element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
-						: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
+						: <BasicViewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
 					} />
+
 					<Route path="/activate/:join_code" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
 						? <Navigate to="/" />

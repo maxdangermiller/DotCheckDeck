@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState} from 'react';
 import { TextField } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axios from "axios";
-import getApi from '../getApi';
+import getApi from './getApi';
 
 const darkTheme = createTheme({
   palette: {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import QRCode from "react-qr-code";
-import getApi from '../getApi';
+import getApi from '../utils/getApi';
 
 const WINDOW_LOCATION = getApi();
 

@@ -5,7 +5,7 @@ import { TextField, Icon } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import axios from "axios";
-import getApi from '../getApi';
+import getApi from './getApi';
 
 const WINDOW_LOCATION = getApi();
 

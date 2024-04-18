@@ -10,7 +10,7 @@ import RegisterPage from './ActivateFormPages/RegisterPage';
 import TermsPage from './ActivateFormPages/TermsPage';
 import LoginPage from './ActivateFormPages/LoginPage';
 import WaitForVerify from './ActivateFormPages/WaitForVerify';
-import getApi from './getApi';
+import getApi from './utils/getApi';
 
 import 'bootstrap/dist/css/bootstrap.css';
 

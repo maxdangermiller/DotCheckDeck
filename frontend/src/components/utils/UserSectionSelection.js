@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {Modal, Button} from 'react-bootstrap/';
 import { Autocomplete, TextField } from '@mui/material';
-import getApi from '../getApi';
+import getApi from './getApi';
 
 const WINDOW_LOCATION = getApi();
 

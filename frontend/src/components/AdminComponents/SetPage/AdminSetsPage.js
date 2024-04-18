@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Table from 'react-bootstrap/Table';
-import getApi from '../../getApi';
+import getApi from '../../utils/getApi';
 
 import AdminViewSetNotes from './AdminViewSetNotes';
 import AdminEditSet from './AdminEditSet';

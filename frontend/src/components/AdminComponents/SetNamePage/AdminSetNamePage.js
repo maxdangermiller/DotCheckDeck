@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import AdminEditSetName from './AdminEditSetName';
 import AdminCreateSetName from './AdminCreateSetName';
-import getApi from '../../getApi';
+import getApi from '../../utils/getApi';
 
 const WINDOW_LOCATION = getApi();
 const CELL_STYLE = "flex-row justify-content-center d-flex align-items-center adminTextAlignCenter";

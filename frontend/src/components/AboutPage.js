@@ -1,7 +1,7 @@
 import React from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import photo from '../MaxMiller.png'
-import getApi from './getApi';
+import getApi from './utils/getApi';
 
 import 'bootstrap/dist/css/bootstrap.css';
 

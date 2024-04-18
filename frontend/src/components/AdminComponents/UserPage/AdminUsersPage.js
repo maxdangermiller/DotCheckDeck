@@ -5,7 +5,7 @@ import AdminEditUser from './AdminEditUser';
 import AdminEditShowUser from './AdminEditShowUser';
 import AdminInviteUser from './AdminInviteUser';
 import AdminDeleteUser from './AdminDeleteUser';
-import getApi from '../../getApi';
+import getApi from '../../utils/getApi';
 
 const WINDOW_LOCATION = getApi();
 

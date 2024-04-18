@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Table from 'react-bootstrap/Table';
-import getApi from '../../getApi';
+import getApi from '../../utils/getApi';
 import Boolean from '../Boolean';
 import AdminAddProp from './AdminAddProp';
 import AdminEditProp from './AdminEditProp';
