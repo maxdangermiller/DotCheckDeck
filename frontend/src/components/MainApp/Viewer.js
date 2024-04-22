@@ -17,7 +17,7 @@ import logo from '../../logo.svg';
 import useLocalData from './utils/useLocalData';
 import useUserOptions from './utils/useUserOptions';
 
-import './BetaViewer.css';
+import './Viewer.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
 const WINDOW_LOCATION = getApi();

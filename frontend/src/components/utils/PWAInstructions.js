@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {Modal, Button, ListGroup} from 'react-bootstrap/';
-import DCD_Add_To_Home_Screen from '../DCD_Add_To_Home_Screen.gif';
+import DCD_Add_To_Home_Screen from '../../DCD_Add_To_Home_Screen.gif';
 import 'bootstrap/dist/css/bootstrap.css';
 
 const PWAInstructions = (props) => {

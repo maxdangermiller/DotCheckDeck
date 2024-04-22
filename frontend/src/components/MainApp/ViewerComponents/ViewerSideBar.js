@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 
 import './ViewerSideBar.css';
-import OptionsModal from '../../ViewerSideBarComponents/OptionsModal';
-import SetNameModel from '../../ViewerSideBarComponents/SetNameModel';
-import NotesModel from '../../ViewerSideBarComponents/NotesModel';
+import OptionsModal from './ViewerSideBarComponents/OptionsModal';
+import SetNameModel from './ViewerSideBarComponents/SetNameModel';
+import NotesModel from './ViewerSideBarComponents/NotesModel';
 import AudioProgressBar from './ViewerSideBarComponents/AudioProgressBar';
 
 import {ReactComponent as LeftArrow} from '../../../circle-arrow-left.svg';
