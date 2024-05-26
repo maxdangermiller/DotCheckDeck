@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {ReactComponent as Check} from '../../circle-check.svg';
-import {ReactComponent as XMark} from '../../circle-xmark.svg';
+import {ReactComponent as Check} from '../../icons/circle-check.svg';
+import {ReactComponent as XMark} from '../../icons/circle-xmark.svg';
 
 const Boolean = (props) => {
     const {state, ...rest} = props;

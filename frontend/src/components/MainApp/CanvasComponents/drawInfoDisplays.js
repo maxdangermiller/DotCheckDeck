@@ -199,7 +199,15 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
         context.fillStyle = "black";
         context.textBaseline = "middle";
         context.textAlign = "center";
-        context.fillText(dot["userLabel"], x + w * 0.2, y + h * 0.25);
+
+        let userLabel = dot["userLabel"];
+        let isProp = dot["show_user"]["is_prop"];
+
+        if (isProp === true) {
+            userLabel = "Prop";
+        }
+
+        context.fillText(userLabel, x + w * 0.2, y + h * 0.25);
 
         if (dot["userName"] !== "None None" && dot["userName"] !== "") {
             context.font = canvas.height * 0.015 + 'px ArialBlack';
@@ -225,7 +233,7 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
             }
 
             context.closePath();
-        } else {
+        } else if (isProp !== true) {
             context.font = canvas.height * 0.0125 + 'px ArialBlack';
             context.fillStyle = "red";
 

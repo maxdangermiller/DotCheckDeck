@@ -27,6 +27,7 @@ import ResendVerifyEmail from './utils/ResendVerifyEmail'
 // Main App
 import Viewer from './MainApp/Viewer';
 import BasicViewer from './MainApp/BasicViewer';
+import AppNavBar from './MainApp/MainAppNavBar/AppNavBar';
 
 import axios from "axios";
 
@@ -166,6 +167,7 @@ function App() {
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 	const isPWAAdded = window.matchMedia('(display-mode: standalone)').matches;
 
+
 	if (token == null && !isOffline) {
 		return (
 			<div className="d-flex align-items-center justify-content-center flex-column fullScreen">
@@ -174,7 +176,9 @@ function App() {
 				</div>
 			</div>
 		);
-	} else {
+	} 
+	
+	else {
 		return (
 			<Router>
 				<NavBar 
@@ -189,48 +193,41 @@ function App() {
 					: null
 				}
 				<Routes>
-					<Route path="/" exact element={
+					<Route path="/app" exact element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
-						: <Viewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
-					} />
-
-					<Route path="/beta/" exact element={
-						(token === "" && !isOffline) || schoolCode === ""
-						? <Navigate to="/login" />
-						: <Viewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
-					} />
-					<Route path="/beta/basic" exact element={
-						(token === "" && !isOffline) || schoolCode === ""
-						? <Navigate to="/login" />
-						: <BasicViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
+						: <Viewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
 					} />
 					
-					<Route path="/basic" exact element={
+					<Route path="/app/basic" exact element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
-						: <BasicViewer token={token} schoolCode={schoolCode} userData={userData} isOffline={isOffline}/>
+						: <BasicViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
+					} />
+
+					<Route path="/" exact element={
+						<Navigate to="/app" />
 					} />
 
 					<Route path="/viewer-quick-display/:set_numb_param" exact element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
-						: <BasicViewer token={token} schoolCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
+						: <Viewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
 					} />
 
 					<Route path="/activate/:join_code" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <Activate setToken={setToken} setRefToken={setRefToken}/>
 					} />
 					<Route path="/activate" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <Activate setToken={setToken} setRefToken={setRefToken}/>
 					} />
 					<Route path="/login" exact element={
 						token !== "" && token !== undefined && schoolCode !== ""
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <Login 
 							setToken={setToken} 
 							setRefToken={setRefToken} 
@@ -241,32 +238,32 @@ function App() {
 					} />
 					<Route path="/admin" exact element={
 						token === "" || token === undefined || !isAdminAuthorized()
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <Admin token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/admin-timeline" exact element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <AdminTimeline token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/admin-join-code" exact element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <AdminJoinCodeDisplay token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/admin-create-show" exact element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <AdminCreateShow token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/admin-add-prop" exact element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <AdminAddProp token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/admin-convert-to-prop" exact element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
-						? <Navigate to="/" />
+						? <Navigate to="/app" />
 						: <AdminConvertToProp token={token} schoolCode={schoolCode}/>
 					} />
 					<Route path="/activate-account/:enc_id" exact element={

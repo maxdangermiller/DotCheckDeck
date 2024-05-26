@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import './Nav.css';
-import logo from '../logo.svg';
+import logo from '../icons/logo.svg';
 import {Nav,  Navbar, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 const NavBar = (props) => {
     const { loggedIn, logout, isAdminAuthorized } = props
+
+	const location = useLocation();
+	const [ show, setShow ] = useState(true);
 
 	const getViewerOptions = () => {
 		if (window.location.pathname === "/basic") {
@@ -17,20 +21,25 @@ const NavBar = (props) => {
 		return <></>;
 	}
 
+	useEffect(() => {
+		console.log('Location changed');
+
+		setShow(location.pathname.substring(0, 4) !== "/app")
+	}, [location]);
+
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+	if (!show){
+		return <></>
+	}
+
 	return (
-		<Navbar bg="dark" variant="dark" style={{height: "8vh", minHeight: "36px"}}>
+		<Navbar bg="dark" variant="dark" style={{height: "8vh", minHeight: "36px", display: show}}>
 			<Container fluid>
 				<Nav className="ml-auto">
 					<Navbar.Brand href="/">
 						<img src={logo} alt="" height="30px" width="30px"/>
 					</Navbar.Brand>
-					{
-						window.location.pathname !== "/beta" ?
-						<Nav.Link href="/beta">Beta</Nav.Link>
-						: null
-					}
 
 					{getViewerOptions()}
 					{

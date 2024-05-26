@@ -1,3 +1,9 @@
+.fullScreen {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden!important;
+}
+
 .ViewerFullScreen {
     width: 100vw;
     height: 92vh;

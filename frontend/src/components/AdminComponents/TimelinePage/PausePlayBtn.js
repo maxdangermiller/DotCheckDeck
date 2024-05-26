@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {ReactComponent as PauseIcon} from '../../../circle-pause.svg';
-import {ReactComponent as PlayIcon} from '../../../circle-play.svg';
+import {ReactComponent as PauseIcon} from '../../../icons/circle-pause.svg';
+import {ReactComponent as PlayIcon} from '../../../icons/circle-play.svg';
 
 const PausePlayBtn = (props) => {
     const {isPlaying, setIsPlaying, className, ...rest} = props;

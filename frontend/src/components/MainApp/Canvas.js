@@ -894,7 +894,7 @@ const Canvas = (props) => {
             window.cancelAnimationFrame(animationFrameId)
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot, audioPlaying, curPlayTime])
+    }, [data, hoverDot, cameraOffset, cameraZoom, isAnimation, isDragging, animationDirection, followDot, audioPlaying, curPlayTime, userOptions])
 
     useEffect(() => {
         console.log("Canvas Updating for " + curSet)
@@ -920,7 +920,7 @@ const Canvas = (props) => {
             let cords = convertDotToCords(dot, canvasRef.current.width, canvasRef.current.height);
             if (y > cords.y - margin && y < cords.y + margin  && x > cords.x - margin && x < cords.x + margin) {
                 wasOnDot = true;
-                if (userOptions.showMovementBrackets) {
+                if (userOptions.showMovementBrackets && userOptions.highlightUser.id !== dot.dot.show_user_id) {
                     setUserOptions({...userOptions, "highlightUser": {"id": dot.dot.show_user_id, "label": dot.userLabel}})
                 }
                 else {
@@ -943,7 +943,9 @@ const Canvas = (props) => {
             if (hoverDot["x"] !== undefined) {
                 setHoverDot({});
             }
-            setUserOptions({...userOptions, "highlightUser": {"id": userData.show_user_id, "label": userData.label}})
+            if (userOptions.highlightUser.id !== userData.show_user_id) {
+                setUserOptions({...userOptions, "highlightUser": {"id": userData.show_user_id, "label": userData.label}})
+            }
         }
     }
 

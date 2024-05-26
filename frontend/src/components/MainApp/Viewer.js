@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useParams } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axios from "axios";
 
 import Canvas from './Canvas'
 import ViewerSideBar from './ViewerComponents/ViewerSideBar';
 import getApi from '../utils/getApi';
-import CustomDownloadProgress from '../utils/CustomDownloadProgress';
+import CustomDownloadProgress from './ViewerComponents/CustomDownloadProgress';
 import UserInfoDialogue from './ViewerComponents/UserInfoDialogue';
 import UpdatePrompt from '../utils/UpdatePrompt';
 import UserSectionSelection from '../utils/UserSectionSelection';
 import FollowUserBtn from './ViewerComponents/FollowUserBtn';
 
-import logo from '../../logo.svg';
+import AppNavBar from './MainAppNavBar/AppNavBar';
+
+import logo from '../../icons/logo.svg';
 
 // Utilities
 import useLocalData from './utils/useLocalData';
@@ -34,7 +37,9 @@ const MIN_TIMESTAMP_INTERVAL = 120000;  // 2 minutes
 
 
 const Viewer = (props) => {
-	const { token, showCode, userData, showID, isOffline } = props;
+	const { token, showCode, userData, showID, isOffline, logout } = props;
+
+	const {set_numb_param} = useParams();
 
 	const [curSet, setCurSet]  = useState(0);                                                   // Store current index of the show
 	const [audioPlaying, setAudioPlaying] = useState(false);                                    // Is the audio playing?
@@ -86,7 +91,7 @@ const Viewer = (props) => {
         saveCurTimestamps(newestTimestamps.data, newestTimestamps.sn);
 		setShowUpdatePrompt(false);
 
-		console.log(newestTimestamps.data)
+		console.log(getLocalTimestamps())
 		startCaptiveDownload(newestTimestamps.data);
 	}
 
@@ -117,6 +122,11 @@ const Viewer = (props) => {
 				setCurDatabaseTimestamp(localTimestamp);
 				setCurDatabaseSNTimestamp(localSNTimestamp);
 			}
+			return;
+		}
+
+		if (showCode === undefined || showCode === "undefined") {
+			window.location.href = "/error?message=Invalid Show Code! The API sent over something invalid, or the cookie was not saved";
 			return;
 		}
 
@@ -343,11 +353,26 @@ const Viewer = (props) => {
 		} 
 
 		if (checkLocalData()) {
+			// Display the quick view if we have the query param
+			// TODO: Figure out Later
+			/*
+			if (set_numb_param !== undefined) {
+				changeCurSetWithSetNumb(set_numb_param);
+			}
+			*/
+
 			return;
 		}
 
 		if (data.length !== 0) {
-			// retrievePoints(useBuffer);
+			// Display the quick view if we have the query param
+			// TODO: Figure out Later
+			/*
+			if (set_numb_param !== undefined) {
+				changeCurSetWithSetNumb(set_numb_param);
+			}
+			*/
+
 			return;	
 		}
 
@@ -362,7 +387,7 @@ const Viewer = (props) => {
 		try {
 			if (sets.length === 0) { return; }
 			if (checkLocalSetNames()) { return; }
-			fetch(WINDOW_LOCATION + "/get-set-names?school_code=" + props.schoolCode + "&token=" + props.token)
+			fetch(WINDOW_LOCATION + "/get-set-names?school_code=" + showCode + "&token=" + token)
 				.then(res => res.json())
 				.then(
 					(result) => {
@@ -440,6 +465,8 @@ const Viewer = (props) => {
 	}, [audioPlaying])
 
 	// Automatically Grab The Users Info and select them for highlighting
+	// Deprecated by selectUserForHighlighting in useUserOptions
+	/*
 	useEffect(() => {
 		let parsedData = userOptions;
 		try {
@@ -465,12 +492,15 @@ const Viewer = (props) => {
 		
 		if (userData.label !== undefined) {
 			console.log(userData)
-			setUserOptions({...parsedData,  "highlightUser": {"id": userData.show_user_id, "label": userData.label}, "followingUser": false});
+			// TODO: Return
+			// setUserOptions({...parsedData,  "highlightUser": {"id": userData.show_user_id, "label": userData.label}, "followingUser": false});
 		} else {
-			setUserOptions({...parsedData,  "highlightUser": null, "followingUser": false});
+			// TODO: Return
+			// setUserOptions({...parsedData,  "highlightUser": null, "followingUser": false});
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [userData])
+	*/
 
 	// Check to see if we're in landscape, if not display a "Rotate Please" message
 	useEffect(() => {
@@ -491,6 +521,20 @@ const Viewer = (props) => {
 		if (x >= 0 && x < sets.length && curSet !== x) {
 			console.log("Changing set");
 			setCurSet(x);
+		}
+	}
+
+	/**
+	 * Change Current Set Index given a set number string
+	 * @param {String} set_numb 
+	 * @returns void
+	 */
+	const changeCurSetWithSetNumb = (set_numb) => {
+		for (let x = 0; x < sets.length; x++) {
+			if (sets[x]["set_numb"].toLowerCase() === set_numb.toLowerCase()) {
+				changeCurSet(x);
+				return;
+			}
 		}
 	}
 
@@ -645,23 +689,35 @@ const Viewer = (props) => {
     // Return if downloading
 	if (isDownloading) {
 		return (
-			<ThemeProvider theme={darkTheme}><section className="gradient-custom">
-			<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
-				<div className="col-12 col-md-8 col-lg-6 col-xl-5 loginFormHeight">
-					<div className="card bg-dark text-white loginFormHeight" style={{borderRadius: '1rem'}}>
-						<div className="card-body p-5 text-center loginFormTextHeight">
-							<div className='flex-column justify-content-center d-flex align-items-center' style={{height: "100%"}}>
-								<img src={logo} alt="" width="40%" height="40%" />
-								<div className="mb-md-5 mt-md-4">
-									<h2 className="fw-bold mb-2 text-uppercase">Downloading</h2>
+			<ThemeProvider theme={darkTheme}><section className="gradient-custom fullScreen">
+				<div className="d-flex flex-column justify-content-center align-items-center fullScreen">
+					<AppNavBar 
+						token={token} 
+						loggedIn={token !== "" && token !== undefined} 
+						logout={logout}
+						data={data} 
+						curSet={curSet} 
+						isOffline={isOffline}
+						userData={userData}
+					/>
+					
+					<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
+						<div className="col-12 col-md-8 col-lg-6 col-xl-5 loginFormHeight">
+							<div className="card bg-dark text-white loginFormHeight" style={{borderRadius: '1rem'}}>
+								<div className="card-body p-5 text-center loginFormTextHeight">
+									<div className='flex-column justify-content-center d-flex align-items-center' style={{height: "100%"}}>
+										<img src={logo} alt="" width="40%" height="40%" />
+										<div className="mb-md-5 mt-md-4">
+											<h2 className="fw-bold mb-2 text-uppercase">Downloading</h2>
 
-									<CustomDownloadProgress variant="determinate" value={downloadingProgress} />
+											<CustomDownloadProgress variant="determinate" value={downloadingProgress} />
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 			</section></ThemeProvider>
 		);
 	}
@@ -692,59 +748,70 @@ const Viewer = (props) => {
 
 
 	return (
-		<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
-			<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass" ref={canvasRef}>
-				<Canvas 
-					data={data} 
-					curSet={curSet} 
-					curPlayTime={curPlayTime}
-					audioPlaying={audioPlaying}
-					userOptions={userOptions}
-					setUserOptions={setUserOptions}
-					userData={userData}
-					token={token}
-					hoverUserInfo={hoverUserInfo}
-					setHoverUserInfo={setHoverUserInfo}
-					isOffline = {isOffline}
-				/>
-				<UserInfoDialogue hoverUserInfo={hoverUserInfo} canvasRef={canvasRef}/>
-			</div>
-			<ViewerSideBar 
-				curSetInfo={getCurSetInfo()} 
-				getCurSetNumb={getCurSetNumb()} 
-				setInput={setInput} 
-				curSet={curSet} 
-				sets={sets} 
-				setSets={saveSets}
-				handelSetBtnControls={handelSetBtnControls}
-				changeCurSetNumb={changeCurSetNumb}
-				userOptions={userOptions}
-				setUserOptions={setUserOptions}
-				data={data}
-				audioPlaying={audioPlaying}
-				setAudioPlaying={setAudioPlaying}
-				audio={audio}
-				curPlayTime={curPlayTime}
-				setCurPlayTime={setCurPlayTime}
-				token={token}
-				userData={userData}
-				updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
-			/>
-			<FollowUserBtn userOptions={userOptions}/>
-
-			<UserSectionSelection 
+		<div className="d-flex flex-column justify-content-center align-items-center fullScreen">
+			<AppNavBar 
+				token={token} 
+				loggedIn={token !== "" && token !== undefined} 
+				logout={logout}
 				data={data} 
 				curSet={curSet} 
-				schoolCode={showCode} 
-				token={token} 
+				isOffline={isOffline}
 				userData={userData}
-				showID={showID}
 			/>
-			<UpdatePrompt
-				show={showUpdatePrompt}
-				setShow={setShowUpdatePrompt}
-				update={changeTimestampsToNewUpdate}
-			/>
+
+			<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
+				<div className="flex-row justify-content-center d-flex align-items-center canvasDivClass" ref={canvasRef}>
+					<Canvas 
+						data={data} 
+						curSet={curSet} 
+						curPlayTime={curPlayTime}
+						audioPlaying={audioPlaying}
+						userOptions={userOptions}
+						setUserOptions={setUserOptions}
+						userData={userData}
+						token={token}
+						hoverUserInfo={hoverUserInfo}
+						setHoverUserInfo={setHoverUserInfo}
+						isOffline = {isOffline}
+					/>
+					<UserInfoDialogue hoverUserInfo={hoverUserInfo} canvasRef={canvasRef}/>
+				</div>
+				<ViewerSideBar 
+					curSetInfo={getCurSetInfo()} 
+					getCurSetNumb={getCurSetNumb()} 
+					setInput={setInput} 
+					curSet={curSet} 
+					sets={sets} 
+					setSets={saveSets}
+					handelSetBtnControls={handelSetBtnControls}
+					changeCurSetNumb={changeCurSetNumb}
+					userOptions={userOptions}
+					setUserOptions={setUserOptions}
+					data={data}
+					audioPlaying={audioPlaying}
+					setAudioPlaying={setAudioPlaying}
+					audio={audio}
+					curPlayTime={curPlayTime}
+					setCurPlayTime={setCurPlayTime}
+					token={token}
+					userData={userData}
+					updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
+				/>
+
+				<UserSectionSelection 
+					data={data} 
+					curSet={curSet} 
+					schoolCode={showCode} 
+					token={token} 
+					userData={userData}
+					showID={showID}
+				/>
+				<UpdatePrompt
+					show={showUpdatePrompt}
+					setShow={setShowUpdatePrompt}
+					update={changeTimestampsToNewUpdate}
+				/>
+			</div>
 		</div>
 	);
 }

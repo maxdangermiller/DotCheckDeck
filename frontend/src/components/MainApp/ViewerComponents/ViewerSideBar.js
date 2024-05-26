@@ -1,15 +1,27 @@
 import React, { useState, useEffect } from 'react'
+import { Container, Row, Col } from 'react-bootstrap';
 
 import './ViewerSideBar.css';
 import OptionsModal from './ViewerSideBarComponents/OptionsModal';
 import SetNameModel from './ViewerSideBarComponents/SetNameModel';
 import NotesModel from './ViewerSideBarComponents/NotesModel';
 import AudioProgressBar from './ViewerSideBarComponents/AudioProgressBar';
+import AudioPlayer from './ViewerSideBarComponents/AudioPlayer';
 
-import {ReactComponent as LeftArrow} from '../../../circle-arrow-left.svg';
-import {ReactComponent as RightArrow} from '../../../circle-arrow-right.svg';
-import {ReactComponent as PauseIcon} from '../../../circle-pause.svg';
-import {ReactComponent as PlayIcon} from '../../../circle-play.svg';
+// Settings
+import {ReactComponent as SettingsIcon} from '../../../icons/circle-gear.svg';
+// Sets/counts display modes
+import {ReactComponent as DisplayModeIconSets} from '../../../icons/display-mode-icon-s.svg';
+import {ReactComponent as DisplayModeIconCounts} from '../../../icons/display-mode-icon-c.svg';
+// Rehearsal Mode
+import {ReactComponent as RehearsalModeIcon} from '../../../icons/hourglass-half.svg';
+// Edit
+import {ReactComponent as EditSetIcon} from '../../../icons/pencil.svg';
+// Notes
+import {ReactComponent as NotesIcon} from '../../../icons/book.svg';
+// Dot Cords (?)
+import {ReactComponent as ShowDotCordsIcon} from '../../../icons/question.svg';
+
 
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -34,6 +46,29 @@ const ViewerSideBar = (props) => {
         setTempCurSetInfo(JSON.parse(JSON.stringify(curSetInfo)));
     }
 
+    const setFollowingUser = (value) => {
+		console.log("Setting Following User To: " + value);
+		setUserOptions({...userOptions, "followingUser": value});
+	}
+
+	const getSetFollowingUserBtnColor = () => {
+		if (userOptions.followingUser) {
+			return "#5130b8";
+		}
+		return "#311d6e"; 
+	}
+
+    const getDisplayMode = () => {
+        if (userOptions["displayMode"] === "sets") {
+            return "sets";
+        }
+        if (userOptions["displayMode"] === "counts") {
+            return "counts";
+        }
+        // If it gets to here it must be either undefined or invalid
+        return "sets";
+    }
+
     let setName = "";
     if (data.length > curSet && curSetInfo !== undefined && curSetInfo !== null && curSetInfo["set_name"] !== null) {
         setName = curSetInfo["set_name"];
@@ -45,34 +80,89 @@ const ViewerSideBar = (props) => {
 	}, [curSet, sets])
 
     return (
-        <div className="flex-column justify-content-between d-flex align-items-center sideBarClass">
-            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{height: "35vh", width: "100%", maxWidth:"20vw"}}>
-                <h1 className='viewerSideBarHeader'>Current Set:</h1>
+        <>
+            <div className="sideBarClass">
+                <div className='setInfoDisplay'>
                     <input 
                         ref={setInput} 
                         value={curSetNumb} 
-                        className="invisibleInput" 
+                        className="setNumberInput" 
                         onChange={(e) => setCurSetNumb(e.target.value)} 
                         onKeyDown={(e) => changeCurSetNumb(e)}>
-                    </input> 
-                <div onClick={(e) => setShowNotes(true)} style={{cursor: "pointer", maxWidth:"95%"}}>
-                    {
-                        curSetInfo !== null && curSetInfo !== undefined?
-                        <div style={{width: "100%"}}>
-                            <h1 className='centerText' style={{textOverflow: "ellipsis"}}><strong>Name:</strong> {setName}</h1>
-                            <h1 className='centerText'><strong>Measure:</strong> {curSetInfo["measure"]}</h1>
-                            <h1 className='centerText'><strong>Total Counts:</strong> {curSetInfo["total_counts"]}</h1>
-                            <h1 className='centerText'><strong>Counts:</strong> {curSetInfo["counts"]}</h1>
-                        </div> :
-                        <div>
-                            <h1 className='centerText'><strong>Name:</strong></h1>
-                            <h1 className='centerText'><strong>Measure:</strong></h1>
-                            <h1 className='centerText'><strong>Total Counts:</strong></h1>
-                            <h1 className='centerText'><strong>Counts:</strong></h1>
-                        </div>
-                    }
+                    </input>
+                    <h1 className='viewerSideBarNameField'>{setName}</h1>
                 </div>
-                
+                <AudioPlayer 
+                    curPlayTime={curPlayTime}
+                    setCurPlayTime={setCurPlayTime}
+                    audio={audio}
+                    audioPlaying={audioPlaying}
+                    setAudioPlaying={setAudioPlaying}
+                    updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
+                    handelSetBtnControls={handelSetBtnControls}
+                    sets={sets}
+                    curSet={curSet}
+                />
+
+                <div className='optionsDiv'>
+                    <div className='optionsDivRow'>
+                        <button 
+                            type="button" 
+                            className='customViewerSideBarBtn normalBtn'
+                            onClick={() => {setShowSettings(true);}}
+                        >
+                            <SettingsIcon height="100%" fill="currentColor"/>
+                        </button>
+
+                        <button 
+                            type="button" 
+                            className='customViewerSideBarBtn'
+                            onClick={() => {}}
+                        >
+                            {
+                                getDisplayMode() === "sets" ?
+                                <DisplayModeIconSets height="100%"/>
+                                : <DisplayModeIconCounts height="100%"/>
+                            }
+                        </button>
+
+                        <button 
+                            type="button" 
+                            className='customViewerSideBarBtn normalBtn'
+                            onClick={() => {}}
+                        >
+                            <RehearsalModeIcon height="100%" fill="currentColor"/>
+                        </button>
+                    </div>
+
+                    <div className='optionsDivRow'>
+                        <button 
+                            type="button" 
+                            className='customViewerSideBarBtn normalBtn'
+                            onClick={() => {setShowEditSetName(true)}}
+                            disabled={!userData.is_section_leader}
+                        >
+                            <EditSetIcon height="100%" fill="currentColor"/>
+                        </button>
+
+                        <button 
+                            type="button" 
+                            className='customViewerSideBarBtn normalBtn'
+                            onClick={() => {setShowNotes(true)}}
+                        >
+                            <NotesIcon height="100%" fill="currentColor"/>
+                        </button>
+                        
+                        <button 
+                            type="button" 
+                            className='customViewerSideBarBtn normalBtn'
+                            style={{color: getSetFollowingUserBtnColor()}}
+                            onClick={() => {setFollowingUser(!userOptions.followingUser)}}
+                        >
+                            <ShowDotCordsIcon height="100%" fill="currentColor"/>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <OptionsModal
@@ -99,76 +189,8 @@ const ViewerSideBar = (props) => {
                 setShow = {setShowNotes}
                 curSetInfo = {curSetInfo}
             />
-            
-
-            <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
-                <div className='flex-row justify-content-center d-flex align-items-center mb-2' style={{height: '30%', width: '100%'}}>
-                    {
-                        audio !== null                   
-                        ? <AudioProgressBar 
-                            curPlayTime={curPlayTime} 
-                            setCurPlayTime={setCurPlayTime} 
-                            audio={audio} 
-                            isPlaying={audioPlaying} 
-                            setIsPlaying={setAudioPlaying}
-                            updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
-                        />
-                        : null
-                    }
-                </div>
-                <div className='flex-row justify-content-between d-flex align-items-center mb-2' style={{width: "90%"}}>
-
-                    
-                    <button 
-                        type="button" 
-                        className='customViewerSideBarBtn backwardBtn'
-                        onClick={() => handelSetBtnControls(curSet - 1)}
-                        disabled={curSet > 0 ? false : true}
-                    ><LeftArrow height="100%" fill="currentColor"/></button>
-
-                    <PausePlayBtn isPlaying={audioPlaying} setIsPlaying={setAudioPlaying} className="customViewerPlayPauseBtn"/>
-                    
-                    <button 
-                        type="button" 
-                        className='customViewerSideBarBtn forwardBtn'
-                        onClick={() => handelSetBtnControls(curSet + 1)}
-                        disabled={sets !== null && curSet < sets.length - 1 ? false : true}
-                    ><RightArrow height="100%" fill="currentColor"/></button>
-                </div>
-                
-            </div>
-            
-            <div className='mb-2 flex-column justify-content-center d-flex align-items-center' style={{width:"80%"}}>
-                <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => setShowSettings(true)}>Settings</div>
-                {
-                    userData.is_section_leader ?
-                    <div className='btn btn-sm btn-secondary mb-1 viewerButton' onClick={(e) => openEditSetName()}>Edit</div>
-                    : null
-                }
-            </div>
-        </div>
+        </>
     );
 };
 
 export default ViewerSideBar;
-
-const PausePlayBtn = (props) => {
-    const {isPlaying, setIsPlaying} = props;
-
-    if (isPlaying) {
-        return (
-            <button 
-                className="customViewerSideBarBtn"
-                onClick={(e) => setIsPlaying(!isPlaying)}
-            ><PauseIcon height="100%" fill="currentColor"/></button>
-        );
-    }
-    return (
-        <button 
-            className='customViewerSideBarBtn'
-            onClick={(e) => setIsPlaying(!isPlaying)}
-        >
-            <PlayIcon height="100%" fill="currentColor"/>
-        </button>
-    );
-}

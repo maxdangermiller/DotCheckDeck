@@ -2,26 +2,36 @@ import { useState, useEffect } from 'react';
 
 const LOCAL_USER_OPTIONS_KEY = "local-user-options";
 
+const DEFAULT_USER_OPTIONS = {
+	"showNextSet": false, "showLastSet": false, "drawPath": false,
+	"highlightSection": false,
+	"useSectionColors": true,
+	"showMovementBrackets": false, "highlightUser": null,
+	"moveSpeed": 10, "useActualSetLength": false,
+	"dimOtherUsers": false, "showCollegeHash": true,
+	"followingUser": false, "useCollegeHash": false,
+	"basicUseCollegeHash": false, "displayMode": "sets"
+};
+
 function useUserOptions(userData) {
-    const [userOptions, setUserOptions] = useState({
-		"showNextSet": false, "showLastSet": false, "drawPath": false,
-		"highlightSection": false,
-		"useSectionColors": true,
-		"showMovementBrackets": false, "highlightUser": null,
-		"moveSpeed": 10, "useActualSetLength": false,
-		"dimOtherUsers": false, "showCollegeHash": true,
-		"followingUser": false, "useCollegeHash": false,
-		"basicUseCollegeHash": false
-	});
+    const [userOptions, setUserOptions] = useState(DEFAULT_USER_OPTIONS);
 
     const saveUserOptions = (data) => {
         setUserOptions(data);
-        window.localStorage.setItem(LOCAL_USER_OPTIONS_KEY, JSON.stringify(data));
+        localStorage.setItem(LOCAL_USER_OPTIONS_KEY, JSON.stringify(data));
     }
 
     const getLocalUserOptions = () => {
-        let localUserOptions = window.localStorage.getItem(LOCAL_USER_OPTIONS_KEY);
+        let localUserOptions = localStorage.getItem(LOCAL_USER_OPTIONS_KEY);
         let parsedData = JSON.parse(localUserOptions);
+
+		/*
+		for (const [key, value] of Object.entries(DEFAULT_USER_OPTIONS)) {
+			if (!(key in parsedData)) {
+				parsedData[key] = DEFAULT_USER_OPTIONS[key];
+			}
+		}
+		*/
 
         // Check a random key to see if we actually have the data
         if (parsedData.dimOtherUsers === undefined) {
@@ -35,18 +45,8 @@ function useUserOptions(userData) {
         let options = userOptions;
 		try {
 			options = getLocalUserOptions();
-			// console.log("Successfully loaded user preferences")
 		} catch {
-			// console.log("DIDN'T Find Saved User preferences, creating new ones")
-			options = {
-				"showNextSet": false, "showLastSet": false, "drawPath": false,
-				"highlightSection": false,
-				"useSectionColors": true,
-				"showMovementBrackets": false, "highlightUser": null,
-				"moveSpeed": 10, "useActualSetLength": false,
-				"dimOtherUsers": false, "showCollegeHash": true,
-				"followingUser": false
-			};
+			options = DEFAULT_USER_OPTIONS;
 			window.localStorage.setItem(LOCAL_USER_OPTIONS_KEY, JSON.stringify(options));
 		}
 		
@@ -55,6 +55,7 @@ function useUserOptions(userData) {
 		} else {
 			setUserOptions({...options,  "highlightUser": null, "followingUser": false});
 		}
+		console.log(options)
     }
 
      // Automatically Grab The Users Info and select them for highlighting

@@ -1,5 +1,5 @@
 import React from 'react';
-import {ReactComponent as FindUserButton} from '../../../circle-question.svg';
+import {ReactComponent as FindUserButton} from '../../../icons/circle-question.svg';
 
 const FollowUserBtn = (props) => {
     const {userOptions, setUserOptions} = props;

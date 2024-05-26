@@ -4,8 +4,8 @@ import getApi from '../utils/getApi';
 import axios from "axios";
 import { Switch, Stack, Typography } from '@mui/material';
 import UpdatePrompt from '../utils/UpdatePrompt';
-import logo from '../../logo.svg';
-import CustomDownloadProgress from '../utils/CustomDownloadProgress';
+import logo from '../../icons/logo.svg';
+import CustomDownloadProgress from './ViewerComponents/CustomDownloadProgress';
 
 import useLocalData from './utils/useLocalData';
 import useUserOptions from './utils/useUserOptions';

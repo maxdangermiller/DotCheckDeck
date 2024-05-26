@@ -32,6 +32,7 @@ const OptionsModal = (props) => {
     const setShowMovementBrackets = (value) => {
         setUserOptions({...userOptions,  "showMovementBrackets": value});
     }
+    
 
     const setUseCollegeHash = (value) => {
         setUserOptions({...userOptions,  "useCollegeHash": value});
