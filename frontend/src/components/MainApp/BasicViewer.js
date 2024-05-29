@@ -6,6 +6,7 @@ import { Switch, Stack, Typography } from '@mui/material';
 import UpdatePrompt from '../utils/UpdatePrompt';
 import logo from '../../icons/logo.svg';
 import CustomDownloadProgress from './ViewerComponents/CustomDownloadProgress';
+import AppNavBar from './MainAppNavBar/AppNavBar';
 
 import useLocalData from './utils/useLocalData';
 import useUserOptions from './utils/useUserOptions';
@@ -25,7 +26,7 @@ let lastCheckedVersionTime = 0;
 const MIN_TIMESTAMP_INTERVAL = 120000;  // 2 minutes
 
 const BasicViewer = (props) => {
-    const {token, showCode, setIsBasic, userData, isOffline} = props;
+    const {token, showCode, setIsBasic, userData, isOffline, logout} = props;
 
     const [curSet, setCurSet]  = useState(0);                                                   // Store current index of the show
 	const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);                            // Show Prompt To Ask If We Should Update
@@ -543,64 +544,76 @@ const BasicViewer = (props) => {
     }
 
     return (
-        <div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
-            <div className="overflow-auto" style={{height: '80vh', width:'min(100%, 800px'}}>
-            <ul className="list-group">
-            {
-                getOnlyUserDots().map((dotData, index) =>
-                    <li className="list-group-item flex-row justify-content-between d-flex align-items-center" key={index} style={{width:'100%', height:'180px'}}>
-                        <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'30%', height:'100%'}}>
-                            <div style={{width:'100%', height:'60%', fontSize:'32px'}} className='flex-column justify-content-center d-flex align-items-center'>
-                                {sets[index].set_numb}
-                            </div>
-                            <div style={{width:'100%', height:'40%', textAlign:'center'}} className='flex-column justify-content-center d-flex align-items-center'>
-                                {sets[index].set_name}
-                            </div>
-                        </div>
-                        <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'65%'}}>
-                            <div className='mb-2'>{getDotText1(dotData.dot)}</div>
-                            <div className='mb-2'>{getDotText2(dotData.dot)}</div>
-                            <div className='mb-2'>For {dotData.counts} counts</div>
-                            <div className='mb-2'>Measures: {dotData.measure}</div>
-                        </div>
-                        <div style={{right: "1rem", bottom: "1rem", position: "absolute"}}>    
-                            {
-                                userData.is_section_leader ?
-                                <button className='btn btn-secondary' onClick={(e) => openEditSetName(dotData)}>Edit</button>
-                                : null
-                            }
-                            <button className='btn btn-success' onClick={(e) => {
-                                window.location.href = "/viewer-quick-display/" + dotData.set_numb + "?return=" + window.location.href
-                            }} >View</button>
-                        </div>
-                    </li>
-
-                )
-            }
-            </ul>
-            </div>
-            <br />
-            <div className='d-flex flex-row justify-content-between align-items-center' style={{width:"100%", padding:"1rem"}}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography>High School</Typography>
-                    <Switch
-                        checked={userOptions.basicUseCollegeHash}
-                        onChange={(e) => setUseCollegeHash(e.target.checked)}
-                        inputProps={{ 'aria-label': 'controlled' }}
-                        size='xl'
-                    />
-                    <Typography>College</Typography>
-                </Stack>
-
-                <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Normal</button>
-            </div>
-            
-            <UpdatePrompt
-				show={showUpdatePrompt}
-				setShow={setShowUpdatePrompt}
-				update={changeTimestampsToNewUpdate}
+        <div className="d-flex flex-column justify-content-center align-items-center fullScreen">
+			<AppNavBar 
+				token={token} 
+				loggedIn={token !== "" && token !== undefined} 
+				logout={logout}
+				data={data} 
+				curSet={curSet} 
+				isOffline={isOffline}
+				userData={userData}
 			/>
-		</div>
+
+            <div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
+                <div className="overflow-auto" style={{height: '80vh', width:'min(100%, 800px'}}>
+                <ul className="list-group">
+                {
+                    getOnlyUserDots().map((dotData, index) =>
+                        <li className="list-group-item flex-row justify-content-between d-flex align-items-center" key={index} style={{width:'100%', height:'180px'}}>
+                            <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'30%', height:'100%'}}>
+                                <div style={{width:'100%', height:'60%', fontSize:'32px'}} className='flex-column justify-content-center d-flex align-items-center'>
+                                    {sets[index].set_numb}
+                                </div>
+                                <div style={{width:'100%', height:'40%', textAlign:'center'}} className='flex-column justify-content-center d-flex align-items-center'>
+                                    {sets[index].set_name}
+                                </div>
+                            </div>
+                            <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'65%'}}>
+                                <div className='mb-2'>{getDotText1(dotData.dot)}</div>
+                                <div className='mb-2'>{getDotText2(dotData.dot)}</div>
+                                <div className='mb-2'>For {dotData.counts} counts</div>
+                                <div className='mb-2'>Measures: {dotData.measure}</div>
+                            </div>
+                            <div style={{right: "1rem", bottom: "1rem", position: "absolute"}}>    
+                                {
+                                    userData.is_section_leader ?
+                                    <button className='btn btn-secondary' onClick={(e) => openEditSetName(dotData)}>Edit</button>
+                                    : null
+                                }
+                                <button className='btn btn-success' onClick={(e) => {
+                                    window.location.href = "/viewer-quick-display/" + dotData.set_numb + "?return=" + window.location.href
+                                }} >View</button>
+                            </div>
+                        </li>
+
+                    )
+                }
+                </ul>
+                </div>
+                <br />
+                <div className='d-flex flex-row justify-content-between align-items-center' style={{width:"100%", padding:"1rem"}}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography>High School</Typography>
+                        <Switch
+                            checked={userOptions.basicUseCollegeHash}
+                            onChange={(e) => setUseCollegeHash(e.target.checked)}
+                            inputProps={{ 'aria-label': 'controlled' }}
+                            size='xl'
+                        />
+                        <Typography>College</Typography>
+                    </Stack>
+
+                    <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Normal</button>
+                </div>
+                
+                <UpdatePrompt
+                    show={showUpdatePrompt}
+                    setShow={setShowUpdatePrompt}
+                    update={changeTimestampsToNewUpdate}
+                />
+            </div>
+        </div>
     );
 }
 
