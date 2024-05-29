@@ -82,7 +82,7 @@ const AudioPlayer = (props) => {
         const curCount = parseInt(curTime / msInCount);
 
         return <div className='flex-row justify-content-center d-flex align-items-center' style={{height: '10%', width: '100%'}}>
-            {`${curCount + 1}/${counts}`}
+            {`${curCount}/${counts}`}
         </div>;
     }
 
