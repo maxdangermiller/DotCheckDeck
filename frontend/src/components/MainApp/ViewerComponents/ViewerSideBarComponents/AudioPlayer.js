@@ -10,13 +10,89 @@ const AudioPlayer = (props) => {
     const {
         curPlayTime, setCurPlayTime, audio, 
         audioPlaying, setAudioPlaying, updateSetBasedOnAudioTime, 
-        handelSetBtnControls, sets, curSet
+        handelSetBtnControls, sets, curSet, userOptions
     } = props;
 
+    /**
+     * Get if the user has selected counts display mode
+     * @returns {boolean} If the display mode is counts
+     */
+    const isCountsMode = () => {
+        return userOptions["displayMode"] === 1;
+    }
+
+    /**
+     * Get Current Set Display
+     * @returns {ReactComponent} Cur Set Number in span
+     */
+    const getCurSetDisplay = () => {
+        if (isCountsMode() && curSet < sets.length) {
+            return (
+                <span 
+                    style={{
+                        width: "25%", 
+                        textAlign: "center", 
+                        fontSize: "1rem", 
+                        fontFamily: "var(--bs-body-font-family)"
+                    }}
+                >
+                    {sets[curSet].set_numb}
+                </span>
+            );
+        }
+        return null;
+    }
+    /**
+     * Get Next Set Display
+     * @returns {ReactComponent} Next Set Number in span
+     */
+    const getNextSetDisplay = () => {
+        if (isCountsMode()) {
+            if (curSet + 1 < sets.length) {
+                return (
+                    <span 
+                        style={{
+                            width: "25%", 
+                            textAlign: "center", 
+                            fontSize: "1rem", 
+                            fontFamily: "var(--bs-body-font-family)"
+                        }}
+                    >
+                        {sets[curSet + 1].set_numb}
+                    </span>
+                );
+            }
+            return <span>END</span>
+        }
+        return null;
+    }
+
+    const getCurCountDisplay = () => {
+        if (!isCountsMode() || sets.length < curSet || sets[curSet] === undefined) {
+            return null;
+        }
+
+        const start_time_code = sets[curSet].start_time_code;
+        const end_time_code = sets[curSet].end_time_code;
+        const counts = sets[curSet].counts;
+
+        const curTime = curPlayTime * 1000 - start_time_code;
+        const length = end_time_code - start_time_code;
+        const msInCount = length / counts;
+        const curCount = parseInt(curTime / msInCount);
+
+        return <div className='flex-row justify-content-center d-flex align-items-center' style={{height: '10%', width: '100%'}}>
+            {`${curCount + 1}/${counts}`}
+        </div>;
+    }
 
     return (
         <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
+            {getCurCountDisplay()}
             <div className='flex-row justify-content-center d-flex align-items-center mb-2' style={{height: '30%', width: '100%'}}>
+                {
+                    getCurSetDisplay()
+                }
                 {
                     audio !== null                   
                     ? <AudioProgressBar 
@@ -26,8 +102,13 @@ const AudioPlayer = (props) => {
                         isPlaying={audioPlaying} 
                         setIsPlaying={setAudioPlaying}
                         updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
+                        isCountsMode={isCountsMode()}
+                        curSetInfo={sets[curSet]}
                     />
                     : null
+                }
+                {
+                    getNextSetDisplay()
                 }
             </div>
             <div className='flex-row justify-content-between d-flex align-items-center mb-2' style={{width: "90%"}}>
@@ -36,7 +117,7 @@ const AudioPlayer = (props) => {
                 <button 
                     type="button" 
                     className='customViewerSideBarBtn backwardBtn'
-                    onClick={() => handelSetBtnControls(curSet - 1)}
+                    onClick={() => handelSetBtnControls(-1)}
                     disabled={curSet > 0 ? false : true}
                 ><LeftArrow height="100%" fill="currentColor"/></button>
 
@@ -45,7 +126,7 @@ const AudioPlayer = (props) => {
                 <button 
                     type="button" 
                     className='customViewerSideBarBtn forwardBtn'
-                    onClick={() => handelSetBtnControls(curSet + 1)}
+                    onClick={() => handelSetBtnControls(1)}
                     disabled={sets !== null && curSet < sets.length - 1 ? false : true}
                 ><RightArrow height="100%" fill="currentColor"/></button>
             </div>

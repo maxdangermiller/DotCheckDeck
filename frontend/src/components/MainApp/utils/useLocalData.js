@@ -196,7 +196,7 @@ function useLocalData(isOffline) {
 					}
 				}
 
-				console.log(parsedData.length, sets.length)
+				// console.log(parsedData.length, sets.length)
 				// console.log("Trying to use local Data", parsedData.length, sets.length)
 				if (parsedData.length < sets.length || sets.length === 0) {
 					return false;

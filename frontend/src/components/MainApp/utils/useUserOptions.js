@@ -10,8 +10,10 @@ const DEFAULT_USER_OPTIONS = {
 	"moveSpeed": 10, "useActualSetLength": false,
 	"dimOtherUsers": false, "showCollegeHash": true,
 	"followingUser": false, "useCollegeHash": false,
-	"basicUseCollegeHash": false, "displayMode": "sets"
+	"basicUseCollegeHash": false, "displayMode": 0
 };
+
+// Display Mode: 0="sets" 1="counts"
 
 function useUserOptions(userData) {
     const [userOptions, setUserOptions] = useState(DEFAULT_USER_OPTIONS);

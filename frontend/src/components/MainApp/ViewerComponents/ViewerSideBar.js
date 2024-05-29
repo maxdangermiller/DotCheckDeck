@@ -51,6 +51,15 @@ const ViewerSideBar = (props) => {
 		setUserOptions({...userOptions, "followingUser": value});
 	}
 
+    const setDisplayMode = (cur_value) => {
+        if (cur_value === 0) {
+            setUserOptions({...userOptions, "displayMode": 1});
+        }
+        else {
+            setUserOptions({...userOptions, "displayMode": 0});
+        }
+    }
+
 	const getSetFollowingUserBtnColor = () => {
 		if (userOptions.followingUser) {
 			return "#5130b8";
@@ -59,14 +68,14 @@ const ViewerSideBar = (props) => {
 	}
 
     const getDisplayMode = () => {
-        if (userOptions["displayMode"] === "sets") {
-            return "sets";
+        if (userOptions["displayMode"] === 0) {
+            return 0;
         }
-        if (userOptions["displayMode"] === "counts") {
-            return "counts";
+        if (userOptions["displayMode"] === 1) {
+            return 1;
         }
         // If it gets to here it must be either undefined or invalid
-        return "sets";
+        return 0;
     }
 
     let setName = "";
@@ -92,6 +101,7 @@ const ViewerSideBar = (props) => {
                     </input>
                     <h1 className='viewerSideBarNameField'>{setName}</h1>
                 </div>
+
                 <AudioPlayer 
                     curPlayTime={curPlayTime}
                     setCurPlayTime={setCurPlayTime}
@@ -102,6 +112,7 @@ const ViewerSideBar = (props) => {
                     handelSetBtnControls={handelSetBtnControls}
                     sets={sets}
                     curSet={curSet}
+                    userOptions={userOptions}
                 />
 
                 <div className='optionsDiv'>
@@ -117,10 +128,10 @@ const ViewerSideBar = (props) => {
                         <button 
                             type="button" 
                             className='customViewerSideBarBtn'
-                            onClick={() => {}}
+                            onClick={() => setDisplayMode(getDisplayMode())}
                         >
                             {
-                                getDisplayMode() === "sets" ?
+                                getDisplayMode() === 0 ?
                                 <DisplayModeIconSets height="100%"/>
                                 : <DisplayModeIconCounts height="100%"/>
                             }

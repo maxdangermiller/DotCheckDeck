@@ -540,20 +540,56 @@ const Viewer = (props) => {
 
     /**
      * Change Current Set Index to Supplied Value
-     * @param {Integer} x set index
+     * @param {Integer} x direction (either -1 or 1)
      */
 	const handelSetBtnControls = (x) => {
-		if (x >= 0 && x < sets.length) {
+		if (isCountsMode()) {
+			const start_time_code = sets[curSet].start_time_code;
+			const end_time_code = sets[curSet].end_time_code;
+			const counts = sets[curSet].counts;
+
+			if (counts === 0){
+				audio.currentTime = sets[curSet + x]["start_time_code"] / 1000;
+				setCurPlayTime(sets[curSet + x]["start_time_code"] / 1000);
+				setCurSet(curSet + x);
+				return;
+			}
+
+			const curTime = curPlayTime * 1000 - start_time_code;
+			const length = end_time_code - start_time_code;
+			const msInCount = length / counts;
+			const curCount = parseInt(curTime / msInCount);
+
+            const newMSTime = (curCount + x) * msInCount + start_time_code + 1;
+			const newCount = parseInt(newMSTime / msInCount);
+
+			console.log(`${curCount}/${counts} (${curTime}) > ${newCount}/${counts} (${newMSTime})`);
+
+			if (curSet === sets.length - 1 && newMSTime > end_time_code) {
+				return;
+			}
+
+			updateSetBasedOnAudioTime(newMSTime);
+			setCurPlayTime(newMSTime / 1000);
+			audio.currentTime = newMSTime / 1000;
+
+			return;
+		}
+
+		const setIndex = curSet;
+		
+		// IS IN SET DISPLAY MODE
+		if (setIndex + x >= 0 && setIndex + x < sets.length) {
 			if (!audioPlaying) {
-				changeCurSet(x);
+				changeCurSet(setIndex + x);
 			} 
 
-            if (audio !== null && sets[x]["start_time_code"] !== null) {
-				audio.currentTime = sets[x]["start_time_code"] / 1000;
-				setCurPlayTime(sets[x]["start_time_code"] / 1000);
-				console.log("Changing cur play time to " + sets[x]["start_time_code"] / 1000)
+            if (audio !== null && sets[setIndex + x]["start_time_code"] !== null) {
+				audio.currentTime = sets[setIndex + x]["start_time_code"] / 1000;
+				setCurPlayTime(sets[setIndex + x]["start_time_code"] / 1000);
+				console.log("Changing cur play time to " + sets[setIndex + x]["start_time_code"] / 1000)
 			} else {
-				console.log("Something is wrong with audio or start_time_code for this set!", audio, sets[x])
+				console.log("Something is wrong with audio or start_time_code for this set!", audio, sets[setIndex + x])
 			}
 		}
 	}
@@ -567,7 +603,19 @@ const Viewer = (props) => {
 		event.preventDefault();
 		for (let x = 0; x < sets.length; x++) {
 			if (sets[x]["set_numb"].toLowerCase() === event.target.value.toLowerCase()) {
-				handelSetBtnControls(x);
+				
+				if (!audioPlaying) {
+					changeCurSet(x);
+				} 
+	
+				if (audio !== null && sets[x]["start_time_code"] !== null) {
+					audio.currentTime = sets[x]["start_time_code"] / 1000;
+					setCurPlayTime(sets[x]["start_time_code"] / 1000);
+					console.log("Changing cur play time to " + sets[x]["start_time_code"] / 1000)
+				} else {
+					console.log("Something is wrong with audio or start_time_code for this set!", audio, sets[x])
+				}
+
                 setInput.current.blur();
 				return;
 			}
@@ -582,6 +630,7 @@ const Viewer = (props) => {
      * @returns {Boolean} is the set within the curTime
      */
     const isSetWithinTime = (set, curTime) => {
+		// console.log("Checking if it's already within time: ", curTime)
         if (set["start_time_code"] !== null && set["end_time_code"] !== null) {
             let startTime = set["start_time_code"];
             let endTime = set["end_time_code"];
@@ -631,18 +680,36 @@ const Viewer = (props) => {
 	}
 
 	/**
+     * Get if the user has selected counts display mode
+     * @returns {boolean} If the display mode is counts
+     */
+    const isCountsMode = () => {
+        return userOptions["displayMode"] === 1;
+    }
+
+	/**
 	 * With a time code, sync the set
 	 * @param {Integer} time_code in milliseconds!
 	 */
 	const updateSetBasedOnAudioTime = (time_code) => {
+		const setsWithinTime = isSetWithinTime(sets[curSet], time_code);
+
+		if (isCountsMode() && setsWithinTime) {
+			return;
+		} 
+
+		// Must be in sets display mode or the next set in counts mode
+
 		// Find if we're within the current set
-        if (isSetWithinTime(sets[curSet], time_code)) {
+        if (setsWithinTime) {
             return;
         }
 
+		// console.log("New Time of: ", time_code);
+
         let start = 0;
 
-        // If the msElapsed is already past the current set, we know it must be past in the array
+        // If the msElapsed is already past the current set, we know it must be past the current set in the array
         if (sets[curSet]["end_time_code"] < time_code) {
             start = curSet;
         }

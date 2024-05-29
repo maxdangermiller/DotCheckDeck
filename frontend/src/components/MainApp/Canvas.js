@@ -61,6 +61,14 @@ const Canvas = (props) => {
     } = canvasConversions(userOptions);
 
     /**
+     * Get if the user has selected counts display mode
+     * @returns {boolean} If the display mode is counts
+     */
+    const isCountsMode = () => {
+        return userOptions["displayMode"] === 1;
+    }
+
+    /**
      * Main Rendering Function
      */
     useEffect(() => {
@@ -311,7 +319,9 @@ const Canvas = (props) => {
                     // console.log(followDot, dot)
                     if (followDot !== undefined && followDot.userID === dot.userID) {
                         followDotCords = {x: x, y: y};
-                        drawUserDialogue(x, y, dot);
+                        if (!userOptions.showMovementBrackets) {
+                            drawUserDialogue(x, y, dot);
+                        }
                     }
                 }
 
@@ -334,7 +344,9 @@ const Canvas = (props) => {
                 if (isHighlighted) {
                     if (followDot !== undefined && followDot.userID === dot.userID) {
                         followDotCords = {x: x, y: y};
-                        drawUserDialogue(x, y, dot);
+                        if (!userOptions.showMovementBrackets) {
+                            drawUserDialogue(x, y, dot);
+                        }
                     }
                 }
             }
@@ -660,11 +672,11 @@ const Canvas = (props) => {
             // This is so if we're playing the show, the sets don't overlap
             const MARGIN = 100;
 
-            if (drawInfo.length !== 0 && curSet !== lastSetID && drawInfo[curSet] !== undefined) {
+            if (drawInfo.length !== 0 && (curSet !== lastSetID || isCountsMode()) && drawInfo[curSet] !== undefined) {
                 let startTime = animationStartTime;
-                let curActualTime = audioPlaying ? curPlayTime * 1000 : Date.now();
+                let curActualTime = (audioPlaying || isCountsMode()) ? curPlayTime * 1000 : Date.now();
                 
-                if (audioPlaying) {
+                if (audioPlaying || isCountsMode()) {
                     startTime = drawInfo[curSet]["start_time_code"];
                     curActualTime = curPlayTime * 1000;
                 } else if (animationStartTime === 0) {
@@ -679,7 +691,7 @@ const Canvas = (props) => {
                 // console.log(curActualTime, animationStartTime)
 
                 // Find what the API says the duration is
-                if (audioPlaying || userOptions.useActualSetLength) {
+                if (audioPlaying || isCountsMode() || userOptions.useActualSetLength) {
                     let setStartTime = drawInfo[curSet]["start_time_code"];
                     let setEndTime = drawInfo[curSet]["end_time_code"];
                     if (setStartTime !== null && setEndTime !== null) {
@@ -700,6 +712,10 @@ const Canvas = (props) => {
 
                 let curSetData = drawInfo[curSet].dots;
                 let lastSetData = drawInfo[lastSetID].dots;
+
+                if (isCountsMode() && curSet > 0) {
+                    lastSetData = drawInfo[curSet - 1].dots;
+                }
 
                 if (curSet > lastSetID) { direction = 1;  }
                 else                    { direction = -1; }
@@ -837,9 +853,10 @@ const Canvas = (props) => {
 
             let isNewFrame = lastSetID !== curSet && animationDirection !== 0 && !loading  && data.length !== 0;
             let isRerender = hadResize && !loading && data.length !== 0 && data !== drawInfo;
+            
 
             // If it is an animation, draw the animation
-            if (isAnimation) {
+            if (isAnimation || (isCountsMode() && lastSetID !== -1 && curSet > 0)) {
                 // console.log("DRAWING ANIMATION between "+ lastSetID + " and " + curSet);
                 // Sometimes there's problems
                 try {
@@ -862,21 +879,18 @@ const Canvas = (props) => {
                 let newDots = drawDots(data, curSet);
                 setDots(newDots)
 
-                if (hoverDot.x !== undefined) {
+                if (hoverDot.x !== undefined && !userOptions.showMovementBrackets) {
                     drawUserDialogue(hoverDot.x, hoverDot.y, hoverDot);
                 }
             }
 
             // If it isn't a new frame, used a buffered frame. This is so we don't set vars and overwrite things.
             else if (drawInfo.length > curSet && drawInfo[curSet] !== undefined)  {
-                if (lastSetID !== curSet) {
-                    console.log(lastSetID !== curSet, animationDirection !== 0, !loading, data.length !== 0);
-                }
                 // console.log(curSet, lastSetID)
                 let newDots = drawDots(drawInfo, curSet);
                 setDots(newDots)
 
-                if (hoverDot.x !== undefined) {
+                if (hoverDot.x !== undefined && !userOptions.showMovementBrackets) {
                     drawUserDialogue(hoverDot.x, hoverDot.y, hoverDot);
                 }
             }

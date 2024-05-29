@@ -24,7 +24,7 @@ const UserInfoDialogue = (props) => {
 
     return (
         <div 
-            className='d-flex flex-column justify-content-center align-items-center'
+            className='d-flex flex-column justify-content-center align-items-center noselect'
             style={{
                 position: "absolute", 
                 top: top, 
