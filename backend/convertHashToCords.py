@@ -170,4 +170,3 @@ def OrderByDistance(cords):
 
     test = [np.polyfit(x[i:(i+2)], y[i:(i+2)],2) for i in range(len(x)-1)]
     print(len(test))
-

@@ -1,7 +1,5 @@
 from email.policy import default
 from flask import Flask, request, jsonify, send_from_directory, session, abort, redirect, render_template
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
@@ -11,25 +9,32 @@ from flask_admin.contrib.sqla import ModelView
 from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, unset_jwt_cookies, jwt_required, \
 	JWTManager, create_refresh_token
 import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
 from azure.communication.email import EmailClient
 import json
 import os
 import sys
-import string
-import random
 import time
-import math
 from cryptography.fernet import Fernet
 
 import storage
+from database import ma, db
+
+from database.dot import Dot
+from database.dotIcon import DotIcon
+from database.setName import SetName
+from database.set import Set
+from database.bandSection import BandSection
+from database.showUser import ShowUser
+from database.user import User
+from database.show import Show
+from database.school import School
+from database.schemas import DotSchema, DotIconSchema, SetNameSchema, SetSchema, BandSectionSchema, ShowUserSchema, UserSchema, ShowSchema, SchoolSchema
+
 
 # TODO: Redis Queue
 # from rq import Queue
 # from rq.job import Job
 # from worker import conn
-
-from cache import regions, CacheableMixin, query_callable
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -67,9 +72,9 @@ dcd_admin
 fS3StNPK4LW269f
 """
 
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
-ma = Marshmallow(app)
+ma.init_app(app)
 api = Api(app)
 jwt = JWTManager(app)
 admin = Admin(app, name='Dot Check Deck', template_mode='bootstrap3')
@@ -165,433 +170,7 @@ email_client = EmailClient.from_connection_string("endpoint=https://email-parent
 # flask db migrate -m "message"
 # flask db upgrade
 
-def generateUpdateCode() -> int:
-	return random.randint(0, math.pow(2, 31) - 1)	
-
-
-class Dot(CacheableMixin, db.Model):
-	cache_label = "dot"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	set_id = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
-	show_user_id = db.Column(db.Integer, db.ForeignKey('show_user.id'), nullable=False)
-	dot_icon_id = db.Column(db.Integer, db.ForeignKey('dot_icon.id'), nullable=True)
-
-	# Data
-	direction = db.Column(db.String(16))
-	line = db.Column(db.String(16))
-	steps = db.Column(db.Float)
-	side = db.Column(db.Integer)
-	fb_steps = db.Column(db.Float)
-	fb_direction = db.Column(db.String(16))
-	use_hash = db.Column(db.String(32))
-
-	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
-
-	def __repr__(self):
-		return f"Dot({self.show_user_id} ->{self.id})"
-
-	def __str__(self):
-		return f"Dot({self.show_user_id} ->{self.id})"
-
-
-class DotIcon(CacheableMixin, db.Model):
-	cache_label = "dot_icon"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	dots = db.relationship('Dot', cascade="all,delete", backref='dot_icon')
-
-	# Data
-	width_in_steps = db.Column(db.Integer, default=1)
-	hight_in_steps = db.Column(db.Integer, default=1)
-
-	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
-
-	def get_svg_file_path(self) -> str:
-		return f"static/{self.show_id}/{self.id}.svg"
-	
-	def save_svg(self, svg_str: str):
-		with open(self.get_svg_file_path(), "w") as file: 
-			file.write(svg_str)
-
-	def __repr__(self):
-		return f"DotIcon({self.id})"
-
-	def __str__(self):
-		return self.__repr__()
-
-
-class SetName(CacheableMixin, db.Model):
-	cache_label = "set_name"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	set_id = db.Column(db.Integer, db.ForeignKey('set.id'), nullable=False)
-	section_id = db.Column(db.Integer, db.ForeignKey('band_section.id'), nullable=False)
-
-	# Data
-	name = db.Column(db.String(32), default="default")
-
-	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
-
-	def __repr__(self):
-		return f"SetName({self.name})"
-
-	def __str__(self):
-		return f"SetName({self.name})"
-
-
-class Set(CacheableMixin, db.Model):
-	cache_label = "set"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	set_names = db.relationship('SetName', cascade="all,delete", backref='set')
-	dots = db.relationship('Dot', cascade="all,delete", backref='set')
-
-
-	# Data
-	set_numb = db.Column(db.String(8), nullable=False)
-	measure = db.Column(db.String(16))
-	counts = db.Column(db.Integer, nullable=False)
-	total_counts = db.Column(db.Integer, nullable=True, default=0)
-	start_time_code = db.Column(db.Integer)
-	end_time_code = db.Column(db.Integer)
-	showIndex = db.Column(db.Integer, nullable=False, default=-1)
-	notes = db.Column(db.String(256), nullable=True, default="")
-
-	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
-
-	def __repr__(self):
-		return f"Set({self.set_numb})"
-
-	def __str__(self):
-		return f"Set({self.set_numb})"
-
-
-class BandSection(CacheableMixin, db.Model):
-	cache_label = "band_section"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	show_users = db.relationship('ShowUser', cascade="all,delete", backref='band_section')
-	set_names = db.relationship('SetName', cascade="all,delete", backref='band_section')
-
-	# Data
-	name = db.Column(db.String(32), default="default")
-	color_r = db.Column(db.Integer)
-	color_g = db.Column(db.Integer)
-	color_b = db.Column(db.Integer)
-
-	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
-
-	def __repr__(self):
-		return f"BandSection({self.name})"
-
-	def __str__(self):
-		return f"BandSection({self.name})"
-
-
-class ShowUser(CacheableMixin, db.Model):
-	cache_label = "show_user"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_id = db.Column(db.Integer, db.ForeignKey('show.id'), nullable=False)
-	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-	section_id = db.Column(db.Integer, db.ForeignKey('band_section.id'))
-	dots = db.relationship('Dot', cascade="all,delete", backref='show_user')
-
-	# Data
-	symbol = db.Column(db.String(16))
-	label = db.Column(db.String(16))
-	is_section_leader = db.Column(db.Boolean, default=False)
-	is_locked = db.Column(db.Boolean, default=False)
-	is_prop = db.Column(db.Boolean, default=False)
-	is_stationary = db.Column(db.Boolean, default=False)
-
-	# Timestamps
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated_date = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	last_updated = db.Column(db.Integer, default=None, nullable=True, onupdate=generateUpdateCode())
-
-
-	def __repr__(self):
-		return f"ShowUser({self.symbol}{self.label})"
-
-	def __str__(self):
-		return f"ShowUser({self.symbol}{self.label})"
-
-
-class User(CacheableMixin, db.Model):
-	cache_label = "user"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-	show_users = db.relationship('ShowUser', backref='user')
-
-	# Data
-	email = db.Column(db.String(128), unique=True)
-	password_hash = db.Column(db.String(128))
-	first_name = db.Column(db.String(64))
-	last_name = db.Column(db.String(64))
-
-	is_admin = db.Column(db.Boolean, default=False)
-	send_admin_email = db.Column(db.Boolean, default=False)
-
-	activated_date = db.Column(db.DateTime, default=None, nullable=True)
-	created_date = db.Column(db.DateTime, default=datetime.datetime.now, nullable=True)
-	last_updated = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.datetime.now)
-	verified_date = db.Column(db.DateTime, default=None, nullable=True)
-
-	# Methods
-	def set_password(self, password):
-		self.password_hash = generate_password_hash(password)
-
-	def check_password(self, password):
-		return check_password_hash(self.password_hash, password)
-
-	def __repr__(self):
-		return f"User({self.email})"
-
-	def __str__(self):
-		return f"User({self.email})"
-
-
-class Show(CacheableMixin, db.Model):
-	cache_label = "show"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	show_users = db.relationship('ShowUser', cascade="all,delete", backref='show')
-	sets = db.relationship('Set', cascade="all,delete", backref='show')
-	dots = db.relationship('Dot', cascade="all,delete", backref='show')
-	band_sections = db.relationship('BandSection', cascade="all,delete", backref='show')
-	set_names = db.relationship('SetName', cascade="all,delete", backref='show')
-	dot_icons = db.relationship('DotIcon', cascade="all,delete", backref='show')
-	school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-
-	# Data
-	code = db.Column(db.String(8), unique=True)
-	name = db.Column(db.String(256), default="NO NAME")
-
-	is_default = db.Column(db.Boolean, default=True, nullable=False)
-
-	# Tracking database updates
-	last_update = db.Column(db.Integer, default=0, nullable=False)
-	last_set_name_update = db.Column(db.Integer, default=0, nullable=True)
-
-	# GENERATE CODE!!!
-	def generateCode(self) -> str:
-		# TODO: Make sure this is unique so there isn't an error!
-		self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-		# self.code = "12345678"
-		return self.code
-
-	def changeUpdateTime(self):
-		newUpdateCode = generateUpdateCode()
-		print("UPDATE!!!!!!", newUpdateCode)
-		self.last_update = newUpdateCode
-		# addUpdate(self, newUpdateCode)
-	
-	def changeSetNameUpdateTime(self):
-		newUpdateCode = generateUpdateCode()
-		print("UPDATE!!!!!!", newUpdateCode)
-		self.last_set_name_update = newUpdateCode
-	
-	def __repr__(self):
-		return f"Show({self.code})"
-
-	def __str__(self):
-		return f"Show({self.code})"
-
-
-class School(CacheableMixin, db.Model):
-	cache_label = "school"
-	cache_regions = regions
-	query_class = query_callable(regions)
-
-	id = db.Column(db.Integer, primary_key=True)
-
-	# Relationships
-	shows = db.relationship('Show', cascade="all,delete", backref='school')
-	users = db.relationship('User', cascade="all,delete", backref='school')
-
-	show_users = db.relationship('ShowUser', cascade="all,delete", backref='school')
-	sets = db.relationship('Set', cascade="all,delete", backref='school')
-	dots = db.relationship('Dot', cascade="all,delete", backref='school')
-	dot_icons = db.relationship('DotIcon', cascade="all,delete", backref='school')
-	band_sections = db.relationship('BandSection', cascade="all,delete", backref='school')
-	set_names = db.relationship('SetName', cascade="all,delete", backref='school')
-
-
-	# Data
-	name = db.Column(db.String(256))
-	email = db.Column(db.String(128))
-
-	def __repr__(self):
-		return f"School({self.name})"
-
-	def __str__(self):
-		return f"School({self.name})"
-
-
 # Serializers
-class DotIconSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		"""
-		fields = (
-			"id", "show_id", "set_id", "show_user_id", "direction", "line",
-			"steps", "side", "fb_steps", "fb_direction", "use_hash"
-		)
-		"""
-
-		model = DotIcon
-		include_fk = True
-		load_instance = True
-
-
-class DotSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		"""
-		fields = (
-			"id", "show_id", "set_id", "show_user_id", "direction", "line",
-			"steps", "side", "fb_steps", "fb_direction", "use_hash"
-		)
-		"""
-
-		model = Dot
-		include_fk = True
-		load_instance = True
-	
-	dot_icon = ma.Nested(DotIconSchema)
-
-
-class SetNameSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		# fields = ("id", "name", "setID", "schoolID", "sectionID")
-		model = SetName
-		include_fk = True
-		load_instance = True
-
-
-class SetSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		model = Set
-		include_fk = True
-		load_instance = True
-	
-	setNames = ma.Nested(SetNameSchema)
-
-
-class ShowSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		model = Show
-		include_fk = True
-		load_instance = True	
-
-
-class SchoolSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		model = School
-		include_fk = True
-		load_instance = True
-		load_relationships = True
-
-
-class BandSectionSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		model = BandSection
-		include_fk = True
-		load_instance = True
-		load_relationships = True
-
-	set_names = ma.Nested(SetNameSchema)
-
-
-class ShowUserSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		model = ShowUser
-		include_fk = True
-		load_instance = True
-		load_relationships = True
-	
-	show = ma.Nested(ShowSchema)
-
-
-class UserSchema(ma.SQLAlchemyAutoSchema):
-	class Meta:
-		"""
-		fields = (
-			"id", "symbol", "label", 
-			"firstName", "lastName", "email", 
-			"is_admin", "is_section_leader", "section"
-			"activated_date", "created_date", "last_updated"
-		)
-		"""
-		model = User
-		include_fk = True
-		include_relationships = True
-		load_instance = True
-
-		exclude = ("password_hash",)
-	
-	show_users = ma.Nested(ShowUserSchema, many=True)
-
-
 dot_schema = DotSchema()
 dots_schema = DotSchema(many=True)
 set_schema = SetSchema()
@@ -606,7 +185,6 @@ school_schema = SchoolSchema()
 band_section_schema = BandSectionSchema()
 band_sections_schema = BandSectionSchema(many=True)
 set_names_schema = SetNameSchema(many=True)
-
 
 class SecureModelView(ModelView):
 	def is_accessible(self):
@@ -633,7 +211,7 @@ admin.add_view(SecureModelView(BandSection, db.session))
 admin.add_view(ShowModelView(Show, db.session))
 admin.add_view(SchoolModelView(School, db.session))
 
-
+# Admin Routes
 @app.route('/admin-logout', methods=["GET"])
 def admin_logout():
 	session.clear()
