@@ -232,7 +232,12 @@ const Canvas = (props) => {
 
                 if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let img = new Image();
+
+                    img.onerror = function() { window.location.href = "/login" };
+                    img.onabort = function() { window.location.href = "/login" };
+
                     img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
+
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                     let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
@@ -304,6 +309,10 @@ const Canvas = (props) => {
 
                 if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let img = new Image();
+
+                    img.onerror = function() { window.location.href = "/login" };
+                    img.onabort = function() { window.location.href = "/login" };
+
                     img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                     let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
@@ -331,6 +340,10 @@ const Canvas = (props) => {
 
                 if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let img = new Image();
+
+                    img.onerror = function() { window.location.href = "/login" };
+                    img.onabort = function() { window.location.href = "/login" };
+
                     img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                     let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
@@ -596,6 +609,10 @@ const Canvas = (props) => {
                         // If it's an icon dot
                         else if (dot.dot.dot_icon_id !== null && !isOffline) {
                             let img = new Image();
+
+                            img.onerror = function() { window.location.href = "/login" };
+                            img.onabort = function() { window.location.href = "/login" };
+
                             img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                             let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                             let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
@@ -613,6 +630,10 @@ const Canvas = (props) => {
                     // If it's an icon dot
                     else if (dot.dot.dot_icon_id !== null && !isOffline) {
                         let img = new Image();
+
+                        img.onerror = function() { window.location.href = "/login" };
+                        img.onabort = function() { window.location.href = "/login" };
+
                         img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                         let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                         let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
@@ -629,6 +650,10 @@ const Canvas = (props) => {
                 
                 else if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let img = new Image();
+
+                    img.onerror = function() { window.location.href = "/login" };
+                    img.onabort = function() { window.location.href = "/login" };
+
                     img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                     let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
