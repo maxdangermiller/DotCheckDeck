@@ -62,7 +62,7 @@ class Dot(CacheableMixin, db.Model):
 		output += (self.fbDirToBits() << 2)
 		output += self.hashToBits()
 
-		print(bin(output))
+		# print(bin(output))
 
 		return output
 	
@@ -185,7 +185,7 @@ class Dot(CacheableMixin, db.Model):
 		"""
 		
 		stepsModified = int(steps) << 4
-		decimal = int(steps) % 1
+		decimal = steps % 1
 		# System.out.println(steps + " " + stepsModified + " " + decimal)
 		if (self.compareDecimal(decimal, 0.1)):
 			return stepsModified + 1

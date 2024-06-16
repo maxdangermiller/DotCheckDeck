@@ -1101,6 +1101,7 @@ class GetSectionsResource(Resource):
 
 
 # Authorize a school code (used by activate account)
+# TODO: Refactor to show code
 class SchoolCodeAuthResource(Resource):
 	def post(self):
 		# TODO: Refactor to "show_code"
@@ -2510,6 +2511,9 @@ class PropsListResource(Resource):
 		return show_users_schema.dump(showUsers), 200
 
 
+# NEW DATA HANDLING
+
+
 def getDotLinks(sets, showUser: ShowUser):
 	dots = list()
 
@@ -2697,18 +2701,67 @@ def getShowData(show: Show):
 		})
 
 	out["show_users"] = showUsersOut
+
+	print("SAVING NEW CACHE")
+	with open(f"cache/dots-new/{show.id}.json", "w") as outfile:
+		json.dump(out, outfile, indent=4)
+
 	
 	return out
+
+# TODO: Audit
+def auditCacheData(show: Show):
+	pass
+
+def getBufferedShowUsers(data: dict, section: int, dataLoadSize: int) -> list:
+	numShowUsers = len(data["show_users"])
+	dataSectionSize = int(numShowUsers / dataLoadSize)
+	startIndex = 0 + section * dataSectionSize
+	endIndex = startIndex + dataSectionSize
 	
+	# Make sure the end won't give an out of bound error
+	if endIndex > numShowUsers:
+		endIndex = numShowUsers
+
+	# var to store all of the sets
+	out = list()
+	
+	for i in range(startIndex, endIndex):
+		# TODO: Audit somewhere else
+
+		out.append(data["show_users"][i])
+
+	return out
+
+
+def getBufferedDotsNew(show: Show, section: int, curDatabaseVersion: int):
+	DATA_LOAD_SIZE = 8
+
+	try:
+		with open(f"cache/dots-new/{show.id}.json", "r") as file:
+			data = json.load(file)
+
+			output = {}
+
+			output["sets"] = data["sets"]
+			output["band_sections"] = data["band_sections"]
+			output["show_users"] = getBufferedShowUsers(data, section, DATA_LOAD_SIZE)
+
+				
+			return output
+	except:
+		print("Error")
+		return getShowData(show)
+
+
 
 class APIGetData(Resource):
 	@jwt_required()
 	def get(self):
 		showCode = request.args.get('show_code', None)
-		dataSection = int(request.args.get('data_section', 1))
-		BUFFER_SIZE = 4
+		dataSection = int(request.args.get('data_section', 0))
 
-		# REQUIRE A SCHOOL CODE
+		# REQUIRE A SHOW CODE
 		if showCode is None:
 			return "Missing Show Code", 404
 
@@ -2721,7 +2774,7 @@ class APIGetData(Resource):
 		
 		curDatabaseVersion = show.last_update
 
-		return getShowData(show), 200
+		return getBufferedDotsNew(show, dataSection, curDatabaseVersion), 200
 	
 
 
