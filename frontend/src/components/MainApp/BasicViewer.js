@@ -26,7 +26,7 @@ let lastCheckedVersionTime = 0;
 const MIN_TIMESTAMP_INTERVAL = 120000;  // 2 minutes
 
 const BasicViewer = (props) => {
-    const {token, showCode, setIsBasic, userData, isOffline, logout} = props;
+    const {token, showCode, userData, isOffline, logout} = props;
 
     const [curSet, setCurSet]  = useState(0);                                                   // Store current index of the show
 	const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);                            // Show Prompt To Ask If We Should Update
@@ -604,7 +604,7 @@ const BasicViewer = (props) => {
                         <Typography>College</Typography>
                     </Stack>
 
-                    <button className='btn btn-primary' onClick={(e) => setIsBasic(false)}>Normal</button>
+                    <button className='btn btn-primary' onClick={(e) => {window.location.href = "/app"}}>Normal</button>
                 </div>
                 
                 <UpdatePrompt

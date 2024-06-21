@@ -66,6 +66,24 @@ const AppNavBar = (props) => {
 		return false;
 	}
 
+    const getAppInfoDisplay = () => {
+        if (window.location.pathname === "/app/basic") {
+            return (
+                <Nav className="ml-auto">
+                    <div className='customNavbarText'>BASIC MODE</div>
+                </Nav>
+            );
+        }
+        
+        // Normal
+        return (
+            <Nav className="ml-auto">
+                <div className='customNavbarText'>Measure: {getCurrentMeasure()}</div>
+                <div className='customNavbarText'>Counts: {getCurrentCounts()}</div>
+            </Nav>
+        );
+    }
+
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); 
 
 	return (
@@ -82,10 +100,9 @@ const AppNavBar = (props) => {
 
                     <Navbar.Text style={{fontWeight: "bold", paddingRight: "12px"}}>|</Navbar.Text>
 				</Nav>
-                <Nav className="ml-auto">
-                    <div className='customNavbarText'>Measure: {getCurrentMeasure()}</div>
-                    <div className='customNavbarText'>Counts: {getCurrentCounts()}</div>
-                </Nav>
+                
+                {getAppInfoDisplay()}
+
 				<Nav className="mr-auto">
                     <Navbar.Text style={{fontWeight: "bold", paddingRight: "12px"}}>|</Navbar.Text>
                     <Nav.Link onClick={logout} href="#logout">Logout</Nav.Link>

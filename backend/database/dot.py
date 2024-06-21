@@ -186,7 +186,7 @@ class Dot(CacheableMixin, db.Model):
 		
 		stepsModified = int(steps) << 4
 		decimal = steps % 1
-		# System.out.println(steps + " " + stepsModified + " " + decimal)
+
 		if (self.compareDecimal(decimal, 0.1)):
 			return stepsModified + 1
 		
@@ -203,6 +203,7 @@ class Dot(CacheableMixin, db.Model):
 			return stepsModified + 5
 		
 		if (self.compareDecimal(decimal, 0.5)):
+			# print(f"Steps: {steps}, Steps Shifted: {stepsModified}, Decimal: {decimal}, {stepsModified + 6}")
 			return stepsModified + 6
 		
 		if (self.compareDecimal(decimal, 0.6)):
