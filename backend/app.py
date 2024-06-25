@@ -1415,8 +1415,8 @@ def getAllDotInfoForSet(show, set):
 			
 		r, g, b = getSectionColor(showUserObj)
 
-		print("Pos Number: ", dot.posToBits())
-		dot.posFromBits(dot.posToBits())
+		# print("Pos Number: ", dot.posToBits())
+		# dot.posFromBits(dot.posToBits())
 
 		dotCords.append({
 			'dot': dot_schema.dump(dot),

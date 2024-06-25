@@ -62,7 +62,6 @@ class Dot(CacheableMixin, db.Model):
 		output += (self.fbDirToBits() << 2)
 		output += self.hashToBits()
 
-		# print(bin(output))
 
 		return output
 	
@@ -108,7 +107,7 @@ class Dot(CacheableMixin, db.Model):
 		Return: two bits 0-2 representing the definition
 		"""
 		
-		if (self.direction == "On"):
+		if (self.direction == "On" or self.direction == ""):
 			return 0
 		
 		if (self.direction == "Inside"):
@@ -141,7 +140,7 @@ class Dot(CacheableMixin, db.Model):
 		argument -- description
 		Return: four bits 0-10
 		"""
-		
+
 		return int(int(self.line) / 5)
 
 	def lineFromBits(self, bits):
@@ -284,7 +283,8 @@ class Dot(CacheableMixin, db.Model):
 		Keyword arguments:
 		Return: 1 bit representing the side
 		"""
-		
+		if (self.side == 0):
+			return 0
 	
 		return self.side - 1
 	

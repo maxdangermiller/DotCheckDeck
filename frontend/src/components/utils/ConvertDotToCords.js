@@ -16,10 +16,78 @@ const side2Convert = (line) => {
  */
 const convertDotToCords = (dot, width, height) => {
     // Point to the new method
-    return posFromBits(dot.dot_pos, width, height);
+    return posFromBits(dot.dot_pos, width, height, dot.dot, dot.userLabel);
 }
 
 // NEW CONVERSIONS
+
+
+const roundToGoodNum = (num) => {
+    let integer = parseInt(num);
+    let deci = Math.round((num % 1) * 100);
+    
+    // 0
+    if (deci === 0) {
+        return integer + 0;
+    }
+
+    // 0-0.1
+    if (deci <= 10) {
+        return integer + 0.1;
+    }
+
+    // 0.1-0.2
+    if (deci <= 20) {
+        return integer + 0.2;
+    }
+
+    // 0.2-0.25
+    if (deci <= 25) {
+        return integer + 0.25;
+    }
+
+    // 0.25-0.3
+    if (deci <= 30) {
+        return integer + 0.3;
+    }
+
+    // 0.3-0.4
+    if (deci <= 40) {
+        return integer + 0.4;
+    }
+    
+    // 0.4-0.5
+    if (deci <= 50) {
+        return integer + 0.5;
+    }
+
+    // 0.5-0.6
+    if (deci <= 60) {
+        return integer + 0.6;
+    }
+
+    // 0.6-0.7
+    if (deci <= 70) {
+        return integer + 0.7;
+    }
+
+    // 0.7-0.75
+    if (deci <= 75) {
+        return integer + 0.75;
+    }
+
+    // 0.75-0.8
+    if (deci <= 80) {
+        return integer + 0.8;
+    }
+
+    // 0.8-0.9
+    if (deci <= 90) {
+        return integer + 0.9;
+    }
+
+    return integer + 1;
+} 
 
 
 const cordsToDot = (x, y, width, height, baseDot) => {
@@ -27,13 +95,15 @@ const cordsToDot = (x, y, width, height, baseDot) => {
     const NUM_LINES = 20;
     const YARDS_BETWEEN_LINES = 5;
     const STEPS_BETWEEN_LINES = 8;
+
+    const RATIO_BETWEEN_HASHES = 1/3;
     
     // Output Info
     let dir = "";
     let line = -1;
     let steps = 0;
     let side = -1;
-    let fbSteps = -1;
+    let fbSteps = 1;
     let fbDir = "";
     let hash = "";
 
@@ -59,7 +129,7 @@ const cordsToDot = (x, y, width, height, baseDot) => {
 
     // If the x pos is really close to the line
     if (Math.abs(xOfLine - x) <= 0.01) {
-        dir = "On"
+        dir = "On";
     }
     // If the x pos is to the LEFT of the line
     else if (x < xOfLine) {
@@ -84,13 +154,37 @@ const cordsToDot = (x, y, width, height, baseDot) => {
         }
     }
 
-    steps = Math.round(Math.abs(xOfLine - x) / pxPerStep * 100) / 100;
-    console.log(xOfLine, x, Math.abs(xOfLine - x), pxPerStep);
+    steps = roundToGoodNum(Math.round(Math.abs(xOfLine - x) / pxPerStep * 100) / 100);
+    // console.log(xOfLine, x, Math.abs(xOfLine - x), pxPerStep, steps);
+    // console.log(steps + " steps " + dir + " the " + line + " yd line")
+
+    let pxBetweenHashes = RATIO_BETWEEN_HASHES * height;
+    let hashNum = Math.round(y / pxBetweenHashes);
+    let yOfHash = hashNum * pxBetweenHashes;
+
+    // Follows the same pattern as the hash
+    hash = hashFromBits(3 - hashNum);
+
+    fbSteps = roundToGoodNum(Math.round(Math.abs(yOfHash - y) / pxPerStep * 100) / 100);
+    fbSteps = Math.round((fbSteps + Number.EPSILON) * 100) / 100
+
+    // If the x pos is really close to the line
+    if (Math.abs(yOfHash - y) <= 0.01) {
+        dir = "On";
+    }
+    // If the x pos is to the LEFT of the line
+    else if (x < xOfLine) {
+        fbDir = "Behind";
+    }
+    // If the x pos is to the RIGHT of the line
+    else {
+        fbDir = "Front";
+    }
 
     return {
         ...baseDot,
         "direction": dir,
-        "line": line,
+        "line": line.toString(),
         "steps": steps,
         "side": side,
         "fb_steps": fbSteps,
@@ -107,7 +201,7 @@ const cordsToDot = (x, y, width, height, baseDot) => {
  * @param {int} height
  * @return cords in px
  */
-const posFromBits = (binary, width, height) => {
+const posFromBits = (binary, width, height, dot, dot_label) => {
     let bDir 		= parseInt(binary >>> 27);
     // let dir         = directionFromBits(bDir);
 
@@ -131,8 +225,23 @@ const posFromBits = (binary, width, height) => {
     let bHash 		= parseInt(binary % Math.pow(2, 2));
     // let hash        = hashFromBits(bHash);
 
+    /*
+    if (dir != dot.direction || line != dot.line || steps != dot.steps || side != dot.side || fbSteps != dot.fb_steps || fbDir != dot.fb_direction || hash != dot.use_hash) {
+        console.log("\r\nProblem with dot (" + dot.show_user_id + ") ");
+
+        console.log(dir + " : " + dot.direction);
+        console.log(line + " : " + dot.line);
+        console.log(steps + " : " + dot.steps);
+        console.log(side + " : " + dot.side);
+        console.log(fbSteps + " : " + dot.fb_steps);
+        console.log(fbDir + " : " + dot.fb_direction);
+        console.log(hash + " : " + dot.use_hash);
+        return {x: 0, y: 0};
+    }
+    */
+
     const YARDS_IN_STEP = 0.625;
-    const FT_IN_STEP = 1.875;
+    // const FT_IN_STEP = 1.875;
 
     // Default Direction Modifier to "OUTSIDE"
     let dModifier = -1;
@@ -148,22 +257,25 @@ const posFromBits = (binary, width, height) => {
         dModifier = 0;
     }
 
-    if (line !== 0) {
-        // Side 1 is left
-        if (side === 1) {
-            sModifier = 1;
-        } else {
-            line  = side2Convert(line);
-            sModifier = -1;
-        }
-    } else {
-        // line = 50;
-        sModifier = 0;
+    // Side 1 (left side)
+    if (side === 1) {
+        sModifier = 1;
+    }
+    // Side 2 (right side)
+    else {
+        line  = side2Convert(line);
+        sModifier = -1;
     }
 
+    // NOT UPDATED!!!
+    // 0-100 yd    100 yd        width        1
+    // -------- * --------   *   -----   *  ----- = Number between 0 and width
+    //            100 width        1         100
+    
+    // 0-100
     let relX = line + (dModifier * sModifier * steps * YARDS_IN_STEP);
     // Round to 2 decimals
-    let x = Math.round(relX * width) / 100;
+    let x = Math.round(relX * (width / 100) * 100) / 100;
 
     // "BEHIND"
     if (bFBDir === 2) {

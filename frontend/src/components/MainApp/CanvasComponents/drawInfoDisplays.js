@@ -97,7 +97,7 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
         context.strokeStyle=HIGHLIGHT_USER_COLOR;
         context.lineWidth="2";
         
-        if (x !== lineX) {
+        if (x !== lineX || dot["direction"] !== "On") {
             const distanceFromHash = Math.abs(y - hashY) + BRACKET_SEPARATION;
             let useY = 0;
             let xDirection = 0;
@@ -122,10 +122,10 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
             context.lineTo(x, useY + DASH_LENGTH);
 
             // Draw text
-            drawMovementBracketText(lineX, useY, x, useY, xDirection, 0, dot.steps, HIGHLIGHT_USER_COLOR);
+            drawMovementBracketText(lineX, useY, x, useY, xDirection, 0, +dot.steps.toFixed(2), HIGHLIGHT_USER_COLOR);
         }
 
-        if (y !== hashY) {
+        if (y !== hashY || dot["fb_direction"] !== "On") {
             const distanceFromHash = Math.abs(x - lineX) + BRACKET_SEPARATION;
             let useX = 0;
             let yDirection = 0;
@@ -152,7 +152,7 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
             let steps = hashStepsCorrect(dot.fb_steps, dot.use_hash, hashY_HS, hashY, y);
 
             // Draw text
-            drawMovementBracketText(useX, hashY, useX, y, 0, yDirection, steps, HIGHLIGHT_USER_COLOR);
+            drawMovementBracketText(useX, hashY, useX, y, 0, yDirection, +steps.toFixed(2), HIGHLIGHT_USER_COLOR);
         }
 
         context.stroke();

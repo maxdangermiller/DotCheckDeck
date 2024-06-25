@@ -307,6 +307,7 @@ const Canvas = (props) => {
                 const x = ((x1 - x0) / counts * count) + x0;
                 const y = m * x + b;
 
+                // If it's an icon, draw the icon
                 if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let img = new Image();
 
@@ -319,6 +320,8 @@ const Canvas = (props) => {
 
                     context.drawImage(img, x - width / 2, y - height / 2, width, height);
                 }
+
+                // Otherwise draw the normal point
                 else {
                     drawPoint(x, y, color, userLabel)
                     
@@ -347,7 +350,10 @@ const Canvas = (props) => {
                     }
                 }
 
-            } else {
+            } 
+
+            // Single Axis movement in the y-axis direction
+            else {
                 const x = x0
                 const y = ((y1 - y0) / counts * count) + y0;
 
@@ -364,7 +370,20 @@ const Canvas = (props) => {
                     context.drawImage(img, x - width / 2, y - height / 2, width, height);
                 }
                 else {
-                    drawPoint(x, y, color, userLabel)
+                    drawPoint(x, y, color, userLabel);
+
+                    let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
+
+                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id) {
+                        if (userOptions.showMovementBrackets) {
+                            drawUserName(dot);
+
+                            // Find actual dot when it's between 2
+                            let actDot = cordsToDot(x,y, curDimensions["w"], curDimensions["h"], dot.dot);
+                            drawMovementBrackets(x, y, actDot);
+                        }
+
+                    }
                 }
 
                 if (isHighlighted) {
