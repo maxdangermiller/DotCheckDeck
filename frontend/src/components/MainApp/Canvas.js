@@ -1,5 +1,5 @@
 import React, {useRef, useEffect, useState} from 'react'
-import convertDotToCords from '../utils/ConvertDotToCords';
+import {convertDotToCords, cordsToDot} from '../utils/ConvertDotToCords';
 import canvasConversions from './CanvasComponents/canvasConversions';
 import drawHashes from './CanvasComponents/drawHashes';
 import drawInfoDisplays from './CanvasComponents/drawInfoDisplays';
@@ -321,6 +321,19 @@ const Canvas = (props) => {
                 }
                 else {
                     drawPoint(x, y, color, userLabel)
+                    
+                    let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
+
+                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id) {
+                        if (userOptions.showMovementBrackets) {
+                            drawUserName(dot);
+
+                            // Find actual dot when it's between 2
+                            let actDot = cordsToDot(x,y, curDimensions["w"], curDimensions["h"], dot.dot);
+                            drawMovementBrackets(x, y, actDot);
+                        }
+
+                    }
                 }
 
 

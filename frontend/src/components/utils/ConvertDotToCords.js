@@ -7,19 +7,6 @@ const side2Convert = (line) => {
     return 100 - line;
 }
 
-const hashConvert = (useHash) => {
-    if (useHash === "Front side") {
-        return 1;
-    }
-    if (useHash === "Front Hash") {
-        return 2/3;
-    }
-    if (useHash === "Back Hash"){
-        return 1/3;
-    }
-    return 0;
-}
-
 /**
  * Convert Dot Object to Coordinates
  * @param {Object} dot 
@@ -33,6 +20,85 @@ const convertDotToCords = (dot, width, height) => {
 }
 
 // NEW CONVERSIONS
+
+
+const cordsToDot = (x, y, width, height, baseDot) => {
+    // Find what line its closest to
+    const NUM_LINES = 20;
+    const YARDS_BETWEEN_LINES = 5;
+    const STEPS_BETWEEN_LINES = 8;
+    
+    // Output Info
+    let dir = "";
+    let line = -1;
+    let steps = 0;
+    let side = -1;
+    let fbSteps = -1;
+    let fbDir = "";
+    let hash = "";
+
+    let pxBetweenLines = width / NUM_LINES;
+    let pxPerStep = pxBetweenLines / STEPS_BETWEEN_LINES;
+
+    // Find the closest line
+    line = Math.round(x / pxBetweenLines);
+    let xOfLine = line * pxBetweenLines;
+    
+    // If its on or before the 50 on side 1, then just multiply
+    if (line <= 10) {
+        line = line * YARDS_BETWEEN_LINES;
+        side = 1;
+    }
+    // Otherwise it's on side 2
+    else {
+        line = 50 - (line - 10) * YARDS_BETWEEN_LINES;
+        side = 2;
+    }
+    // console.log(line);
+
+
+    // If the x pos is really close to the line
+    if (Math.abs(xOfLine - x) <= 0.01) {
+        dir = "On"
+    }
+    // If the x pos is to the LEFT of the line
+    else if (x < xOfLine) {
+        // Side 1: OUTSIDE
+        if (side === 1) {
+            dir = "Outside";
+        }
+        // Side 2: INSIDE
+        if (side === 2) {
+            dir = "Inside";
+        }
+    }
+    // If the x pos is to the RIGHT of the line
+    else {
+        // Side 1: INSIDE
+        if (side === 1) {
+            dir = "Inside";
+        }
+        // Side 2: OUTSIDE
+        if (side === 2) {
+            dir = "Outside";
+        }
+    }
+
+    steps = Math.round(Math.abs(xOfLine - x) / pxPerStep * 100) / 100;
+    console.log(xOfLine, x, Math.abs(xOfLine - x), pxPerStep);
+
+    return {
+        ...baseDot,
+        "direction": dir,
+        "line": line,
+        "steps": steps,
+        "side": side,
+        "fb_steps": fbSteps,
+        "fb_direction": fbDir,
+        "use_hash": hash,
+    }
+}
+
 
 /**
  * Position from bits
@@ -254,6 +320,5 @@ const bHashConvert = (bits) => {
 }
 
 
-
-
+export {convertDotToCords, cordsToDot};
 export default convertDotToCords;

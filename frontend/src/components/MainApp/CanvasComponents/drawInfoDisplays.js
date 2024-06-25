@@ -166,7 +166,7 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
      * @param {Dot} dot 
      */
     const drawUserDialogue = (dotX, dotY, dot) => {
-        // console.log("drawing dialogue: " + dot["userLabel"])
+        // console.log("drawing dialogue: " + dot);
         const w = canvas.width * 0.075;
         const h = canvas.height * 0.075;
         const x = dotX + canvas.height * 0.01;
