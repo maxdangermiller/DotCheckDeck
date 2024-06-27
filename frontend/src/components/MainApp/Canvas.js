@@ -991,6 +991,7 @@ const Canvas = (props) => {
             let cords = convertDotToCords(dot, canvasRef.current.width, canvasRef.current.height);
             if (y > cords.y - margin && y < cords.y + margin  && x > cords.x - margin && x < cords.x + margin) {
                 wasOnDot = true;
+                // console.log("ON DOT")
                 if (userOptions.showMovementBrackets && userOptions.highlightUser.id !== dot.dot.show_user_id) {
                     setUserOptions({...userOptions, "highlightUser": {"id": dot.dot.show_user_id, "label": dot.userLabel}})
                 }
@@ -1043,6 +1044,7 @@ const Canvas = (props) => {
             x: getEventLocation(e).x / cameraZoom - cameraOffset.x,
             y: getEventLocation(e).y / cameraZoom - cameraOffset.y
         });
+        dotHover(e);
     }
 
     const onPointerUp = (e) => {

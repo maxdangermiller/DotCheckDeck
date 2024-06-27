@@ -2567,6 +2567,7 @@ def updateBufferWithSetName(show, setName):
 class UpdateOrCreateSetNameResource(Resource):
 	@jwt_required()
 	def post(self):
+		print("TEST")
 		identity = get_jwt_identity()
 		
 		activeUser = User.query.filter(User.email == identity).first()

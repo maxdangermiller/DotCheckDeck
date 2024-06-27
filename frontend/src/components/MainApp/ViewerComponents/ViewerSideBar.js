@@ -25,6 +25,15 @@ import {ReactComponent as ShowDotCordsIcon} from '../../../icons/question.svg';
 
 import 'bootstrap/dist/css/bootstrap.css';
 
+
+const NORMAL_BTN_COLOR = "#474747";
+const NOT_FOLLOWING_USER_COLOR = "#474747";
+const FOLLOWING_USER_COLOR = "#ECA72C";
+const NOTES_AVAILABLE_COLOR = "#047d5d";
+const REHEARSAL_MODE_COLOR = "#824C71";
+const NOT_REHEARSAL_MODE_COLOR = "#4A2545";
+
+
 const ViewerSideBar = (props) => {
     const { 
         curSetInfo, getCurSetNumb, setInput, 
@@ -41,16 +50,27 @@ const ViewerSideBar = (props) => {
     const [tempCurSetInfo, setTempCurSetInfo] = useState({});
     const [curSetNumb, setCurSetNumb] = useState("");
 
+    /**
+     * Open Edit Set Name Model
+     */
     const openEditSetName = () => {
         setShowEditSetName(true);
         setTempCurSetInfo(JSON.parse(JSON.stringify(curSetInfo)));
     }
 
+    /**
+     * Set Following User Var
+     * @param {boolean} value 
+     */
     const setFollowingUser = (value) => {
 		console.log("Setting Following User To: " + value);
 		setUserOptions({...userOptions, "followingUser": value});
 	}
 
+    /**
+     * Set display mode
+     * @param {int} cur_value 0 or 1
+     */
     const setDisplayMode = (cur_value) => {
         if (cur_value === 0) {
             setUserOptions({...userOptions, "displayMode": 1});
@@ -60,13 +80,40 @@ const ViewerSideBar = (props) => {
         }
     }
 
+
 	const getSetFollowingUserBtnColor = () => {
 		if (userOptions.followingUser) {
-			return "#5130b8";
+			return FOLLOWING_USER_COLOR;
 		}
-		return "#311d6e"; 
+		return NOT_FOLLOWING_USER_COLOR; 
 	}
 
+	const getNotesBtnDisabled = () => {
+        console.log(curSetInfo)
+		if (curSetInfo === null || curSetInfo === undefined || curSetInfo.notes === null || curSetInfo.notes === "") {
+			return true;
+		}
+		return false; 
+	}
+
+	const getNotesBtnColor = () => {
+		if (!getNotesBtnDisabled()) {
+			return NOTES_AVAILABLE_COLOR;
+		}
+		return NORMAL_BTN_COLOR; 
+	}
+
+    const getRehearsalBtnColor = () => {
+        if (true) {
+            return NOT_REHEARSAL_MODE_COLOR;
+        }
+        return REHEARSAL_MODE_COLOR;
+    }
+
+    /**
+     * Get Display Mode
+     * @returns {boolean} 0 if were in sets display mode, 1 if we're in counts display mode
+     */
     const getDisplayMode = () => {
         if (userOptions["displayMode"] === 0) {
             return 0;
@@ -78,11 +125,19 @@ const ViewerSideBar = (props) => {
         return 0;
     }
 
-    let setName = "";
-    if (data.length > curSet && curSetInfo !== undefined && curSetInfo !== null && curSetInfo["set_name"] !== null) {
-        setName = curSetInfo["set_name"];
+    /**
+     * Get Set Name
+     * @returns {string} set name
+     */
+    const getSetName = () => {
+        if (data.length > curSet && curSetInfo !== undefined && curSetInfo !== null && curSetInfo["set_name"] !== null) {
+            return curSetInfo["set_name"];
+        }
+
+        return "";
     }
     
+    // Change Set Numb
     useEffect(() => {
 		setCurSetNumb(getCurSetNumb);
 	    // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,7 +154,7 @@ const ViewerSideBar = (props) => {
                         onChange={(e) => setCurSetNumb(e.target.value)} 
                         onKeyDown={(e) => changeCurSetNumb(e)}>
                     </input>
-                    <h1 className='viewerSideBarNameField'>{setName}</h1>
+                    <h1 className='viewerSideBarNameField'>{getSetName()}</h1>
                 </div>
 
                 <AudioPlayer 
@@ -120,6 +175,7 @@ const ViewerSideBar = (props) => {
                         <button 
                             type="button" 
                             className='customViewerSideBarBtn normalBtn'
+                            style={{color: NORMAL_BTN_COLOR}}
                             onClick={() => {setShowSettings(true);}}
                         >
                             <SettingsIcon height="100%" fill="currentColor"/>
@@ -128,6 +184,7 @@ const ViewerSideBar = (props) => {
                         <button 
                             type="button" 
                             className='customViewerSideBarBtn'
+                            style={{color: NORMAL_BTN_COLOR}}
                             onClick={() => setDisplayMode(getDisplayMode())}
                         >
                             {
@@ -140,6 +197,7 @@ const ViewerSideBar = (props) => {
                         <button 
                             type="button" 
                             className='customViewerSideBarBtn normalBtn'
+                            style={{color: getRehearsalBtnColor()}}
                             onClick={() => {}}
                         >
                             <RehearsalModeIcon height="100%" fill="currentColor"/>
@@ -150,6 +208,7 @@ const ViewerSideBar = (props) => {
                         <button 
                             type="button" 
                             className='customViewerSideBarBtn normalBtn'
+                            style={{color: NORMAL_BTN_COLOR}}
                             onClick={() => {setShowEditSetName(true)}}
                             disabled={!userData.is_section_leader}
                         >
@@ -159,6 +218,7 @@ const ViewerSideBar = (props) => {
                         <button 
                             type="button" 
                             className='customViewerSideBarBtn normalBtn'
+                            style={{color: getNotesBtnColor()}}
                             onClick={() => {setShowNotes(true)}}
                         >
                             <NotesIcon height="100%" fill="currentColor"/>

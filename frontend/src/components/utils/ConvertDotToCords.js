@@ -172,11 +172,9 @@ const cordsToDot = (x, y, width, height, baseDot) => {
     if (Math.abs(yOfHash - y) <= 0.01) {
         dir = "On";
     }
-    // If the x pos is to the LEFT of the line
-    else if (x < xOfLine) {
+    else if (y < yOfHash) {
         fbDir = "Behind";
     }
-    // If the x pos is to the RIGHT of the line
     else {
         fbDir = "Front";
     }

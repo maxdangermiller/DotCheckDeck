@@ -25,6 +25,7 @@ const SetNameModelBasic = (props) => {
                 .then(res => res.json())
                 .then(
                     (result) => {
+                        console.log(result);
                         let newData = data.dots.map((value, index) => {
                             if (value.dot.id === curSetInfo.dot.id) {
                                 value.set_name = curSetInfo.set_name;

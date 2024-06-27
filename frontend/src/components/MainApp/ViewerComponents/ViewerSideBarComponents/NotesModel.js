@@ -17,8 +17,8 @@ const NotesModel = (props) => {
                 <Modal.Header closeButton>
                     <Modal.Title>Notes for Set UNDEFINED</Modal.Title>
                 </Modal.Header>
-                <Modal.Body style={{minHeight: "20vh"}}>
-                    UNDEFINED
+                <Modal.Body style={{minHeight: "20vh", color: "red"}}>
+                    NO NOTES HAVE BEEN WRITTEN BY YOUR DIRECTOR(S)
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleClose}>
@@ -27,6 +27,24 @@ const NotesModel = (props) => {
                 </Modal.Footer>
             </Modal>
         );
+    }
+
+    if (curSetInfo.notes === null || curSetInfo.notes === "") {
+        return (
+            <Modal show={show} onHide={handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Notes for Set {curSetInfo.set_numb}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{minHeight: "20vh", color: "red"}}>
+                    NO NOTES HAVE BEEN WRITTEN BY YOUR DIRECTOR(S)
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        ); 
     }
 
     return (
