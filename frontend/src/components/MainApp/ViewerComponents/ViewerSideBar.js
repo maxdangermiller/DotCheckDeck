@@ -89,7 +89,6 @@ const ViewerSideBar = (props) => {
 	}
 
 	const getNotesBtnDisabled = () => {
-        console.log(curSetInfo)
 		if (curSetInfo === null || curSetInfo === undefined || curSetInfo.notes === null || curSetInfo.notes === "") {
 			return true;
 		}

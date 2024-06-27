@@ -21,6 +21,8 @@ import random
 import time
 import math
 from cryptography.fernet import Fernet
+# from flask_caching import Cache
+# import redis
 
 import storage
 
@@ -61,6 +63,11 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_QUERY_STRING_NAME"] = "token"
 
+# app.config['CACHE_TYPE'] = 'redis'
+# app.config['CACHE_REDIS_HOST'] = 'localhost'
+# app.config['CACHE_REDIS_PORT'] = 6379
+# app.config['CACHE_REDIS_DB'] = 0
+
 """"
 Database auth
 dcd_admin
@@ -73,6 +80,12 @@ ma = Marshmallow(app)
 api = Api(app)
 jwt = JWTManager(app)
 admin = Admin(app, name='Dot Check Deck', template_mode='bootstrap3')
+
+# Cache
+# cache = Cache(app=app)
+# cache.init_app(app)
+# redis_client = redis.Redis(host='localhost', port=6379, db=0)
+
 # TODO: queue = Queue(connection=conn)
 
 CORS(app)
