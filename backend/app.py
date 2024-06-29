@@ -2875,7 +2875,7 @@ def addAllDataFromPDF(file):
 
 
 
-if __name__ == "__main__":
+def start_app():
 	rebuild = False
 
 	for i, arg in enumerate(sys.argv):
@@ -3023,6 +3023,9 @@ if __name__ == "__main__":
 		# Use Default Config
 		else:
 			app.run(debug=True)
+
+if __name__ == "__main__":
+	start_app()
 
 """
 Startup Command
