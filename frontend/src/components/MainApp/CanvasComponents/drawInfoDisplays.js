@@ -1,4 +1,5 @@
 import canvasConversions from './canvasConversions';
+import { dotFromBits } from './ConvertDotToCords';
 
 const HIGHLIGHT_USER_COLOR = "rgb(255, 0, 0)";
 
@@ -78,6 +79,7 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
      */
     const drawMovementBrackets = (x, y, dot) => {
         if (dot === null) { return; }
+        
         // Find the cords of the closest line and hash
         const lineRatio = sideLineRatioConvert( dot["side"], dot["line"] );
         const hashRatio = hashRatioConvert(dot["use_hash"], userOptions.useCollegeHash);
@@ -246,7 +248,7 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
         context.font = canvas.height * 0.0125 + 'px Arial Black';
         context.fillStyle = "black";
 
-        const dotI = dot["dot"]
+        const dotI = dotFromBits(dot["dot_pos"])
         // const dotStr = dotI["direction"] + " " + dotI["line"] + " on "+ dotI["side"] + "; " + 
         //         dotI["fbSteps"] + " " + dotI["dbDirection"] + " " + dotI["useHash"] + ", for " + dot["counts"] + " counts"
 

@@ -174,6 +174,7 @@ email_client = EmailClient.from_connection_string("endpoint=https://email-parent
 # Serializers
 dot_schema = DotSchema()
 dots_schema = DotSchema(many=True)
+dot_icon_schema = DotIconSchema()
 set_schema = SetSchema()
 sets_schema = SetSchema(many=True)
 user_schema = UserSchema()
@@ -1419,7 +1420,17 @@ def getAllDotInfoForSet(show, set):
 		# dot.posFromBits(dot.posToBits())
 
 		dotCords.append({
-			'dot': dot_schema.dump(dot),
+			# 'dot': dot_schema.dump(dot),
+			'dot': {
+				'last_updated': dot.last_updated,
+				'dot_icon': dot_icon_schema.dump(dot.dot_icon),
+				'id': dot.id,
+				'dot_icon_id': dot.dot_icon_id,
+				'school_id': dot.school_id,
+				'set_id': dot.set_id,
+				'show_id' : dot.show_id,
+				'show_user_id': dot.show_user_id
+			},
 			'dot_pos': dot.posToBits(),
 			'show_user': show_user_schema.dump(showUserObj),
 

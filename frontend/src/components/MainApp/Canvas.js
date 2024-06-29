@@ -1,5 +1,5 @@
 import React, {useRef, useEffect, useState} from 'react'
-import {convertDotToCords, cordsToDot} from '../utils/ConvertDotToCords';
+import {convertDotToCords, cordsToDot, dotFromBits} from './CanvasComponents/ConvertDotToCords';
 import canvasConversions from './CanvasComponents/canvasConversions';
 import drawHashes from './CanvasComponents/drawHashes';
 import drawInfoDisplays from './CanvasComponents/drawInfoDisplays';
@@ -27,6 +27,7 @@ const Canvas = (props) => {
         userData, token, hoverUserInfo, 
         setHoverUserInfo, isOffline, loading
     } = props;
+    
 
     const canvasRef = useRef(null)
 
@@ -51,6 +52,8 @@ const Canvas = (props) => {
     const [animationDirection, setAnimationDirection] = useState(-1);  
     const [lastSetID, setLastSetID] = useState(-1);
 
+    const [loadedIcons, setLoadedIcons] = useState([])
+
     const [hadResize, setHadResize] = useState(false);
 
     const {
@@ -66,6 +69,27 @@ const Canvas = (props) => {
      */
     const isCountsMode = () => {
         return userOptions["displayMode"] === 1;
+    }
+
+    const getLoadedIcon = (icon_id) => {
+        for (let i = 0; i < loadedIcons.length; i++) {
+            if (loadedIcons[i]["id"] == icon_id) {
+                return loadedIcons[i]["icon"];
+            }
+        }
+
+        let img = new Image();
+
+        img.onerror = function() { window.location.href = "/login" };
+        img.onabort = function() { window.location.href = "/login" };
+
+        img.src = WINDOW_LOCATION + '/get-icon/' + icon_id + "?token=" + token;
+
+        img.onload = () => {
+            setLoadedIcons([...loadedIcons, {"id": icon_id, "icon": img}]);
+        }
+
+        return img;
     }
 
     /**
@@ -231,17 +255,10 @@ const Canvas = (props) => {
                 let dot = data[curSetIndex].dots[curUserIndex];
 
                 if (dot.dot.dot_icon_id !== null && !isOffline) {
-                    let img = new Image();
-
-                    img.onerror = function() { window.location.href = "/login" };
-                    img.onabort = function() { window.location.href = "/login" };
-
-                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
-
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                     let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                    context.drawImage(img, x - width / 2, y - height / 2, width, height);
+                    context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
                 }
                 else {
                     context.beginPath();
@@ -309,16 +326,10 @@ const Canvas = (props) => {
 
                 // If it's an icon, draw the icon
                 if (dot.dot.dot_icon_id !== null && !isOffline) {
-                    let img = new Image();
-
-                    img.onerror = function() { window.location.href = "/login" };
-                    img.onabort = function() { window.location.href = "/login" };
-
-                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                     let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                    context.drawImage(img, x - width / 2, y - height / 2, width, height);
+                    context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
                 }
 
                 // Otherwise draw the normal point
@@ -358,16 +369,10 @@ const Canvas = (props) => {
                 const y = ((y1 - y0) / counts * count) + y0;
 
                 if (dot.dot.dot_icon_id !== null && !isOffline) {
-                    let img = new Image();
-
-                    img.onerror = function() { window.location.href = "/login" };
-                    img.onabort = function() { window.location.href = "/login" };
-
-                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                     let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                    context.drawImage(img, x - width / 2, y - height / 2, width, height);
+                    context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
                 }
                 else {
                     drawPoint(x, y, color, userLabel);
@@ -640,16 +645,10 @@ const Canvas = (props) => {
 
                         // If it's an icon dot
                         else if (dot.dot.dot_icon_id !== null && !isOffline) {
-                            let img = new Image();
-
-                            img.onerror = function() { window.location.href = "/login" };
-                            img.onabort = function() { window.location.href = "/login" };
-
-                            img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                             let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                             let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                            context.drawImage(img, useX - width / 2, useY - height / 2, width, height);
+                            context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
                         }
 
                         // Else dim others 
@@ -661,16 +660,10 @@ const Canvas = (props) => {
 
                     // If it's an icon dot
                     else if (dot.dot.dot_icon_id !== null && !isOffline) {
-                        let img = new Image();
-
-                        img.onerror = function() { window.location.href = "/login" };
-                        img.onabort = function() { window.location.href = "/login" };
-
-                        img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                         let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                         let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                        context.drawImage(img, useX - width / 2, useY - height / 2, width, height);
+                        context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
                     }
 
                     // If not, handel all of the not selected dots
@@ -681,16 +674,11 @@ const Canvas = (props) => {
                 }
                 
                 else if (dot.dot.dot_icon_id !== null && !isOffline) {
-                    let img = new Image();
-
-                    img.onerror = function() { window.location.href = "/login" };
-                    img.onabort = function() { window.location.href = "/login" };
-
-                    img.src = WINDOW_LOCATION + '/get-icon/' + dot.dot.dot_icon_id + "?token=" + token;
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
                     let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                    context.drawImage(img, useX - width / 2, useY - height / 2, width, height);
+
+                    context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
                 }
 
                 // Since nothing is selected, just highlight all
@@ -702,7 +690,7 @@ const Canvas = (props) => {
 
             if (drawBracket.useX !== null && followDot === undefined) {
                 drawUserName(drawBracket.dot)
-                drawMovementBrackets(drawBracket.useX, drawBracket.useY, drawBracket.dot.dot);
+                drawMovementBrackets(drawBracket.useX, drawBracket.useY, dotFromBits(drawBracket.dot["dot_pos"]));
             }
 
             return newDots;

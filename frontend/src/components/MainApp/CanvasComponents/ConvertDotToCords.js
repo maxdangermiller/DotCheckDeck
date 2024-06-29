@@ -293,6 +293,41 @@ const posFromBits = (binary, width, height, dot, dot_label) => {
     return {x: x, y: y};
 }
 
+const dotFromBits = (binary) => {
+    let bDir 		= parseInt(binary >>> 27);
+    let dir         = directionFromBits(bDir);
+
+    let bLine 		= parseInt(binary % Math.pow(2, 27)) >>> 23;
+    let line        = lineFromBits(bLine);
+
+    let bSteps	 	= parseInt(binary % Math.pow(2, 23)) >>> 15;
+    let steps       = stepsFromBits(bSteps);
+
+    let bSide 		= parseInt(binary % Math.pow(2, 15)) >>> 14;
+    let side        = sideFromBits(bSide);
+
+
+    let bFBSteps	= parseInt(binary % Math.pow(2, 14)) >>> 4;
+    let fbSteps     = stepsFromBits(bFBSteps);
+
+    let bFBDir 		= parseInt(binary % Math.pow(2, 4)) >>> 2;
+    let fbDir       = fbDirFromBits(bFBDir);
+
+
+    let bHash 		= parseInt(binary % Math.pow(2, 2));
+    let hash        = hashFromBits(bHash);
+
+    return {
+        "direction": dir,
+        "line": line.toString(),
+        "steps": steps,
+        "side": side,
+        "fb_steps": fbSteps,
+        "fb_direction": fbDir,
+        "use_hash": hash,
+    }
+}
+
 /**
  * 
  * @param {int} bits 0-2
@@ -430,5 +465,5 @@ const bHashConvert = (bits) => {
 }
 
 
-export {convertDotToCords, cordsToDot};
+export {convertDotToCords, cordsToDot, dotFromBits};
 export default convertDotToCords;
