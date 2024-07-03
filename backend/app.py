@@ -3025,6 +3025,8 @@ def start_app():
 			app.run(debug=True)
 
 if __name__ == "__main__":
+	print("\r\n\r\nSTARTING Dot Check Deck API Server\r\n\r\n")
+
 	start_app()
 
 """
