@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Pull everything from github
+        uses: actions/checkout@v2
 
       - name: Set up Python version
         uses: actions/setup-python@v1
@@ -28,13 +29,9 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
-      - name: Change Directories
-        run: |
-          mkdir backend
-          cd backend
-
       - name: Create and start virtual environment
         run: |
+          cd backend
           python3 -m venv venv
           source venv/bin/activate
       
@@ -54,6 +51,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
