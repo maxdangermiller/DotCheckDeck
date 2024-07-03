@@ -1,7 +1,7 @@
-from database import ma, db
-from cache import regions, CacheableMixin, query_callable
-from database.utils import generateUpdateCode
-from database.utils import generateUpdateCode
+from backend.database import ma, db
+from backend.cache import regions, CacheableMixin, query_callable
+from backend.database.utils import generateUpdateCode
+from backend.database.utils import generateUpdateCode
 
 
 class School(CacheableMixin, db.Model):

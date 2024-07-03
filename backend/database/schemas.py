@@ -1,13 +1,13 @@
-from database import ma 
-from database.dot import Dot
-from database.dotIcon import DotIcon
-from database.setName import SetName
-from database.set import Set
-from database.bandSection import BandSection
-from database.showUser import ShowUser
-from database.user import User
-from database.show import Show
-from database.school import School
+from backend.database import ma 
+from backend.database.dot import Dot
+from backend.database.dotIcon import DotIcon
+from backend.database.setName import SetName
+from backend.database.set import Set
+from backend.database.bandSection import BandSection
+from backend.database.showUser import ShowUser
+from backend.database.user import User
+from backend.database.show import Show
+from backend.database.school import School
 
 
 class DotIconSchema(ma.SQLAlchemyAutoSchema):
