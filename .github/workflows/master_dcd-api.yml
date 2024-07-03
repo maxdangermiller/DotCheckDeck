@@ -19,7 +19,6 @@ jobs:
 
       - name: Set up Python version
         uses: actions/setup-python@v1
-        working-directory: backend
         with:
           python-version: '3.11'
       
@@ -29,20 +28,22 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
+      - name: Change Directories
+        run: |
+          mkdir backend
+          cd backend
+
       - name: Create and start virtual environment
-        working-directory: backend
         run: |
           python3 -m venv venv
           source venv/bin/activate
       
       - name: Install dependencies
-        working-directory: backend
         run: pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Upload artifact for deployment jobs
-        working-directory: backend
         uses: actions/upload-artifact@v2
         with:
           name: python-app
