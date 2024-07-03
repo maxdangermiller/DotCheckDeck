@@ -2875,7 +2875,9 @@ def addAllDataFromPDF(file):
 
 
 
-def start_app():
+if __name__ == "__main__":
+	print("\r\n\r\nSTARTING Dot Check Deck API Server\r\n\r\n")
+
 	rebuild = False
 
 	for i, arg in enumerate(sys.argv):
@@ -3023,12 +3025,6 @@ def start_app():
 		# Use Default Config
 		else:
 			app.run(debug=True)
-
-if __name__ == "__main__":
-	print("\r\n\r\nSTARTING Dot Check Deck API Server\r\n\r\n")
-
-	start_app()
-
 """
 Startup Command
 
