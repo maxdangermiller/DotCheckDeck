@@ -30,26 +30,26 @@ class LocalStorageClient(StorageClient):
 		super().__init__()
 
 	def get_file(self, path: str, filename: str):
-		with open(f"./backend/{path}/{filename}", "rb") as file: 
+		with open(f"./{path}/{filename}", "rb") as file: 
 			return file
 	
 	def send_file(self, path: str, filename: str):
-		return send_from_directory(f"./backend/{path}", filename)
+		return send_from_directory(f"./{path}", filename)
 
 	def save_file(self, path: str, filename: str, file):
 		# Create Path if it doesn't exist
-		doesExist = os.path.exists(f"./backend/{path}")
+		doesExist = os.path.exists(f"./{path}")
 		if not doesExist:
-			os.makedirs(f"./backend/{path}")
+			os.makedirs(f"./{path}")
 
-		file.save(f"./backend/{path}/{filename}")
+		file.save(f"./{path}/{filename}")
 	
 	def get_json(self, path: str, filename: str):
-		with open(f"./backend/{path}/{filename}", "r") as file: 
+		with open(f"./{path}/{filename}", "r") as file: 
 			return json.load(file, indent=4)
 	
 	def save_json(self, path: str, filename: str, data):
-		with open(f"./backend/{path}/{filename}", "w") as file: 
+		with open(f"./{path}/{filename}", "w") as file: 
 			json.dump(data, file, indent=4)
 
 

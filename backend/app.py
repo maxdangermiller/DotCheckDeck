@@ -1132,7 +1132,7 @@ class SchoolCodeAuthResource(Resource):
 def updateBufferWithNewUser(user, showUser, show):
 	data = []
 
-	with open(f"backend/cache/dots/{show.id}.json", "r") as file:
+	with open(f"cache/dots/{show.id}.json", "r") as file:
 		data = json.load(file)
 		for set in data:
 			for dot in set["dots"]:
@@ -1141,7 +1141,7 @@ def updateBufferWithNewUser(user, showUser, show):
 					break
 			set["update_timestamp"] = show.last_update
 	
-	with open(f"backend/cache/dots/{show.id}.json", "w") as file: 
+	with open(f"cache/dots/{show.id}.json", "w") as file: 
 		json.dump(data, file, indent=4)
 
 
@@ -1480,7 +1480,7 @@ def getAllDotsWithoutBuffer(schoolCode):
 		output.append(getAllDotInfoForSet(show, set))
 	
 	print("SAVING NEW CACHE")
-	with open(f"backend/cache/dots/{show.id}.json", "w") as outfile:
+	with open(f"cache/dots/{show.id}.json", "w") as outfile:
 		json.dump(output, outfile, indent=4)
 
 	return output
@@ -1489,7 +1489,7 @@ def getAllDotsWithoutBuffer(schoolCode):
 def updateSetInDotsCache(show):
 	print("UPDATING CACHE!")
 	try:
-		with open(f"backend/cache/dots/{show.id}.json", "r") as file:
+		with open(f"cache/dots/{show.id}.json", "r") as file:
 			data = json.load(file)
 
 			curDatabaseVersion = show.last_update
@@ -1501,7 +1501,7 @@ def updateSetInDotsCache(show):
 					setObj = Set.query.filter(Set.id == data[i]["setID"]).first()
 					data[i] = getAllDotInfoForSet(show, setObj)
 			
-			with open(f"backend/cache/dots/{show.id}.json", "w") as outfile:
+			with open(f"cache/dots/{show.id}.json", "w") as outfile:
 					json.dump(data, outfile, indent=4)
 
 	except:
@@ -1523,7 +1523,7 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 	curDatabaseVersion = show.last_update
 
 	try:
-		with open(f"backend/cache/dots/{show.id}.json", "r") as file:
+		with open(f"cache/dots/{show.id}.json", "r") as file:
 			data = json.load(file)
 
 			if middleSet == "undefined":
@@ -1557,7 +1557,7 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 				output.append(data[i])
 			
 			if changedSomething:
-				with open(f"backend/cache/dots/{show.id}.json", "w") as outfile:
+				with open(f"cache/dots/{show.id}.json", "w") as outfile:
 					json.dump(data, outfile, indent=4)
 			"""
 			foundSomething = False
@@ -1607,7 +1607,7 @@ def getBufferedUserDots(show, showUser):
 	setNames = getBufferedSetNames(show, showUser)[0]
 
 	try:
-		with open(f"backend/cache/dots/{show.id}.json", "r") as file:
+		with open(f"cache/dots/{show.id}.json", "r") as file:
 			data = json.load(file)
 
 			# var to store all of the sets
@@ -1632,7 +1632,7 @@ def getBufferedUserDots(show, showUser):
 						break
 			
 			if changedSomething:
-				with open(f"backend/cache/dots/{show.id}.json", "w") as outfile:
+				with open(f"cache/dots/{show.id}.json", "w") as outfile:
 					json.dump(data, outfile, indent=4)
 				
 			return output
@@ -2139,7 +2139,7 @@ def updateBufferWithSetName(show, setName):
 	data = []
 
 	try:
-		with open(f"backend/cache/set-names/{show.id}.json", "r") as file:
+		with open(f"cache/set-names/{show.id}.json", "r") as file:
 			data = json.load(file)
 			print(data)
 
@@ -2152,7 +2152,7 @@ def updateBufferWithSetName(show, setName):
 							set["set_name"] = setName.name
 					set["update_timestamp"] = str(show.last_set_name_update)
 		
-		with open(f"backend/cache/set-names/{show.id}.json", "w") as file: 
+		with open(f"cache/set-names/{show.id}.json", "w") as file: 
 			json.dump(data, file, indent=4)
 	except:
 		getSetNamesWithoutBuffer(show)
@@ -2435,7 +2435,7 @@ def getSetNamesWithoutBuffer(show):
 		output[section.id] = setsOutput
 	
 	# SAVING NEW CACHE
-	with open(f"backend/cache/set-names/{show.id}.json", "w") as outfile:
+	with open(f"cache/set-names/{show.id}.json", "w") as outfile:
 		json.dump(output, outfile, indent=4)
 
 	return output
@@ -2446,7 +2446,7 @@ def getBufferedSetNames(show, showUser):
 	curDatabaseVersion = show.last_set_name_update
 
 	try:
-		with open(f"backend/cache/set-names/{show.id}.json", "r") as file:
+		with open(f"cache/set-names/{show.id}.json", "r") as file:
 			data = json.load(file)
 
 			# var to store all of the sets
@@ -2714,7 +2714,7 @@ def getShowData(show: Show):
 	out["show_users"] = showUsersOut
 
 	print("SAVING NEW CACHE")
-	with open(f"backend/cache/dots-new/{show.id}.json", "w") as outfile:
+	with open(f"cache/dots-new/{show.id}.json", "w") as outfile:
 		json.dump(out, outfile, indent=4)
 
 	
@@ -2749,7 +2749,7 @@ def getBufferedDotsNew(show: Show, section: int, curDatabaseVersion: int):
 	DATA_LOAD_SIZE = 8
 
 	try:
-		with open(f"backend/cache/dots-new/{show.id}.json", "r") as file:
+		with open(f"cache/dots-new/{show.id}.json", "r") as file:
 			data = json.load(file)
 
 			output = {}
@@ -2877,7 +2877,6 @@ def addAllDataFromPDF(file):
 
 if __name__ == "__main__":
 	print("\r\n\r\nSTARTING Dot Check Deck API Server\r\n\r\n")
-
 	rebuild = False
 
 	for i, arg in enumerate(sys.argv):
@@ -3025,6 +3024,8 @@ if __name__ == "__main__":
 		# Use Default Config
 		else:
 			app.run(debug=True)
+
+
 """
 Startup Command
 
