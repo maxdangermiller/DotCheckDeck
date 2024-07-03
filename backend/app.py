@@ -48,7 +48,7 @@ if 'WEBSITE_HOSTNAME' not in os.environ:
 else:
 	# production
 	print("Loading config.production from production.py")
-	app.config.from_object('production')
+	app.config.from_object('backend.production')
 
 	storage_obj = storage.CloudStorageClient()
 
