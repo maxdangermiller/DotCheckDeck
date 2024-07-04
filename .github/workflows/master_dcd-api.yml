@@ -13,6 +13,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./app
+
 
     steps:
       - name: Pull everything from github
@@ -22,22 +27,14 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
-      - name: Set up java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '21'
 
       - name: Create and start virtual environment
         run: |
-          cd backend
-          python3 -m venv venv
+          python -m venv venv
           source venv/bin/activate
       
       - name: Install dependencies
         run: |
-          cd backend
           pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
@@ -48,8 +45,7 @@ jobs:
           name: python-app
           path: |
             .
-            !frontend/
-            !backend/venv/**
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
