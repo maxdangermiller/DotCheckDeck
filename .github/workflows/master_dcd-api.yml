@@ -23,13 +23,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up Python version
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: '3.11'
 
       - name: Create and start virtual environment
         run: |
-          python -m venv venv
+          python3 -m venv venv
           source venv/bin/activate
       
       - name: Install dependencies
@@ -42,8 +42,8 @@ jobs:
         with:
           name: python-app
           path: |
-            . 
-            !venv/
+            backend/**
+            !backend/venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -53,16 +53,26 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v2
         with:
           name: python-app
           path: .
-          
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
-        id: deploy-to-webapp
+
+      - name: Log in to Azure CLI
+        uses: azure/login@v1
         with:
-          app-name: 'dcd-api'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_37684D3A3DD647A9A2DDF3F96DE3A2F2 }}
+          creds: ${{ secrets.AZURE_SERVICE_PRINCIPAL }}
+
+      - name: Configure deployment and runtime settings on the webapp
+        run: |
+          az configure --defaults ${{ env.RESOURCE_GROUP }}
+          az webapp config appsettings --name ${{ env.WEBAPP_NAME }} --settings \
+              SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+              FLASK_ENV=production
+
+          az webapp config set --name ${{ env.WEBAPP_NAME }} \
+              --startup-file "gunicorn --bind=0.0.0.0 --timeout 600 app:app"
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.WEBAPP_NAME}}
