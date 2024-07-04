@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Pull everything from github
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python version
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
@@ -47,7 +47,7 @@ jobs:
         with:
           name: python-app
           path: |
-            backend/** 
+            . 
             !backend/venv/**
 
   deploy:
@@ -66,7 +66,7 @@ jobs:
           path: .
           
       - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v4
         id: deploy-to-webapp
         with:
           app-name: 'dcd-api'
