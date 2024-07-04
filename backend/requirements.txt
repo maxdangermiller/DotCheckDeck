@@ -23,6 +23,7 @@ Flask-Migrate==4.0.1
 Flask-RESTful==0.3.9
 Flask-SQLAlchemy==3.0.2
 greenlet==2.0.1
+gunicorn==22.0.0
 idna==3.4
 importlib-metadata==6.6.0
 isodate==0.6.1

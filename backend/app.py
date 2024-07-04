@@ -16,19 +16,19 @@ import sys
 import time
 from cryptography.fernet import Fernet
 
-import backend.storage as storage
-from backend.database import ma, db
+import storage as storage
+from database import ma, db
 
-from backend.database.dot import Dot
-from backend.database.dotIcon import DotIcon
-from backend.database.setName import SetName
-from backend.database.set import Set
-from backend.database.bandSection import BandSection
-from backend.database.showUser import ShowUser
-from backend.database.user import User
-from backend.database.show import Show
-from backend.database.school import School
-from backend.database.schemas import DotSchema, DotIconSchema, SetNameSchema, SetSchema, BandSectionSchema, ShowUserSchema, UserSchema, ShowSchema, SchoolSchema
+from database.dot import Dot
+from database.dotIcon import DotIcon
+from database.setName import SetName
+from database.set import Set
+from database.bandSection import BandSection
+from database.showUser import ShowUser
+from database.user import User
+from database.show import Show
+from database.school import School
+from database.schemas import DotSchema, DotIconSchema, SetNameSchema, SetSchema, BandSectionSchema, ShowUserSchema, UserSchema, ShowSchema, SchoolSchema
 
 
 # TODO: Redis Queue
@@ -48,7 +48,7 @@ if 'WEBSITE_HOSTNAME' not in os.environ:
 else:
 	# production
 	print("Loading config.production from production.py")
-	app.config.from_object('backend.production')
+	app.config.from_object('production')
 
 	storage_obj = storage.CloudStorageClient()
 

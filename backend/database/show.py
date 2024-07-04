@@ -1,7 +1,7 @@
-from backend.database import ma, db
-from backend.cache import regions, CacheableMixin, query_callable
+from database import ma, db
+from cache import regions, CacheableMixin, query_callable
 from datetime import datetime
-from backend.database.utils import generateUpdateCode
+from database.utils import generateUpdateCode
 import random
 import string
 
