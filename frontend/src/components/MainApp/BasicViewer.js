@@ -514,6 +514,17 @@ const BasicViewer = (props) => {
         setUserOptions({...userOptions,  "basicUseCollegeHash": value});
     }
 
+    const getSetMeasures = (set_id) => {
+        for (let i = 0; i < sets.length; i++) {
+            let set = sets[i];
+            if (set.id === set_id) {
+                return set.measure
+            }
+            
+        }
+        return "";
+    }
+
     // Return if downloading
 	if (isDownloading) {
 		return (
@@ -604,7 +615,7 @@ const BasicViewer = (props) => {
                                 <div className='mb-2'>{getDotText1(dotFromBits(dotData["dot_pos"]))}</div>
                                 <div className='mb-2'>{getDotText2(dotFromBits(dotData["dot_pos"]))}</div>
                                 <div className='mb-2'>For {dotData.counts} counts</div>
-                                <div className='mb-2'>Measures: {dotData.measure}</div>
+                                <div className='mb-2'>Measures: {getSetMeasures(dotData.dot.set_id)}</div>
                             </div>
                             <div style={{right: "1rem", bottom: "1rem", position: "absolute"}}>    
                                 {
