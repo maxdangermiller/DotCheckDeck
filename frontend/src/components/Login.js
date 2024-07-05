@@ -93,6 +93,7 @@ const Login = (props) => {
 										value={email}
 										onChange={e => setEmail(e.target.value)}
 										label="Email"
+										type="email"
 										variant="outlined"
 									/>
 									<TextField
@@ -101,6 +102,7 @@ const Login = (props) => {
 										onChange={e => setPassword(e.target.value)}
 										label="Password"
 										type="password"
+										variant="outlined"
 									/>
 
 									<button className="btn btn-outline-light btn-lg px-5" type="submit" onClick={e => btnClick(e)}>Login</button>

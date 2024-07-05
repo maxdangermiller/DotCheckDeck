@@ -66,6 +66,7 @@ const Viewer = (props) => {
         setCurDatabaseSNTimestamp,
         saveCurTimestamps,
         getLocalTimestamps,
+		updateSpecificSetName,  // For SetNameModel.js
         // Vars
         data,
         curDatabaseTimestamp,
@@ -129,6 +130,8 @@ const Viewer = (props) => {
 			window.location.href = "/error?message=Invalid Show Code! The API sent over something invalid, or the cookie was not saved";
 			return;
 		}
+
+		setShowUpdatePrompt(false);
 
 		console.log("Getting updated database version")
 		fetch(WINDOW_LOCATION + "/database-version?show_code=" + showCode + "&token=" + token)
@@ -278,7 +281,7 @@ const Viewer = (props) => {
         }
 
         // Check if a download was started without valid set data
-        if (sets.length === 0) {
+        if (sets === undefined || sets === null || sets.length === 0) {
             return;
         }
  
@@ -317,15 +320,14 @@ const Viewer = (props) => {
                 if (error.response && (error.response.status === 401 || error.response.status === 400)) {
                     console.log(error.response)
 
-                    window.location.href = "/login";
+                    // window.location.href = "/login";
+					window.location.href = "/error?message=Unauthorized! Try logging in again&return=/login";
                 } else if (error.response && error.response.status === 404) {
-                    window.localStorage.removeItem("localSets")
-                    window.location.reload();
+                    window.location.href = "/error?message=An Unknown Problem Occurred. \r\nIt is recommended to press the 'Reset Client' button&return=/app";
                 }
             })
         } catch (error) {
-            window.localStorage.clear();
-			window.location.reload();
+            window.location.href = "/error?message=An Unknown Problem Occurred. \r\nIt is recommended to press the 'Reset Client' button&return=/app";
         }
 
 
@@ -338,7 +340,11 @@ const Viewer = (props) => {
         setIsDownloading(true);
 		setDownloadingProgress(0);
 
-		captiveDownload([], sets, timestamp, 0);
+		try {
+			captiveDownload([], sets, timestamp, 0);
+		} catch (error) {
+			window.location.href = "/error?message=An Unknown Error occurred. Press 'Go Back' to return&return=/app";
+		}
     }
 
     /**
@@ -463,44 +469,6 @@ const Viewer = (props) => {
 			audio.pause();
 		}
 	}, [audioPlaying])
-
-	// Automatically Grab The Users Info and select them for highlighting
-	// Deprecated by selectUserForHighlighting in useUserOptions
-	/*
-	useEffect(() => {
-		let parsedData = userOptions;
-		try {
-			let localUserOptions = window.localStorage.getItem("localUserOptions");
-			parsedData = JSON.parse(localUserOptions);
-			if (parsedData.dimOtherUsers === undefined) {
-				throw new Error('Yeah... Sorry');
-			}
-			// console.log("Successfully loaded user preferences")
-		} catch {
-			console.log("DIDN'T Find Saved User Preferences, creating new ones")
-			parsedData = {
-				"showNextSet": false, "showLastSet": false, "drawPath": false,
-				"highlightSection": false,
-				"useSectionColors": true,
-				"showMovementBrackets": false, "highlightUser": null,
-				"moveSpeed": 10, "useActualSetLength": false,
-				"dimOtherUsers": false, "showCollegeHash": true,
-				"followingUser": false
-			};
-			window.localStorage.setItem("localUserOptions", JSON.stringify(parsedData));
-		}
-		
-		if (userData.label !== undefined) {
-			console.log(userData)
-			// TODO: Return
-			// setUserOptions({...parsedData,  "highlightUser": {"id": userData.show_user_id, "label": userData.label}, "followingUser": false});
-		} else {
-			// TODO: Return
-			// setUserOptions({...parsedData,  "highlightUser": null, "followingUser": false});
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [userData])
-	*/
 
 	// Check to see if we're in landscape, if not display a "Rotate Please" message
 	useEffect(() => {
@@ -795,7 +763,7 @@ const Viewer = (props) => {
 			<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
 				<h1>Rotate Please</h1>
 				<h2>or switch to basic mode</h2>
-				<button className='btn btn-primary' onClick={(e) => {window.location.href = "/basic"}}>Open Basic</button>
+				<button className='btn btn-primary' onClick={(e) => {window.location.href = "/app/basic"}}>Open Basic</button>
 				<UserSectionSelection 
 					data={data} 
 					curSet={curSet} 
@@ -863,6 +831,7 @@ const Viewer = (props) => {
 					token={token}
 					userData={userData}
 					updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
+					updateSpecificSetName={updateSpecificSetName}
 				/>
 
 				<UserSectionSelection 

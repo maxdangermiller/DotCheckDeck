@@ -69,9 +69,7 @@ const AppNavBar = (props) => {
     const getAppInfoDisplay = () => {
         if (window.location.pathname === "/app/basic") {
             return (
-                <Nav className="ml-auto">
-                    <div className='customNavbarText'>BASIC MODE</div>
-                </Nav>
+                null
             );
         }
         

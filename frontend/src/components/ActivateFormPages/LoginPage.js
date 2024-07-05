@@ -24,12 +24,14 @@ const LoginPage = (props) => {
                 onChange={e => setEmail(e.target.value)}
                 label="Email"
                 variant="outlined"
+                type="email"
             />
             <TextField
                 className="mb-3 customInput"
                 value={loginData.password}
                 onChange={e => setPassword(e.target.value)}
                 label="Password"
+                variant="outlined"
                 type="password"
             />
         </>

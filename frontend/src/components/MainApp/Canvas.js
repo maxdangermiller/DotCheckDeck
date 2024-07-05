@@ -80,8 +80,12 @@ const Canvas = (props) => {
 
         let img = new Image();
 
-        img.onerror = function() { window.location.href = "/login" };
-        img.onabort = function() { window.location.href = "/login" };
+        img.onerror = function() { 
+            window.location.href = "/error?message=Your login token is expired. Press 'Go Back' to return to login&return=/login";
+        };
+        img.onabort = function() { 
+            window.location.href = "/error?message=Your login token is expired. Press 'Go Back' to return to login&return=/login";
+        };
 
         img.src = WINDOW_LOCATION + '/get-icon/' + icon_id + "?token=" + token;
 
@@ -338,7 +342,7 @@ const Canvas = (props) => {
                     
                     let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
 
-                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id) {
+                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id && followDot === undefined) {
                         if (userOptions.showMovementBrackets) {
                             drawUserName(dot);
 
@@ -379,7 +383,7 @@ const Canvas = (props) => {
 
                     let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
 
-                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id) {
+                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id && followDot === undefined) {
                         if (userOptions.showMovementBrackets) {
                             drawUserName(dot);
 

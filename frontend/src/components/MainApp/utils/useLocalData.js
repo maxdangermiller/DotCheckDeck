@@ -249,6 +249,31 @@ function useLocalData(isOffline) {
 		return null;
     }
 
+	/**
+	 * Update Specific Set Name
+	 * For use in SetNameModel.js
+	 * 
+	 * @param {String} set_name 
+	 * @param {Integer} set_id 
+	 * @param {Integer} new_sn_timestamp 
+	 */
+	const updateSpecificSetName = (set_name, set_id, new_sn_timestamp) => {
+		let newSets = sets.map((value, index) => {
+			if (value.id === set_id) {
+				console.log(value);
+				value.set_name = set_name;
+			}
+
+			return value;
+		})
+
+		setSets(newSets);
+		localStorage.setItem(LOCAL_SETS_KEY, JSON.stringify(newSets));
+
+		setCurDatabaseSNTimestamp(new_sn_timestamp);
+	}
+
+
 
 	return {
 		checkLocalSets: checkLocalSets,
@@ -263,6 +288,7 @@ function useLocalData(isOffline) {
         setCurDatabaseSNTimestamp: setCurDatabaseSNTimestamp,
         saveCurTimestamps: saveCurTimestamps,
         getLocalTimestamps: getLocalTimestamps,
+		updateSpecificSetName:updateSpecificSetName,
         data,
         curDatabaseTimestamp,
         curDatabaseSNTimestamp,

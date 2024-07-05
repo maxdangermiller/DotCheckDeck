@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {Modal, Button} from 'react-bootstrap/';
 import { TextField } from '@mui/material';
 import getApi from '../../../utils/getApi';
@@ -6,13 +6,21 @@ import getApi from '../../../utils/getApi';
 const WINDOW_LOCATION = getApi();
 
 const SetNameModel = (props) => {
-    const {show, setShow, token, curSetInfo, setCurSetInfo, sets, setSets} = props;
+    const {show, setShow, token, curSetInfo, setCurSetInfo, updateSpecificSetName} = props;
 
-    const setSetName = (value) => {
+    const [ setName, setCurSetName ] = useState('');
+
+
+
+    function handelChangeSetName(event) {
+        let value = event.target.value;
+        setCurSetName(value)
+
         setCurSetInfo({...curSetInfo,  "set_name": value});
     }
 
     const saveSetName = () => {
+        
         try {
             fetch(WINDOW_LOCATION + '/update-set-name', {
                 method: 'POST',
@@ -25,16 +33,8 @@ const SetNameModel = (props) => {
                 .then(res => res.json())
                 .then(
                     (result) => {
-                        let newSets = sets.map((value, index) => {
-                            if (value.id === curSetInfo.id) {
-                                console.log(value);
-                                value.set_name = curSetInfo.set_name;
-                            }
-
-                            return value;
-                        })
-
-                        setSets(newSets);
+                        updateSpecificSetName(setName, curSetInfo.id, result["sn-update-timestamp"]);
+                        
                         setShow(false);
                     },
                     // Note: it's important to handle errors here
@@ -50,9 +50,16 @@ const SetNameModel = (props) => {
         }
     }
 
-    const handleClose = () => setShow(false);
+    useEffect(() => {
+        if (curSetInfo === null || curSetInfo === undefined || curSetInfo.set_name === null || curSetInfo.set_name === undefined ) {
+            setCurSetName("");
+        }
+        else {
+            setCurSetName(curSetInfo.set_name);
+        }
+    }, [show])
 
-    let setName = curSetInfo !== null ? curSetInfo.set_name : "";
+    const handleClose = () => setShow(false);
 
     return (
         <Modal show={show} onHide={handleClose}>
@@ -60,7 +67,7 @@ const SetNameModel = (props) => {
                 <Modal.Title>Create/Edit Set Name</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <TextField value={setName} onChange={(e) => setSetName(e.target.value)} label="Name" />
+                <TextField value={setName} onChange={handelChangeSetName} label="Name" />
                 <p>Please make it short to make sure everyone will be able to see the whole name!</p>
             </Modal.Body>
             <Modal.Footer>

@@ -127,6 +127,7 @@ const RegisterPage = (props) => {
                 variant="outlined"
                 style={{width: "100%"}}
                 id="email"
+                type="email"
 
                 error={registrationData.errors.email_error || registrationData.errors.email_exists_error}
             />

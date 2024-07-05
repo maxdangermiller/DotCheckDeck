@@ -10,7 +10,7 @@ const TermsPage = (props) => {
     return (
         <div>
             <div>
-                <a style={{color: "white"}}href="eula.pdf">End User License Agreement</a>
+                <a style={{color: "white"}} href="eula.pdf" target="_blank">End User License Agreement</a>
             </div>
             <br />
             <div>

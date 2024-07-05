@@ -6,6 +6,7 @@ import { Switch, Stack, Typography } from '@mui/material';
 import UpdatePrompt from '../utils/UpdatePrompt';
 import logo from '../../icons/logo.svg';
 import CustomDownloadProgress from './ViewerComponents/CustomDownloadProgress';
+import SetNameModel from './ViewerComponents/ViewerSideBarComponents/SetNameModel';
 import AppNavBar from './MainAppNavBar/AppNavBar';
 
 import useLocalData from './utils/useLocalData';
@@ -33,6 +34,8 @@ const BasicViewer = (props) => {
 	const [newestTimestamps, setNewestTimestamps] = useState({"data": -1, "sn": -1});           // Store what the newest available timestamp is
     const [isDownloading, setIsDownloading] = useState(false);                                  // Are we CAPTIVE downloading
     const [downloadingProgress, setDownloadingProgress] = useState(0);                          // What percentage is done?
+    const [showEditSetName, setShowEditSetName] = useState(false);                              // Edit Set Name
+    const [tempCurSetInfo, setTempCurSetInfo] = useState({});                                   // Edit Set Name
 
     // Use Local Data
     const { 
@@ -49,6 +52,7 @@ const BasicViewer = (props) => {
         setCurDatabaseSNTimestamp,
         saveCurTimestamps,
         getLocalTimestamps,
+        updateSpecificSetName,  // For SetNameModel.js
         // Vars
         data,
         curDatabaseTimestamp,
@@ -480,10 +484,10 @@ const BasicViewer = (props) => {
         );
     }
 
-    const openEditSetName = (dotData) => {
-        console.log(dotData)
-        // setShowEditSetName(true);
-        // setTempCurSetInfo(JSON.parse(JSON.stringify(dotData)));
+    const openEditSetName = (setInfo) => {
+        console.log(setInfo)
+        setShowEditSetName(true);
+        setTempCurSetInfo(JSON.parse(JSON.stringify(setInfo)));
     }
 
     /**
@@ -512,23 +516,35 @@ const BasicViewer = (props) => {
     // Return if downloading
 	if (isDownloading) {
 		return (
-			<ThemeProvider theme={darkTheme}><section className="gradient-custom">
-			<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
-				<div className="col-12 col-md-8 col-lg-6 col-xl-5 loginFormHeight">
-					<div className="card bg-dark text-white loginFormHeight" style={{borderRadius: '1rem'}}>
-						<div className="card-body p-5 text-center loginFormTextHeight">
-							<div className='flex-column justify-content-center d-flex align-items-center' style={{height: "100%"}}>
-								<img src={logo} alt="" width="40%" height="40%" />
-								<div className="mb-md-5 mt-md-4">
-									<h2 className="fw-bold mb-2 text-uppercase">Downloading</h2>
+			<ThemeProvider theme={darkTheme}><section className="gradient-custom fullScreen">
+				<div className="d-flex flex-column justify-content-center align-items-center fullScreen">
+					<AppNavBar 
+						token={token} 
+						loggedIn={token !== "" && token !== undefined} 
+						logout={logout}
+						data={data} 
+						curSet={curSet} 
+						isOffline={isOffline}
+						userData={userData}
+					/>
+					
+					<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
+						<div className="col-12 col-md-8 col-lg-6 col-xl-5 loginFormHeight">
+							<div className="card bg-dark text-white loginFormHeight" style={{borderRadius: '1rem'}}>
+								<div className="card-body p-5 text-center loginFormTextHeight">
+									<div className='flex-column justify-content-center d-flex align-items-center' style={{height: "100%"}}>
+										<img src={logo} alt="" width="40%" height="40%" />
+										<div className="mb-md-5 mt-md-4">
+											<h2 className="fw-bold mb-2 text-uppercase">Downloading</h2>
 
-									<CustomDownloadProgress variant="determinate" value={downloadingProgress} />
+											<CustomDownloadProgress variant="determinate" value={downloadingProgress} />
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 			</section></ThemeProvider>
 		);
 	}
@@ -578,10 +594,10 @@ const BasicViewer = (props) => {
                             <div style={{right: "1rem", bottom: "1rem", position: "absolute"}}>    
                                 {
                                     userData.is_section_leader ?
-                                    <button className='btn btn-secondary' onClick={(e) => openEditSetName(dotData)}>Edit</button>
+                                    <button className='btn btn-secondary' onClick={(e) => openEditSetName(sets[index])}>Edit</button>
                                     : null
                                 }
-                                <button className='btn btn-success' onClick={(e) => {
+                                <button className='btn btn-success' disabled onClick={(e) => {
                                     window.location.href = "/viewer-quick-display/" + dotData.set_numb + "?return=" + window.location.href
                                 }} >View</button>
                             </div>
@@ -611,6 +627,15 @@ const BasicViewer = (props) => {
                     show={showUpdatePrompt}
                     setShow={setShowUpdatePrompt}
                     update={changeTimestampsToNewUpdate}
+                />
+
+                <SetNameModel 
+                    show = {showEditSetName}
+                    setShow = {setShowEditSetName}
+                    token = {token}
+                    curSetInfo={tempCurSetInfo}
+                    setCurSetInfo={setTempCurSetInfo}
+                    updateSpecificSetName={updateSpecificSetName}
                 />
             </div>
         </div>

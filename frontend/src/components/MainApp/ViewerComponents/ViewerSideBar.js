@@ -41,7 +41,7 @@ const ViewerSideBar = (props) => {
         userOptions, setUserOptions, data,
         audioPlaying, setAudioPlaying, audio, 
         curPlayTime, setCurPlayTime, token, userData,
-        updateSetBasedOnAudioTime
+        updateSetBasedOnAudioTime, updateSpecificSetName  // For SetNameModel.js
     } = props;
 
     const [showSettings, setShowSettings] = useState(false);
@@ -54,6 +54,7 @@ const ViewerSideBar = (props) => {
      * Open Edit Set Name Model
      */
     const openEditSetName = () => {
+        console.log(JSON.parse(JSON.stringify(curSetInfo)));
         setShowEditSetName(true);
         setTempCurSetInfo(JSON.parse(JSON.stringify(curSetInfo)));
     }
@@ -198,6 +199,7 @@ const ViewerSideBar = (props) => {
                             className='customViewerSideBarBtn normalBtn'
                             style={{color: getRehearsalBtnColor()}}
                             onClick={() => {}}
+                            disabled
                         >
                             <RehearsalModeIcon height="100%" fill="currentColor"/>
                         </button>
@@ -208,7 +210,7 @@ const ViewerSideBar = (props) => {
                             type="button" 
                             className='customViewerSideBarBtn normalBtn'
                             style={{color: NORMAL_BTN_COLOR}}
-                            onClick={() => {setShowEditSetName(true)}}
+                            onClick={() => {openEditSetName()}}
                             disabled={!userData.is_section_leader}
                         >
                             <EditSetIcon height="100%" fill="currentColor"/>
@@ -250,8 +252,7 @@ const ViewerSideBar = (props) => {
                 token = {token}
                 curSetInfo={tempCurSetInfo}
                 setCurSetInfo={setTempCurSetInfo}
-                sets={sets}
-                setSets={setSets}
+                updateSpecificSetName={updateSpecificSetName}
             />
 
             <NotesModel 

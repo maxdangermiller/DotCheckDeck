@@ -64,7 +64,7 @@ function canvasConversions(userOptions) {
      * @returns {Float} 0-1 ratio
      */
     const hashRatioConvert = (hash, useCollegeHash) => {
-        if (hash === "Front side") { return 1; }
+        if (hash === "Front Side") { return 1; }
         if (hash === "Front Hash") { 
             if (useCollegeHash) {
                 return FRONT_COLLAGE_HASH_RATIO;

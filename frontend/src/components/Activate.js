@@ -270,9 +270,10 @@ const Activate = (props) => {
         if (curPage === 4) {
             return (
                 <>
-                    
+                    If you already have created an account for a previous show...
                     <button className="btn btn-outline-light btn-lg" type="submit" onClick={e => setCurPage(5)}>Add to Existing Account</button>
                     <br/>
+                    If you have never made an account for Dot Check Deck...
                     <button className="btn btn-outline-light btn-lg" type="submit" onClick={e => setCurPage(6)}>Create New Account</button>
                 </>
             );

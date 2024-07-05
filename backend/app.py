@@ -2141,7 +2141,7 @@ def updateBufferWithSetName(show, setName):
 	try:
 		with open(f"cache/set-names/{show.id}.json", "r") as file:
 			data = json.load(file)
-			print(data)
+			# print(data)
 
 			if str(setName.section_id) not in data:
 				return
@@ -2211,7 +2211,7 @@ class UpdateOrCreateSetNameResource(Resource):
 
 		db.session.commit()
 
-		return "Done.", 201
+		return {"message": "Successfully Updated/Created Set Name for the given set/band section.", "sn-update-timestamp": show.last_set_name_update}, 201
 
 
 class UpdateSectionResource(Resource):

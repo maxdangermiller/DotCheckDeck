@@ -173,10 +173,10 @@ const cordsToDot = (x, y, width, height, baseDot) => {
         dir = "On";
     }
     else if (y < yOfHash) {
-        fbDir = "Behind";
+        fbDir = "Front";
     }
     else {
-        fbDir = "Front";
+        fbDir = "Behind";
     }
 
     return {
