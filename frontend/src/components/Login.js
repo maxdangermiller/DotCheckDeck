@@ -95,6 +95,7 @@ const Login = (props) => {
 										label="Email"
 										type="email"
 										variant="outlined"
+										autoComplete="username"
 									/>
 									<TextField
 										className="mb-3 customInput"
@@ -103,6 +104,7 @@ const Login = (props) => {
 										label="Password"
 										type="password"
 										variant="outlined"
+										autoComplete='current-password'
 									/>
 
 									<button className="btn btn-outline-light btn-lg px-5" type="submit" onClick={e => btnClick(e)}>Login</button>

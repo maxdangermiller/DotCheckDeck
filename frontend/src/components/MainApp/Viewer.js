@@ -746,6 +746,7 @@ const Viewer = (props) => {
 						curSet={curSet} 
 						isOffline={isOffline}
 						userData={userData}
+						showSetInfo={false}
 					/>
 					
 					<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
@@ -781,6 +782,7 @@ const Viewer = (props) => {
 					curSet={curSet} 
 					isOffline={isOffline}
 					userData={userData}
+					showSetInfo={false}
 				/>
 				<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
 					<h1>Rotate Please</h1>
@@ -815,6 +817,7 @@ const Viewer = (props) => {
 				curSet={curSet} 
 				isOffline={isOffline}
 				userData={userData}
+				showSetInfo={true}
 			/>
 
 			<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">

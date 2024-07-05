@@ -128,6 +128,7 @@ const RegisterPage = (props) => {
                 style={{width: "100%"}}
                 id="email"
                 type="email"
+                autoComplete="username"
 
                 error={registrationData.errors.email_error || registrationData.errors.email_exists_error}
             />
@@ -141,6 +142,7 @@ const RegisterPage = (props) => {
                 style={{width: "100%"}}
                 type="password"
                 id="password"
+                autoComplete="new-password"
 
                 error={registrationData.errors.password_errors.any}
             />
@@ -154,6 +156,7 @@ const RegisterPage = (props) => {
                 style={{width: "100%"}}
                 type="password"
                 id="confirm-password"
+                autoComplete="new-password"
 
                 error={registrationData.errors.password_errors.any || registrationData.password !== registrationData.password_confirm}
             />

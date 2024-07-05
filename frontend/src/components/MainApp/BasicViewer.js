@@ -527,6 +527,7 @@ const BasicViewer = (props) => {
 						curSet={curSet} 
 						isOffline={isOffline}
 						userData={userData}
+                        showSetInfo={false}
 					/>
 					
 					<div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
@@ -561,6 +562,7 @@ const BasicViewer = (props) => {
                     curSet={curSet} 
                     isOffline={isOffline}
                     userData={userData}
+                    showSetInfo={false}
                 />
                 <div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
                     <div className="spinner-border" role="status">
@@ -581,6 +583,7 @@ const BasicViewer = (props) => {
 				curSet={curSet} 
 				isOffline={isOffline}
 				userData={userData}
+                showSetInfo={false}
 			/>
 
             <div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">

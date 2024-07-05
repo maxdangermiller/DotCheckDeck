@@ -17,22 +17,23 @@ const LoginPage = (props) => {
 
     return (
         <>
-        
             <TextField
                 className="mb-3 customInput"
                 value={loginData.email}
                 onChange={e => setEmail(e.target.value)}
                 label="Email"
-                variant="outlined"
                 type="email"
+                variant="outlined"
+                autoComplete="username"
             />
             <TextField
                 className="mb-3 customInput"
                 value={loginData.password}
                 onChange={e => setPassword(e.target.value)}
                 label="Password"
-                variant="outlined"
                 type="password"
+                variant="outlined"
+                autoComplete='current-password'
             />
         </>
     )

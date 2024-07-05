@@ -5,7 +5,7 @@ import {Nav,  Navbar, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 const AppNavBar = (props) => {
-    const { token, loggedIn, logout, data, curSet, isOffline, userData } = props;
+    const { token, loggedIn, logout, data, curSet, isOffline, userData, showSetInfo } = props;
 
     /**
      * Get Current Measure
@@ -67,7 +67,7 @@ const AppNavBar = (props) => {
 	}
 
     const getAppInfoDisplay = () => {
-        if (window.location.pathname === "/app/basic") {
+        if (!showSetInfo) {
             return (
                 null
             );
