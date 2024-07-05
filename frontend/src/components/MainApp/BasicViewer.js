@@ -425,7 +425,7 @@ const BasicViewer = (props) => {
             }
             if (direction === "Front") {
                 if (dot.fb_steps < 4) {
-                    return {...dot, fb_steps: 4 - dot.fb_steps, fb_direction: "Front"};
+                    return {...dot, fb_steps: 4 - dot.fb_steps, fb_direction: "Behind"};
                 }
                 return {...dot, fb_steps: dot.fb_steps - 4};
             }
