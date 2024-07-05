@@ -11,6 +11,7 @@ import AppNavBar from './MainAppNavBar/AppNavBar';
 
 import useLocalData from './utils/useLocalData';
 import useUserOptions from './utils/useUserOptions';
+import {dotFromBits} from './CanvasComponents/ConvertDotToCords';
 
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -277,8 +278,8 @@ const BasicViewer = (props) => {
         try {
             retrieveDataFromAPI(localSets, useSetIndex, showCode, token).then((response) => {      
                 for (let i = 0; i < response.data.length; i++) {
-                    const setNumb = response.data[i]["index"];
-                    localData[setNumb] = response.data[i];
+                    const setNumb = response.data["data"][i]["index"];
+                    localData[setNumb] = response.data["data"][i];
                 }
                 
                 console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(localData, sets) + ".")
@@ -551,9 +552,20 @@ const BasicViewer = (props) => {
 
     if (data.length === 0) {
         return (
-            <div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
-                <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Loading...</span>
+            <div className="d-flex flex-column justify-content-center align-items-center fullScreen">
+                <AppNavBar 
+                    token={token} 
+                    loggedIn={token !== "" && token !== undefined} 
+                    logout={logout}
+                    data={data} 
+                    curSet={curSet} 
+                    isOffline={isOffline}
+                    userData={userData}
+                />
+                <div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
+                    <div className="spinner-border" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
                 </div>
             </div>
         )
@@ -586,8 +598,8 @@ const BasicViewer = (props) => {
                                 </div>
                             </div>
                             <div className='flex-column justify-content-center d-flex align-items-start' style={{width:'65%'}}>
-                                <div className='mb-2'>{getDotText1(dotData.dot)}</div>
-                                <div className='mb-2'>{getDotText2(dotData.dot)}</div>
+                                <div className='mb-2'>{getDotText1(dotFromBits(dotData["dot_pos"]))}</div>
+                                <div className='mb-2'>{getDotText2(dotFromBits(dotData["dot_pos"]))}</div>
                                 <div className='mb-2'>For {dotData.counts} counts</div>
                                 <div className='mb-2'>Measures: {dotData.measure}</div>
                             </div>

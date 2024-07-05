@@ -276,7 +276,8 @@ const Viewer = (props) => {
      * @param {Integer} timestamp 
      */
     const captiveDownload = (localData, localSets, timestamp, depth) => {
-        if (depth >= 10) {
+        if (depth >= 15) {
+			window.location.href = "/error?message=An Unknown Problem Occurred. (Captive Download Error 1)\r\nIt is recommended to press the 'Reset Client' button&return=/app";
             return;
         }
 
@@ -295,15 +296,22 @@ const Viewer = (props) => {
 			saveData(localData);
 			setIsDownloading(false); 
             setShowUpdatePrompt(false);
-            saveCurTimestamps(newestTimestamps.data, newestTimestamps.sn);
+
+			if (newestTimestamps.data === -1) {
+				getDatabaseVersion();
+			}
+			else {
+				saveCurTimestamps(newestTimestamps.data, newestTimestamps.sn);
+			}
+
 			return; 
 		}
 
         try {
             retrieveDataFromAPI(localSets, useSetIndex, showCode, token).then((response) => {      
-                for (let i = 0; i < response.data.length; i++) {
-                    const setNumb = response.data[i]["index"];
-                    localData[setNumb] = response.data[i];
+                for (let i = 0; i < response.data["data"].length; i++) {
+                    const setNumb = response.data["data"][i]["index"];
+                    localData[setNumb] = response.data["data"][i];
                 }
                 
                 console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(localData, sets) + ".")
@@ -312,6 +320,10 @@ const Viewer = (props) => {
                 console.log(localData);
                 
                 saveLocalData(localData);
+
+				if (response.data["data-timestamp"] !== newestTimestamps.data || response.data["set_name_timestamp"] !== newestTimestamps.sn) {
+					setNewestTimestamps(response.data["data-timestamp"], response.data["set_name_timestamp"])
+				}
                 
                 // Recurse
                 captiveDownload(localData, localSets, timestamp, depth + 1);
@@ -760,23 +772,34 @@ const Viewer = (props) => {
     // Return if landscape
 	if (!isLandscape) {
 		return (
-			<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
-				<h1>Rotate Please</h1>
-				<h2>or switch to basic mode</h2>
-				<button className='btn btn-primary' onClick={(e) => {window.location.href = "/app/basic"}}>Open Basic</button>
-				<UserSectionSelection 
+			<div className="d-flex flex-column justify-content-center align-items-center fullScreen">
+				<AppNavBar 
+					token={token} 
+					loggedIn={token !== "" && token !== undefined} 
+					logout={logout}
 					data={data} 
 					curSet={curSet} 
-					schoolCode={showCode} 
-					token={token} 
+					isOffline={isOffline}
 					userData={userData}
-					showID={showID}
 				/>
-				<UpdatePrompt
-					show={showUpdatePrompt}
-					setShow={setShowUpdatePrompt}
-					update={changeTimestampsToNewUpdate}
-				/>
+				<div className="flex-column justify-content-center d-flex align-items-center ViewerFullScreen">
+					<h1>Rotate Please</h1>
+					<h2>or switch to basic mode</h2>
+					<button className='btn btn-primary' onClick={(e) => {window.location.href = "/app/basic"}}>Open Basic</button>
+					<UserSectionSelection 
+						data={data} 
+						curSet={curSet} 
+						schoolCode={showCode} 
+						token={token} 
+						userData={userData}
+						showID={showID}
+					/>
+					<UpdatePrompt
+						show={showUpdatePrompt}
+						setShow={setShowUpdatePrompt}
+						update={changeTimestampsToNewUpdate}
+					/>
+				</div>
 			</div>
 		);
 	}

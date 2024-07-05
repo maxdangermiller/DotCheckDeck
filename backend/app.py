@@ -1576,10 +1576,18 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 				output.append(data[i])
 			"""
 				
-			return output, 200
+			return {
+				"data": output, 
+				"data-timestamp": show.last_update, 
+				"set_name_timestamp": show.last_set_name_update
+			}, 200
 	except:
 		print("Error")
-		return getAllDotsWithoutBuffer(show.code)
+		return {
+			"data": getAllDotsWithoutBuffer(show.code), 
+			"data-timestamp": show.last_update, 
+			"set_name_timestamp": show.last_set_name_update
+		}
 
 
 class GetDotsWithBufferResource(Resource):
