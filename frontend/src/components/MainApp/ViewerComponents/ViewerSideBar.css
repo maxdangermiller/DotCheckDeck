@@ -68,6 +68,8 @@
     border-width: 5px;
     border-radius: 20px;
     height: 80%!important;
+    overflow-x:visible!important;
+    overflow-y: hidden!important;
     
 }
 

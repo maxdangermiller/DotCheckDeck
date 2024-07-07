@@ -86,6 +86,16 @@ const AudioPlayer = (props) => {
         </div>;
     }
 
+    /**
+     * Finds the last set's end_time_code
+     */
+    const getLastEndTimeCode = () => {
+        let lastSet = sets[sets.length - 1];
+        console.log(lastSet)
+        return 10;
+    }
+
+
     return (
         <div className='mb-2 flex-column justify-content-center d-flex align-items-center mediaControlRow'>
             {getCurCountDisplay()}
@@ -104,8 +114,9 @@ const AudioPlayer = (props) => {
                         updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
                         isCountsMode={isCountsMode()}
                         curSetInfo={sets[curSet]}
+                        lastEndTimeCode={() => getLastEndTimeCode()}
                     />
-                    : null
+                    : <span style={{textAlign: "center"}}>OFFLINE</span>
                 }
                 {
                     getNextSetDisplay()

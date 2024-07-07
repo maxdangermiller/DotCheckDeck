@@ -100,7 +100,10 @@ function App() {
 							} else {
 								if (window.location.pathname !== "/login") {
 									setIsOffline(false);
-									window.location.href = "/login";
+									window.location.href = "/error?message=No internet connection detected. \r\nYou must connect to the internet at least temporally&return=/login";
+								}
+								else {
+									window.location.href = "/error?message=No internet connection detected. \r\nYou can't login without internet access& right nowreturn=/login";
 								}
 							}
 						}
@@ -108,6 +111,7 @@ function App() {
 							// console.log(error.response)
 							// console.log(error.response.status)
 							// console.log(error.response.headers)
+							window.location.href = "/error?message=Something Went Wrong. \r\nIt's probably your fault somehow though... Talk To Max Miller if problems persist&return=/login";
 							removeToken();
 						}
 					})
@@ -119,7 +123,9 @@ function App() {
 	}
 
 	useEffect(() => {
-		refreshToken();
+		if (window.location.pathname !== "/error") {
+			refreshToken();
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [token, refToken]);
 	
@@ -165,7 +171,7 @@ function App() {
 	const isPWAAdded = window.matchMedia('(display-mode: standalone)').matches;
 
 
-	if (token == null && !isOffline) {
+	if (token == null && !isOffline && window.location.pathname !== "/error") {
 		return (
 			<div className="d-flex align-items-center justify-content-center flex-column fullScreen">
 				<div className="spinner-border" role="status">

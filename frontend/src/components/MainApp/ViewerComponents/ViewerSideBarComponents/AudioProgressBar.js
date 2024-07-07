@@ -4,7 +4,7 @@ const AudioProgressBar = (props) => {
     const {
         curPlayTime, setCurPlayTime, audio, 
         isPlaying, setIsPlaying, updateSetBasedOnAudioTime, 
-        isCountsMode, curSetInfo
+        isCountsMode, curSetInfo, lastEndTimeCode
     } = props;
 
     /**
