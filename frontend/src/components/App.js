@@ -24,6 +24,8 @@ import Page404 from './utils/Page404';
 import ErrorPage from './utils/ErrorPage';
 import ResendVerifyEmail from './utils/ResendVerifyEmail'
 
+import HomePage from './HomePage';
+
 // Main App
 import Viewer from './MainApp/Viewer';
 import BasicViewer from './MainApp/BasicViewer';
@@ -209,7 +211,7 @@ function App() {
 					} />
 
 					<Route path="/" exact errorElement={<ErrorPage />} element={
-						<Navigate to="/app" />
+						<HomePage />
 					} />
 
 					<Route path="/viewer-quick-display/:set_numb_param" exact errorElement={<ErrorPage />} element={
