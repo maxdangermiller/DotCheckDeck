@@ -90,9 +90,12 @@ const AudioPlayer = (props) => {
      * Finds the last set's end_time_code
      */
     const getLastEndTimeCode = () => {
-        let lastSet = sets[sets.length - 1];
-        console.log(lastSet)
-        return 10;
+        try {
+            let lastSet = sets[sets.length - 1];
+            return lastSet.end_time_code;
+        } catch (error) {
+            return 0;
+        }
     }
 
 
@@ -114,7 +117,7 @@ const AudioPlayer = (props) => {
                         updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
                         isCountsMode={isCountsMode()}
                         curSetInfo={sets[curSet]}
-                        lastEndTimeCode={() => getLastEndTimeCode()}
+                        lastEndTimeCode={getLastEndTimeCode()}
                     />
                     : <span style={{textAlign: "center"}}>OFFLINE</span>
                 }

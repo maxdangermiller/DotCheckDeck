@@ -6,7 +6,7 @@ import getApi from '../../../utils/getApi';
 const WINDOW_LOCATION = getApi();
 
 const NotesModel = (props) => {
-    const {show, setShow, curSetInfo, ...rest} = props;
+    const {show, setShow, curSetInfo} = props;
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
@@ -21,6 +21,7 @@ const NotesModel = (props) => {
                     NO NOTES HAVE BEEN WRITTEN BY YOUR DIRECTOR(S)
                 </Modal.Body>
                 <Modal.Footer>
+
                     <Button variant="secondary" onClick={handleClose}>
                         Close
                     </Button>

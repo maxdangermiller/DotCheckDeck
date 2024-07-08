@@ -5,7 +5,7 @@ import './ViewerSideBar.css';
 import OptionsModal from './ViewerSideBarComponents/OptionsModal';
 import SetNameModel from './ViewerSideBarComponents/SetNameModel';
 import NotesModel from './ViewerSideBarComponents/NotesModel';
-import AudioProgressBar from './ViewerSideBarComponents/AudioProgressBar';
+import AdminNotesModel from './ViewerSideBarComponents/AdminNotesModel';
 import AudioPlayer from './ViewerSideBarComponents/AudioPlayer';
 
 // Settings
@@ -41,7 +41,8 @@ const ViewerSideBar = (props) => {
         userOptions, setUserOptions, data,
         audioPlaying, setAudioPlaying, audio, 
         curPlayTime, setCurPlayTime, token, userData,
-        updateSetBasedOnAudioTime, updateSpecificSetName  // For SetNameModel.js
+        updateSetBasedOnAudioTime, updateSpecificSetName,  // For SetNameModel.js
+        isAdminAuthorized
     } = props;
 
     const [showSettings, setShowSettings] = useState(false);
@@ -255,11 +256,22 @@ const ViewerSideBar = (props) => {
                 updateSpecificSetName={updateSpecificSetName}
             />
 
-            <NotesModel 
-                show = {showNotes}
-                setShow = {setShowNotes}
-                curSetInfo = {curSetInfo}
-            />
+            {
+                isAdminAuthorized ?
+                <AdminNotesModel 
+                    show = {showNotes}
+                    setShow = {setShowNotes}
+                    curSetInfo = {curSetInfo}
+                    isAdminAuthorized = {isAdminAuthorized}
+                    token = {token}
+                />
+                :
+                <NotesModel 
+                    show = {showNotes}
+                    setShow = {setShowNotes}
+                    curSetInfo = {curSetInfo}
+                />
+            }
         </>
     );
 };

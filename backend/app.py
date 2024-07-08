@@ -2506,6 +2506,41 @@ class SetNameListResource(Resource):
 		return getBufferedSetNames(show, showUser)
 
 
+class UpdateSetNotesResource(Resource):
+	@jwt_required()
+	def post(self):
+		identity = get_jwt_identity()
+		loggedInUser = User.query.filter(User.email == identity).first()
+
+		if not loggedInUser.is_admin:
+			return "Unauthorized", 401
+
+		parser = reqparse.RequestParser()
+		parser.add_argument('id', type=int, default=None, required=True, help="You must include the ID of the set")
+		parser.add_argument('notes', type=str, default=None, required=True, help="You must include the notes")
+		args = parser.parse_args()
+
+		id = args.get('id')
+		notes = args.get('notes')
+
+		set = Set.query.filter(Set.id == id).first()
+		show = Show.query.filter(Show.school_id == loggedInUser.school.id, Show.id == set.show_id).first()
+
+		if set is None:
+			return "Invalid Set ID", 404
+		if show is None:
+			return "User doesn't have access to the given set", 401
+
+		set.notes = notes
+		
+		# There has been a change made to the show's date, 
+		# so we must change the "last update time" var in the show object
+		show.changeUpdateTime()  
+		db.session.commit()
+
+		return "Updated Successfully", 201
+
+
 # Props
 
 class PropsListResource(Resource):
@@ -2819,6 +2854,7 @@ api.add_resource(GetSectionsResource, '/get-sections')
 api.add_resource(UpdateUserSectionResource, '/update-user-section')
 api.add_resource(AddShowUserResource, "/add-show-user-to-user")
 api.add_resource(PropsListResource, "/get-props")
+api.add_resource(UpdateSetNotesResource, "/update-notes")
 
 api.add_resource(APIGetData, "/api/get-data")
 

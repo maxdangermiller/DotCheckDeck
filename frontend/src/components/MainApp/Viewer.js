@@ -567,7 +567,7 @@ const Viewer = (props) => {
             if (audio !== null && sets[setIndex + x]["start_time_code"] !== null) {
 				audio.currentTime = sets[setIndex + x]["start_time_code"] / 1000;
 				setCurPlayTime(sets[setIndex + x]["start_time_code"] / 1000);
-				console.log("Changing cur play time to " + sets[setIndex + x]["start_time_code"] / 1000)
+				// console.log("Changing cur play time to " + sets[setIndex + x]["start_time_code"] / 1000)
 			} else {
 				console.log("Something is wrong with audio or start_time_code for this set!", audio, sets[setIndex + x])
 			}
@@ -733,6 +733,21 @@ const Viewer = (props) => {
         return sets[curSet]["set_numb"];
     }
 
+	/**
+	 * Is Admin Authorized?
+	 * @returns {Boolean} is authed
+	 */
+	const isAdminAuthorized = () => {
+		if (token === "" || token === undefined || isOffline) {
+			return false;
+		}
+
+		if (userData !== undefined && userData["is_admin"] !== undefined) {
+			return userData["is_admin"];
+		}
+		return false;
+	}
+
     // Return if downloading
 	if (isDownloading) {
 		return (
@@ -858,6 +873,7 @@ const Viewer = (props) => {
 					userData={userData}
 					updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
 					updateSpecificSetName={updateSpecificSetName}
+					isAdminAuthorized={isAdminAuthorized()}
 				/>
 
 				<UserSectionSelection 

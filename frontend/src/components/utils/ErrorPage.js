@@ -24,7 +24,7 @@ const ErrorPage = (props) => {
         <div className="d-flex align-items-center justify-content-center vh-100 vw-100">
             <div className="text-center">
                 <h1 className="display-1 fw-bold">Error</h1>
-                <p className="fs-3"> <span className="text-danger">Opps!</span> We encountered an Error.</p>
+                <p className="fs-3"> <span className="text-danger">Oops!</span> We encountered an Error.</p>
                 <p className="lead">
                     {query.get("message")}
                 </p>

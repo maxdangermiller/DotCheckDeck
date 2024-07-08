@@ -99,7 +99,7 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
         context.strokeStyle=HIGHLIGHT_USER_COLOR;
         context.lineWidth="2";
         
-        if (x !== lineX || dot["direction"] !== "On") {
+        if (Math.abs(x -lineX) > 0.5 || dot["direction"] !== "On") {
             const distanceFromHash = Math.abs(y - hashY) + BRACKET_SEPARATION;
             let useY = 0;
             let xDirection = 0;
@@ -127,7 +127,7 @@ function drawInfoDisplays(canvas, context, userOptions, userData, hoverUserInfo,
             drawMovementBracketText(lineX, useY, x, useY, xDirection, 0, +dot.steps.toFixed(2), HIGHLIGHT_USER_COLOR);
         }
 
-        if (y !== hashY || dot["fb_direction"] !== "On") {
+        if (Math.abs(y -hashY) > 0.5 || dot["fb_direction"] !== "On") {
             const distanceFromHash = Math.abs(x - lineX) + BRACKET_SEPARATION;
             let useX = 0;
             let yDirection = 0;

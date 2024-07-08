@@ -196,39 +196,39 @@ function App() {
 					: null
 				}
 				<Routes>
-					<Route path="/app" exact element={
+					<Route path="/app" exact errorElement={<ErrorPage />} element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
 						: <Viewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
 					} />
 					
-					<Route path="/app/basic" exact element={
+					<Route path="/app/basic" exact errorElement={<ErrorPage />} element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
 						: <BasicViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
 					} />
 
-					<Route path="/" exact element={
+					<Route path="/" exact errorElement={<ErrorPage />} element={
 						<Navigate to="/app" />
 					} />
 
-					<Route path="/viewer-quick-display/:set_numb_param" exact element={
+					<Route path="/viewer-quick-display/:set_numb_param" exact errorElement={<ErrorPage />} element={
 						(token === "" && !isOffline) || schoolCode === ""
 						? <Navigate to="/login" />
 						: <Viewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline}/>
 					} />
 
-					<Route path="/activate/:join_code" exact element={
+					<Route path="/activate/:join_code" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && schoolCode !== ""
 						? <Navigate to="/app" />
 						: <Activate setToken={setToken} setRefToken={setRefToken}/>
 					} />
-					<Route path="/activate" exact element={
+					<Route path="/activate" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && schoolCode !== ""
 						? <Navigate to="/app" />
 						: <Activate setToken={setToken} setRefToken={setRefToken}/>
 					} />
-					<Route path="/login" exact element={
+					<Route path="/login" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && schoolCode !== ""
 						? <Navigate to="/app" />
 						: <Login 
@@ -239,52 +239,52 @@ function App() {
 							setShowID={setShowID}
 						/>
 					} />
-					<Route path="/admin" exact element={
+					<Route path="/admin" exact errorElement={<ErrorPage />} element={
 						token === "" || token === undefined || !isAdminAuthorized()
 						? <Navigate to="/app" />
 						: <Admin token={token} schoolCode={schoolCode}/>
 					} />
-					<Route path="/admin-timeline" exact element={
+					<Route path="/admin-timeline" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
 						: <AdminTimeline token={token} schoolCode={schoolCode}/>
 					} />
-					<Route path="/admin-join-code" exact element={
+					<Route path="/admin-join-code" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
 						: <AdminJoinCodeDisplay token={token} schoolCode={schoolCode}/>
 					} />
-					<Route path="/admin-create-show" exact element={
+					<Route path="/admin-create-show" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
 						: <AdminCreateShow token={token} schoolCode={schoolCode}/>
 					} />
-					<Route path="/admin-add-prop" exact element={
+					<Route path="/admin-add-prop" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
 						: <AdminAddProp token={token} schoolCode={schoolCode}/>
 					} />
-					<Route path="/admin-convert-to-prop" exact element={
+					<Route path="/admin-convert-to-prop" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
 						: <AdminConvertToProp token={token} schoolCode={schoolCode}/>
 					} />
-					<Route path="/activate-account/:enc_id" exact element={
+					<Route path="/activate-account/:enc_id" exact errorElement={<ErrorPage />} element={
 						<VerifyAccount/>
 					} />
-					<Route path="/forgot-password" exact element={
+					<Route path="/forgot-password" exact errorElement={<ErrorPage />} element={
 						<ForgotPassword/>
 					} />
-					<Route path="/resent-verify-email" exact element={
+					<Route path="/resent-verify-email" exact errorElement={<ErrorPage />} element={
 						<ResendVerifyEmail/>
 					} />
-					<Route path="/forgot-password/:enc_id" exact element={
+					<Route path="/forgot-password/:enc_id" exact errorElement={<ErrorPage />} element={
 						<ResetPassword/>
 					} />
-					<Route path="/accept-invitation/:enc_key" exact element={
+					<Route path="/accept-invitation/:enc_key" exact errorElement={<ErrorPage />} element={
 						<AcceptInvitation/>
 					} />
-					<Route path="/about" exact element={
+					<Route path="/about" exact errorElement={<ErrorPage />} element={
 						<AboutPage/>
 					} />
 					
