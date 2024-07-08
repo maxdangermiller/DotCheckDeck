@@ -603,7 +603,7 @@ const BasicViewer = (props) => {
                 {
                     getOnlyUserDots().map((dotData, index) =>
                         <li className="list-group-item flex-row justify-content-between d-flex align-items-center" key={index} style={{width:'100%', height:'180px'}}>
-                            <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'30%', height:'100%'}}>
+                            <div className='flex-column justify-content-center d-flex align-items-center' style={{width:'35%', height:'100%'}}>
                                 <div style={{width:'100%', height:'60%', fontSize:'32px'}} className='flex-column justify-content-center d-flex align-items-center'>
                                     {sets[index].set_numb}
                                 </div>
@@ -623,9 +623,6 @@ const BasicViewer = (props) => {
                                     <button className='btn btn-secondary' onClick={(e) => openEditSetName(sets[index])}>Edit</button>
                                     : null
                                 }
-                                <button className='btn btn-success' disabled onClick={(e) => {
-                                    window.location.href = "/viewer-quick-display/" + dotData.set_numb + "?return=" + window.location.href
-                                }} >View</button>
                             </div>
                         </li>
 
