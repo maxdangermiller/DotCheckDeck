@@ -30,31 +30,34 @@ class LocalStorageClient(StorageClient):
 	def __init__(self) -> None:
 		super().__init__()
 
+	def create_path_if_doesnt_exist(path:str):
+		doesExist = os.path.exists(f"./{path}")
+		if not doesExist:
+			os.makedirs(f"./{path}")
+
 	def get_file(self, path: str, filename: str):
-		Path(f"./{path}").mkdir(parents=True, exist_ok=True)
+		self.create_path_if_doesnt_exist(path)
 
 		with open(f"./{path}/{filename}", "rb") as file: 
 			return file
 	
 	def send_file(self, path: str, filename: str):
-		Path(f"./{path}").mkdir(parents=True, exist_ok=True)
-
 		return send_from_directory(f"./{path}", filename)
 
 	def save_file(self, path: str, filename: str, file):
 		# Create Path if it doesn't exist
-		Path(f"./{path}").mkdir(parents=True, exist_ok=True)
+		self.create_path_if_doesnt_exist(path)
 
 		file.save(f"./{path}/{filename}")
 	
 	def get_json(self, path: str, filename: str):
-		Path(f"./{path}").mkdir(parents=True, exist_ok=True)
-
+		self.create_path_if_doesnt_exist(path)
+		
 		with open(f"./{path}/{filename}", "r") as file: 
 			return json.load(file, indent=4)
 	
 	def save_json(self, path: str, filename: str, data):
-		Path(f"./{path}").mkdir(parents=True, exist_ok=True)
+		self.create_path_if_doesnt_exist(path)
 
 		with open(f"./{path}/{filename}", "w") as file: 
 			json.dump(data, file, indent=4)
@@ -72,6 +75,11 @@ class CloudStorageClient(StorageClient):
 		
 		self.files = list()
 		self.last_update = 0
+
+	def create_path_if_doesnt_exist(path:str):
+		doesExist = os.path.exists(f"./{path}")
+		if not doesExist:
+			os.makedirs(f"./{path}")
 
 	def get_container(self, container_name: str):
 		# Check if we have it in self.containers
@@ -97,10 +105,9 @@ class CloudStorageClient(StorageClient):
 		for blob in blob_list:
 			print("\t" + blob.name)
 			filename = blob.name.replace("-", "/")
-			directory = f"./{path_list[0]}"
-			save_path = f"{directory}/{filename}"
+			save_path = f"./{path_list[0]}/{filename}"
 
-			Path(directory).mkdir(parents=True, exist_ok=True)
+			self.create_path_if_doesnt_exist(path_list[0])
 
 			with open(save_path, mode="wb") as download_file:
 				download_file.write(container_client.download_blob(blob.name).readall())
@@ -119,7 +126,7 @@ class CloudStorageClient(StorageClient):
 
 			save_path = f"./{path}/{filename}"
 
-			Path(f"./{path}").mkdir(parents=True, exist_ok=True)
+			self.create_path_if_doesnt_exist(path)
 
 			with open(save_path, mode="wb") as download_file:
 				download_file.write(container_client.download_blob(f"{path_fixed}-{filename}").readall())
