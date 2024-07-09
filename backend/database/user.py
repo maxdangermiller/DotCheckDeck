@@ -29,6 +29,7 @@ class User(CacheableMixin, db.Model):
 	created_date = db.Column(db.DateTime, default=datetime.now, nullable=True)
 	last_updated = db.Column(db.DateTime, default=None, nullable=True, onupdate=datetime.now)
 	verified_date = db.Column(db.DateTime, default=None, nullable=True)
+	last_login = db.Column(db.DateTime, default=datetime.now, nullable=True)
 
 	# Methods
 	def set_password(self, password):

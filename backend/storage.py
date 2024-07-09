@@ -89,7 +89,7 @@ class CloudStorageClient(StorageClient):
 		return container
 
 	def update_files(self, path):
-		if time.time() - self.last_update <= 10000:
+		if time.time() - self.last_update <= 120000:
 			return
 
 		path_list = path.split("/")

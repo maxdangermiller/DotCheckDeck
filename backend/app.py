@@ -277,6 +277,9 @@ def create_token():
 					showString = show_user_schema.dump(showUser)
 					showString["show_user_id"] = showUser.id
 
+	user.last_login = datetime.datetime.now()
+	db.session.commit()	
+
 	response = {
 		"access_token": access_token, 
 		"refresh_token": refresh_token, 
@@ -326,32 +329,34 @@ def get_jwt():
 		access_token = create_access_token(identity=get_jwt_identity())
 		user = User.query.filter_by(email=identity).first()
 
-		userString = {}
+		if user is None:
+			return "User doesn't exist!", 401
+		
+		# Require User to be verified
+		if user.verified_date is None:
+			return "User email hasn't been verified yet!", 403
+
+		userString = user_schema.dump(user)
 		showString = {}
 		schoolCode = ""
 		showID = -1
-		if user is not None:
-			userString = user_schema.dump(user)
 
-			# Require User to be verified
-			if user.verified_date is None:
-				return "User email hasn't been verified yet!", 403
+		userSchool = School.query.filter(School.id == user.school_id).first()
+		if userSchool is not None:
+			userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default.desc()).first()
 
-			userSchool = School.query.filter(School.id == user.school_id).first()
-			if userSchool is not None:
-				userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default.desc()).first()
+			if userShow is not None:
+				schoolCode = userShow.code
+				showID = userShow.id
 
-				if userShow is not None:
-					schoolCode = userShow.code
-					showID = userShow.id
+				showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
+				if showUser is not None:
+					showString = show_user_schema.dump(showUser)
+					showString["show_user_id"] = showUser.id
 
-					showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
-					if showUser is not None:
-						showString = show_user_schema.dump(showUser)
-						showString["show_user_id"] = showUser.id
+		user.last_login = datetime.datetime.now()
+		db.session.commit()	
 
-
-		response = {"access_token": access_token, "user": mergeJsonDicts(showString, userString), "school_code": schoolCode}
 		response = {
 			"access_token": access_token, 
 			"user": mergeJsonDicts(userString, showString),
