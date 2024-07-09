@@ -185,7 +185,7 @@ const AdminSetNamePage = (props) => {
                 <Table striped bordered hover>
                     <thead>
                         <tr>
-                            <th onClick={() => handelHeaderClick(0)}>#</th>
+                            <th onClick={() => handelHeaderClick(0)}>ID</th>
                             <th onClick={() => handelHeaderClick(1)}>Set Number</th>
                             <th onClick={() => handelHeaderClick(2)}>Set Name</th>
                             <th>Edit</th>

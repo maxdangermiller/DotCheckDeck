@@ -93,7 +93,7 @@ const AdminSetsPage = (props) => {
     const sort = (data) => {
         let useKey = "";
 
-        if (sortBy === SORT_ID)     { useKey = "id";    }
+        if (sortBy === SORT_ID)     { useKey = "showIndex";    }  // Use Show Index for Set_numb because it's in the correct order, unlike the strings
         if (sortBy === SORT_MEASURE)   { useKey = "measure";  }
         if (sortBy === SORT_COUNTS)  { useKey = "counts";  }
         if (sortBy === SORT_T_COUNTS)  { useKey = "total_counts";  }
@@ -129,7 +129,7 @@ const AdminSetsPage = (props) => {
         <Table striped bordered hover>
             <thead>
                 <tr>
-                    <th onClick={() => handelHeaderClick(0)}>#</th>
+                    <th onClick={() => handelHeaderClick(0)}>ID</th>
                     <th onClick={() => handelHeaderClick(1)}>Measure</th>
                     <th onClick={() => handelHeaderClick(2)}>Counts</th>
                     <th onClick={() => handelHeaderClick(3)}>Total Counts</th>

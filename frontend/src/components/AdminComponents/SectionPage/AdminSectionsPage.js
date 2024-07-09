@@ -120,7 +120,7 @@ const AdminSectionsPage = (props) => {
         <Table striped bordered hover>
             <thead>
                 <tr>
-                    <th onClick={() => handelHeaderClick(0)}>#</th>
+                    <th onClick={() => handelHeaderClick(0)}>ID</th>
                     <th onClick={() => handelHeaderClick(1)}>Name</th>
                     <th onClick={() => handelHeaderClick(2)}>Color</th>
                     <th>Edit</th>
