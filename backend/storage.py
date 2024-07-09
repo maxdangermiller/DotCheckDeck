@@ -76,11 +76,6 @@ class CloudStorageClient(StorageClient):
 		self.files = list()
 		self.last_update = 0
 
-	def create_path_if_doesnt_exist(path:str):
-		doesExist = os.path.exists(f"./{path}")
-		if not doesExist:
-			os.makedirs(f"./{path}")
-
 	def get_container(self, container_name: str):
 		# Check if we have it in self.containers
 		for container in self.containers:
@@ -106,8 +101,8 @@ class CloudStorageClient(StorageClient):
 			print("\t" + blob.name)
 			filename = blob.name.replace("-", "/")
 			save_path = f"./{path_list[0]}/{filename}"
-
-			self.create_path_if_doesnt_exist(path_list[0])
+			
+			os.makedirs(os.path.dirname(save_path, exist_ok=True))
 
 			with open(save_path, mode="wb") as download_file:
 				download_file.write(container_client.download_blob(blob.name).readall())
@@ -126,7 +121,7 @@ class CloudStorageClient(StorageClient):
 
 			save_path = f"./{path}/{filename}"
 
-			self.create_path_if_doesnt_exist(path)
+			os.makedirs(os.path.dirname(save_path, exist_ok=True))
 
 			with open(save_path, mode="wb") as download_file:
 				download_file.write(container_client.download_blob(f"{path_fixed}-{filename}").readall())
