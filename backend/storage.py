@@ -102,7 +102,7 @@ class CloudStorageClient(StorageClient):
 			filename = blob.name.replace("-", "/")
 			save_path = f"./{path_list[0]}/{filename}"
 			
-			os.makedirs(os.path.dirname(save_path, exist_ok=True))
+			os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
 			with open(save_path, mode="wb") as download_file:
 				download_file.write(container_client.download_blob(blob.name).readall())
@@ -121,7 +121,7 @@ class CloudStorageClient(StorageClient):
 
 			save_path = f"./{path}/{filename}"
 
-			os.makedirs(os.path.dirname(save_path, exist_ok=True))
+			os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
 			with open(save_path, mode="wb") as download_file:
 				download_file.write(container_client.download_blob(f"{path_fixed}-{filename}").readall())
