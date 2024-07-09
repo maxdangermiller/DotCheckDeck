@@ -33,7 +33,7 @@ const AdminUsersPage = (props) => {
     const [showDeleteUser, setShowDeleteUser] = useState(false);
     const [editUserData, setEditUserData] = useState({});
     const [sortBy, setSortBy] = useState(SORT_LABEL);
-    const [sortDirection, setSortDirection] = useState(SORT_UP);
+    const [sortDirection, setSortDirection] = useState(SORT_DOWN);
 
 
     const dateTimeFormat = (dateTime) => {
