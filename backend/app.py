@@ -535,13 +535,14 @@ def upload_file():
 	# Check PDFs
 	for fileKey in request.files:
 		file = request.files[fileKey]
-		if len(fileKey) > 8 and fileKey[:8] == "pdf-file" and is_pdf(file.filename):
-			fileLocation = "./showPDFs/" + file.filename
+		fileName = file.filename
+		if len(fileKey) > 8 and fileKey[:8] == "pdf-file" and is_pdf(fileName):
+			fileLocation = "./showPDFs/" + fileName
 			file.save(fileLocation)
 
 			# Save to cloud
-			with open(fileLocation, "rb") as file:
-				storage_obj.save_file(f"showPDFs/", file.filename, file)
+			with open(fileLocation, "rb") as data:
+				storage_obj.save_file(f"showPDFs/", fileName, data)
 
 			addShowFileToDatabase(fileLocation, school, show)
 
@@ -554,8 +555,8 @@ def upload_file():
 			file.save(fileLocation)
 
 			# Save to cloud
-			with open(fileLocation, "rb") as file:
-				storage_obj.save_file(f"static/{show.id}", "audio.mp3", file)
+			with open(fileLocation, "rb") as data:
+				storage_obj.save_file(f"static/{show.id}", "audio.mp3", data)
 
 	return "Success!", 200
 
@@ -1071,7 +1072,7 @@ class SetListResource(Resource):
 		setsOutput = list()
 
 		for set in sets:
-			setName = "Undefined"
+			setName = "(No Set Name)"
 
 			if loggedInUserSection is not None:
 				setNameObj = SetName.query.filter(SetName.section_id == loggedInUserSection.id, SetName.set_id == set.id).first()
@@ -2410,10 +2411,20 @@ class GetDefaultJoinCode(Resource):
 		if not activeUser.is_admin:
 			return "INVALID AUTHORIZATION", 401
 		
-		show = Show.query.filter(Show.school_id == activeUser.school_id).order_by(Show.is_default.desc()).first()
+		show_id = request.args.get('show_id', None)
 
-		if show is None:
-			return "Internal Server Error, could not find any shows that you have access to!", 404
+		# Default Value
+		show = None
+
+		if show_id is not None:
+			show = Show.query.filter(Show.school_id == activeUser.school_id, Show.id == show_id).first()
+		else:
+			show = Show.query.filter(Show.school_id == activeUser.school_id).order_by(Show.is_default.desc()).first()
+
+		if show is None and show_id is None:
+			return "You do not have access to any shows! No shows found!", 404
+		if show is None and show_id is not None:
+			return f"You don't have access to a show of id={show_id}!", 404
 
 		return {"code": show.code, "name": show.name}
 
@@ -2433,7 +2444,7 @@ def getSetNamesWithoutBuffer(show):
 
 		for set in sets:
 			# Set a default name so that the var is defined
-			setName = "Undefined"
+			setName = "(No Set Name)"
 
 			# Get a Set Name if it exists for that section / set
 			setNameObj = SetName.query.filter(SetName.section_id == section.id, SetName.set_id == set.id).first()
@@ -2486,14 +2497,14 @@ class SetNameListResource(Resource):
 	@jwt_required()
 	def get(self):
 		setNumb = request.args.get('set_id', None)
-		schoolCode = request.args.get('school_code', None) # TODO: Change name to show_code
+		showCode = request.args.get('school_code', None) # TODO: Change name to show_code
 
 		# REQUIRE A SCHOOL CODE
-		if schoolCode is None:
-			return "Missing School Code", 404
+		if showCode is None:
+			return "Missing Show Code", 404
 
 		# CHECK IF CODE IS VALID
-		show = Show.query.filter(Show.code == schoolCode).first()
+		show = Show.query.filter(Show.code == showCode).first()
 		if show is None:
 			return "INVALID SHOW CODE", 404
 

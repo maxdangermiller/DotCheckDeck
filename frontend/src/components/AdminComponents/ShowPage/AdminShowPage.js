@@ -75,6 +75,7 @@ const AdminShowPage = (props) => {
                         <h1 style={{fontSize: "8vh"}}><strong>{show.name}</strong></h1>
                         <div style={{fontSize: "6vh"}}><strong>Code: </strong>{show.code}</div>
                         <button className='btn btn-success' onClick={(e) => openEdit(show)}>Edit</button> 
+                        <button className='btn btn-primary' onClick={(e) => { window.location.href = "/admin-join-code/" + show.id; }}>Display Join Code</button> 
                         <br></br>
                     </div>
                 )

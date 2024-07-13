@@ -22,7 +22,7 @@ const Admin = (props) => {
     const getActivePage = () => {
         console.log(data);
         if (menuIndex === 0) {
-            return (<AdminUsersPage token={token} users={data.users} sections={data.sections} shows={data.shows} setUsers={setUsers}/>);
+            return (<AdminUsersPage token={token} users={data.users} sections={data.sections} shows={data.shows} setUsers={setUsers} default_show={data.default_show}/>);
         }
         if (menuIndex === 1) {
             return (<AdminSectionsPage token={token} sections={data.sections} setSections={setSections}/>);

@@ -1,19 +1,27 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import QRCode from "react-qr-code";
 import getApi from '../utils/getApi';
 
 const WINDOW_LOCATION = getApi();
 
 const AdminJoinCodeDisplay = (props) => {
+    let { show_id } = useParams();
     const { token } = props
 
     const [isLoading, setIsLoading] = useState(false);
     const [schoolInfo, setSchoolInfo] = useState("");
 
     useState(() => {
+        let url = WINDOW_LOCATION + '/default-join-code';
+
+        if (show_id !== null) {
+            url = url + "?show_id=" + show_id
+        }
+
         setIsLoading(true);
         try {
-            fetch(WINDOW_LOCATION + '/default-join-code', {
+            fetch(url, {
                     method: 'GET',
                     headers: {
                         'Content-type': 'application/json; charset=UTF-8',

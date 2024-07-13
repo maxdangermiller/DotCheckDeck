@@ -40,18 +40,10 @@ const NavBar = (props) => {
 					<Navbar.Brand href="/">
 						<img src={logo} alt="" height="30px" width="30px"/>
 					</Navbar.Brand>
-
-					{getViewerOptions()}
 					{
 						isAdminAuthorized() ?
 						<>
 							<Nav.Link href="/admin">Admin</Nav.Link>
-							{
-								!isMobile ? 
-								<Nav.Link href="/admin-timeline">Admin Timeline</Nav.Link>
-								: null
-							}
-							<Nav.Link href="/admin-join-code">Join Code</Nav.Link>
 						</>
 						: null
 					}

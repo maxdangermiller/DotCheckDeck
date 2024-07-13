@@ -30,13 +30,8 @@ class LocalStorageClient(StorageClient):
 	def __init__(self) -> None:
 		super().__init__()
 
-	def create_path_if_doesnt_exist(path:str):
-		doesExist = os.path.exists(f"./{path}")
-		if not doesExist:
-			os.makedirs(f"./{path}")
-
 	def get_file(self, path: str, filename: str):
-		self.create_path_if_doesnt_exist(path)
+		os.makedirs(os.path.dirname(f"./{path}/{filename}"), exist_ok=True)
 
 		with open(f"./{path}/{filename}", "rb") as file: 
 			return file
@@ -45,19 +40,18 @@ class LocalStorageClient(StorageClient):
 		return send_from_directory(f"./{path}", filename)
 
 	def save_file(self, path: str, filename: str, file):
-		# Create Path if it doesn't exist
-		self.create_path_if_doesnt_exist(path)
-
-		file.save(f"./{path}/{filename}")
+		# This shouldn't do anything if local.
+		# The file should already be saved in the api, and file won't actually be a file
+		pass
 	
 	def get_json(self, path: str, filename: str):
-		self.create_path_if_doesnt_exist(path)
+		os.makedirs(os.path.dirname(f"./{path}/{filename}"), exist_ok=True)
 		
 		with open(f"./{path}/{filename}", "r") as file: 
 			return json.load(file, indent=4)
 	
 	def save_json(self, path: str, filename: str, data):
-		self.create_path_if_doesnt_exist(path)
+		os.makedirs(os.path.dirname(f"./{path}/{filename}"), exist_ok=True)
 
 		with open(f"./{path}/{filename}", "w") as file: 
 			json.dump(data, file, indent=4)

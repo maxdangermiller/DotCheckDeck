@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Table from 'react-bootstrap/Table';
+import { Switch, Stack, Typography } from '@mui/material';
+
 import Boolean from '../Boolean';
 import AdminEditUser from './AdminEditUser';
 import AdminEditShowUser from './AdminEditShowUser';
@@ -25,7 +27,7 @@ const SORT_UP = 1;
 const SORT_DOWN = -1;
 
 const AdminUsersPage = (props) => {
-    const {token, users, setUsers, sections, shows} = props;
+    const {token, users, setUsers, sections, shows, default_show} = props;
 
     const [showEditUser, setShowEditUser] = useState(false);
     const [showEditShowUser, setShowEditShowUser] = useState(false);
@@ -35,12 +37,22 @@ const AdminUsersPage = (props) => {
     const [sortBy, setSortBy] = useState(SORT_LABEL);
     const [sortDirection, setSortDirection] = useState(SORT_DOWN);
 
+    // Show Users who aren't in the default show
+    const [showOldUsers, setShowOldUsers] = useState(false);
+
+
+    const dateFormat = (dateTime) => {
+        if (dateTime == null) { return ""; }
+        let date = new Date(Date.parse(dateTime));
+
+        return date.toLocaleDateString();
+    }
 
     const dateTimeFormat = (dateTime) => {
         if (dateTime == null) { return ""; }
         let date = new Date(Date.parse(dateTime));
 
-        return date.toDateString();
+        return date.toLocaleString();
     }
 
     const openEditUser = (user) => {
@@ -68,6 +80,17 @@ const AdminUsersPage = (props) => {
     }
 
     const getAllShowUserLabels = (user) => {
+        if (!showOldUsers) {
+            const showUsers = user["show_users"]
+
+            for (let i = 0; i < showUsers.length; i++) {
+                if (showUsers[i]["show_id"] === default_show["id"]) {
+                    return showUsers[i]["label"];
+                }
+            }
+            return "";
+        }
+
         let out = "";
 
         for (let i = 0; i < user.show_users.length; i++) {
@@ -180,9 +203,44 @@ const AdminUsersPage = (props) => {
 
     }
 
+    /**
+     * Based on the showOldUsers state, only return either the users in the default show or all users
+     * @param {Array} users
+     * @returns {Array} filtered users
+     */
+    const getOnlyShownUsers = (users) => {
+        if (showOldUsers) {
+            return users;
+        }
+
+        return users.filter(function(user) {
+            if (user["is_admin"]) {
+                return true;
+            }
+
+            const showUsers = user["show_users"]
+
+            for (let i = 0; i < showUsers.length; i++) {
+                if (showUsers[i]["show_id"] === default_show["id"]) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
 
     return(
         <>
+        <Stack direction="row" spacing={1} alignItems="center">
+            <Typography>Show Old Users</Typography>
+            <Switch
+                checked={showOldUsers}
+                onChange={(e) => setShowOldUsers(e.target.checked)}
+                inputProps={{ 'aria-label': 'controlled' }}
+                size='xl'
+            />
+        </Stack>
         <Table striped bordered hover>
             <thead>
                 <tr>
@@ -203,7 +261,7 @@ const AdminUsersPage = (props) => {
             </thead>
             <tbody>
                 {
-                    sort(users).map((user, index) => 
+                    sort(getOnlyShownUsers(users)).map((user, index) => 
                         <tr key={index}>
                             <td><div className={CELL_STYLE}> {user.id} </div></td>
                             <td><div className={CELL_STYLE}> {getAllShowUserLabels(user)} </div></td>
@@ -212,8 +270,8 @@ const AdminUsersPage = (props) => {
                             <td><div className={CELL_STYLE}> {user.last_name} </div></td>
                             <td><div className={CELL_STYLE}> <Boolean state={user.is_admin}/> </div></td>
                             <td><div className={CELL_STYLE}> <Boolean state={user.verified_date !== null}/> </div></td>
-                            <td><div className={CELL_STYLE}> {dateTimeFormat(user.activated_date)} </div></td>
-                            <td><div className={CELL_STYLE}> {dateTimeFormat(user.created_date)} </div></td>
+                            <td><div className={CELL_STYLE}> {dateFormat(user.activated_date)} </div></td>
+                            <td><div className={CELL_STYLE}> {dateFormat(user.created_date)} </div></td>
                             <td><div className={CELL_STYLE}> {dateTimeFormat(user.last_login)} </div></td>
                             <td><div className={CELL_STYLE}>
                                 <button className='btn btn-success' onClick={(e) => openEditUser(user)}>Edit</button> 
