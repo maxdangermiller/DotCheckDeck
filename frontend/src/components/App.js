@@ -168,9 +168,22 @@ function App() {
 
 		return false;
 	}
+	
+	const isOnHomePage = () => {
+		let path = window.location.pathname;
+
+		if (path.substring(0, 5) === "/home") { return true; }
+
+		return false;
+	}
+	
 
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 	const isPWAAdded = window.matchMedia('(display-mode: standalone)').matches;
+
+	if (isMobile && isPWAAdded && isOnHomePage()) {
+		window.location.href = "/app"
+	}
 
 
 	if (token == null && !isOffline && window.location.pathname !== "/error") {
@@ -196,7 +209,7 @@ function App() {
 
 				{/* Show PWA Instructions if is mobile & the PWA hasn't been added & we're not on the activate page */}
 				{
-					isMobile && !isPWAAdded && !isOnActivatePage() ?
+					isMobile && !isPWAAdded && !isOnActivatePage() && !isOnHomePage() ?
 					<PWAInstructions />
 					: null
 				}
