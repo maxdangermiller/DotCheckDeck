@@ -103,6 +103,7 @@ const RegisterPage = (props) => {
                 variant="outlined"
                 style={{width: "100%"}}
                 id="first-name"
+                autocomplete="given-name"
 
                 error={registrationData.errors.first_name_error}
             />
@@ -115,6 +116,7 @@ const RegisterPage = (props) => {
                 variant="outlined"
                 style={{width: "100%"}}
                 id="last-name"
+                autocomplete="family-name"
 
                 error={registrationData.errors.last_name_error}
             />
@@ -128,7 +130,7 @@ const RegisterPage = (props) => {
                 style={{width: "100%"}}
                 id="email"
                 type="email"
-                autoComplete="username"
+                autoComplete="email"
 
                 error={registrationData.errors.email_error || registrationData.errors.email_exists_error}
             />

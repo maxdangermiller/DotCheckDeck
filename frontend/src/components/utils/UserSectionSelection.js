@@ -16,7 +16,7 @@ const UserSectionSelection = (props) => {
 
     useEffect(() => {
         // console.log(getShowUser())
-        if (getShowUser() === undefined || getShowUser().section_id !== null) {
+        if (getShowUser() === undefined || getShowUser().section_id !== null || getShowUser().is_drum_major === true) {
             setShow(false);
             return;
         }

@@ -4,8 +4,8 @@ import getApi from '../../utils/getApi';
 
 const WINDOW_LOCATION = getApi();
 
-const AdminInviteUser = (props) => {
-    const {token, show, setShow,} = props;
+const AdminInviteDrumMajor = (props) => {
+    const {token, show, setShow, default_show_id} = props;
 
     const [email, setEmail] = useState("");
 
@@ -17,8 +17,9 @@ const AdminInviteUser = (props) => {
                 method: 'POST',
                 body: JSON.stringify({
                     "email": email,
-                    "is_admin": true,
-                    "is_drum_major": false,
+                    "is_admin": false,
+                    "is_drum_major": true,
+                    "show_id": default_show_id
                 }),
                 headers: {
                     'Content-type': 'application/json; charset=UTF-8',
@@ -47,7 +48,7 @@ const AdminInviteUser = (props) => {
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>
-                <Modal.Title>Invite Admin</Modal.Title>
+                <Modal.Title>Invite Drum Major</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <FloatingLabel
@@ -77,4 +78,4 @@ const AdminInviteUser = (props) => {
     );
 }
 
-export default AdminInviteUser;
+export default AdminInviteDrumMajor;

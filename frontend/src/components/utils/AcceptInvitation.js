@@ -161,6 +161,7 @@ const AcceptInvitation = (props) => {
                                                         variant="outlined"
                                                         style={{width: "100%"}}
                                                         id="first-name"
+                                                        autocomplete="given-name"
                                                         
                                                         error={firstName === ""}
                                                     />
@@ -173,6 +174,7 @@ const AcceptInvitation = (props) => {
                                                         variant="outlined"
                                                         style={{width: "100%"}}
                                                         id="last-name"
+                                                        autocomplete="family-name"
 
                                                         error={lastName === ""}
                                                     />
@@ -185,6 +187,7 @@ const AcceptInvitation = (props) => {
                                                         style={{width: "100%"}}
                                                         type="password"
                                                         id="password"
+                                                        autoComplete="new-password"
 
                                                         error={passwordErrors.any}
                                                     />
@@ -198,6 +201,7 @@ const AcceptInvitation = (props) => {
                                                         style={{width: "100%"}}
                                                         type="password"
                                                         id="confirm-password"
+                                                        autoComplete="new-password"
 
                                                         error={passwordErrors.any || pwd1 !== pwd2}
                                                     />

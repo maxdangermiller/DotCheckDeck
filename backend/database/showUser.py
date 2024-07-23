@@ -22,6 +22,7 @@ class ShowUser(CacheableMixin, db.Model):
 	symbol = db.Column(db.String(16))
 	label = db.Column(db.String(16))
 	is_section_leader = db.Column(db.Boolean, default=False)
+	is_drum_major = db.Column(db.Boolean, default=False)
 	is_locked = db.Column(db.Boolean, default=False)
 	is_prop = db.Column(db.Boolean, default=False)
 	is_stationary = db.Column(db.Boolean, default=False)

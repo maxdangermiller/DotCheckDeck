@@ -6,6 +6,7 @@ import Boolean from '../Boolean';
 import AdminEditUser from './AdminEditUser';
 import AdminEditShowUser from './AdminEditShowUser';
 import AdminInviteUser from './AdminInviteUser';
+import AdminInviteDrumMajor from './AdminInviteDrumMajor';
 import AdminDeleteUser from './AdminDeleteUser';
 import getApi from '../../utils/getApi';
 
@@ -32,6 +33,7 @@ const AdminUsersPage = (props) => {
     const [showEditUser, setShowEditUser] = useState(false);
     const [showEditShowUser, setShowEditShowUser] = useState(false);
     const [showCreateUser, setShowCreateUser] = useState(false);
+    const [showCreateDrumMajor, setShowCreateDrumMajor] = useState(false);
     const [showDeleteUser, setShowDeleteUser] = useState(false);
     const [editUserData, setEditUserData] = useState({});
     const [sortBy, setSortBy] = useState(SORT_LABEL);
@@ -307,6 +309,12 @@ const AdminUsersPage = (props) => {
                     setShow={setShowCreateUser}
                     token={token}
                 />
+                <AdminInviteDrumMajor 
+                    show={showCreateDrumMajor}
+                    setShow={setShowCreateDrumMajor}
+                    token={token}
+                    default_show_id={default_show["id"]}
+                />
                 <AdminDeleteUser 
                     show={showDeleteUser}
                     setShow={setShowDeleteUser}
@@ -316,11 +324,16 @@ const AdminUsersPage = (props) => {
                 
             </tbody>
         </Table>
-        <button 
-            className="btn btn-success" 
-            style={{bottom: "1vh", left: "1vw", position: "absolute"}}
-            onClick={() => setShowCreateUser(true)}
-        >Create User</button>
+        <div className='d-flex flex-column justify-content-start align-items-center' style={{bottom: "1%", left: "1%", position: "fixed"}}>
+            <button 
+                className="btn btn-success" 
+                onClick={() => setShowCreateUser(true)}
+            >Create Admin</button>
+            <button 
+                className="btn btn-primary" 
+                onClick={() => setShowCreateDrumMajor(true)}
+            >Create Drum Major</button>
+        </div>
         </>
     );
 };
