@@ -240,7 +240,7 @@ def admin_login():
 # This creates a new token on login
 @app.route('/token', methods=["POST"])
 def create_token():
-	email = request.json.get("email", None)
+	email = request.json.get("email", "").lower()
 	password = request.json.get("password", None)
 
 	user = User.query.filter_by(email=email).first()
@@ -385,7 +385,7 @@ def logout():
 # Send an email to a user to verify their account
 @app.route("/send-verify-email", methods=["GET"])
 def sendVerifyAccountEmailEndpoint():
-	email = request.args.get("email", None)
+	email = request.args.get("email", "").lower()
 
 	loggedInUser = User.query.filter(User.email == email).first()
 
@@ -647,7 +647,7 @@ def remove_forgot_password_code(code) -> bool:
 
 @app.route('/send-reset-password-email', methods=["GET"])
 def send_reset_password_email():
-	email = request.args.get("email", None)
+	email = request.args.get("email", "").lower()
 
 	user = User.query.filter(User.email == email).first()
 
@@ -1298,7 +1298,7 @@ class SetUpUserResource(Resource):
 			return "No users found with that school_id and label"
 
 		# Try and find a matching user
-		user = User.query.filter(User.email == request.json["email"]).first()
+		user = User.query.filter(User.email == request.json["email"].lower()).first()
 		if user is not None:
 			return "User has already been activated, please use the existing user option", 400
 		
@@ -1907,7 +1907,7 @@ class CreateUserResource(Resource):
 		parser.add_argument('is_admin', type=bool, default=None, required=True)
 		args = parser.parse_args()
 		
-		user = User.query.filter(User.email == args.get('email')).first()
+		user = User.query.filter(User.email == args.get('email').lower()).first()
 
 		if user is not None:
 			return "USER ALREADY EXISTS", 404
@@ -2123,7 +2123,7 @@ class InviteUserResource(Resource):
 		parser.add_argument('show_id', type=int, default=None, required=False)
 		args = parser.parse_args()
 		
-		user = User.query.filter(User.email == args.get('email')).first()
+		user = User.query.filter(User.email == args.get('email').lower()).first()
 
 		if user is not None:
 			return "USER ALREADY EXISTS", 404
@@ -3140,6 +3140,16 @@ if __name__ == "__main__":
 						set.start_time_code = s["start_time_code"]
 						set.end_time_code = s["end_time_code"]
 						db.session.commit()	
+
+		if arg == "fix_emails":
+			rebuild = True
+			with app.app_context():
+				users = User.query.filter().all()
+
+				for user in users:
+					user.email = user.email.lower()
+					db.session.commit()
+				
 
 
 	# from GUITest import GUITest
