@@ -83,12 +83,13 @@ const AppNavBar = (props) => {
     }
 
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); 
+    const isPWAAdded = window.matchMedia('(display-mode: standalone)').matches;
 
 	return (
 		<Navbar bg="dark" variant="dark" style={{height: "8vh", minHeight: "36px"}} className="customNavbar">
 			<Container fluid>
 				<Nav className="ml-auto">
-                    <Navbar.Brand href="/" className="d-flex flex-column justify-content-center align-items-center">
+                    <Navbar.Brand href={isMobile && isPWAAdded ? "/app" : "/"} className="d-flex flex-column justify-content-center align-items-center">
                         <img src={logo} alt="" height="30px" width="30px"/>
                     </Navbar.Brand>
 

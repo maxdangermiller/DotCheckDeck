@@ -31,7 +31,7 @@ const AboutPage = (props) => {
                                             <img src={photo} alt="" width="100%"/>
                                         </div>
                                         <div className="d-flex flex-column justify-content-start align-items-start h-100" style={{width: "55%", textAlign:"start"}}>
-                                            Hey! I'm Max Miller! I'm currently (as I'm writing this) a Junior at University High School in Normal, IL.
+                                            Hey! I'm Max Miller! I'm currently (as I'm writing this) a Senior at University High School in Normal, IL.
                                             I wrote this webapp because I saw a clear need for bringing drill reading into the 21st century. 
                                             This app aims at improving the drill reading and comprehension process, all at a significantly lower price than competition.
                                         </div>

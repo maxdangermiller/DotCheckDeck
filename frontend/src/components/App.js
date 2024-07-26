@@ -172,7 +172,7 @@ function App() {
 	const isOnHomePage = () => {
 		let path = window.location.pathname;
 
-		if (path.substring(0, 5) === "/home") { return true; }
+		if (path.length === 1 || path.length === 0) { return true; }
 
 		return false;
 	}

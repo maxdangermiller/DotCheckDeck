@@ -1,4 +1,4 @@
-#!/Users/maxmiller/Desktop/Programming/BandThing/venv/bin/python3
+#!/Users/maxmiller/Desktop/Programming/DotCheckDeck/venv/bin/python3.10
 # -*- coding: utf-8 -*-
 import re
 import sys
