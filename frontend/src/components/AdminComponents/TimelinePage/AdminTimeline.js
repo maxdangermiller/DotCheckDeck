@@ -59,7 +59,7 @@ const AdminTimeline = (props) => {
 
     useEffect(() => {
         try {
-            fetch(WINDOW_LOCATION + "/sets?school_code=" + schoolCode + "&token=" + token)
+            fetch(WINDOW_LOCATION + "/sets?show_code=" + schoolCode + "&token=" + token)
                 .then(res => res.json())
                 .then(
                     (result) => {

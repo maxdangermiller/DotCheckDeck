@@ -20,10 +20,11 @@ const SORT_EMAIL = 2;
 const SORT_FIRST_NAME = 3;
 const SORT_LAST_NAME = 4;
 const SORT_IS_ADMIN = 5;
-const SORT_IS_VERIFIED = 6;
-const SORT_ACTIVATED_DATE = 7;
-const SORT_CREATED_DATE = 8;
-const SORT_LOGIN_DATE = 9;
+const SORT_IS_DRUM_MAJOR = 6;
+const SORT_IS_VERIFIED = 7;
+const SORT_ACTIVATED_DATE = 8;
+const SORT_CREATED_DATE = 9;
+const SORT_LOGIN_DATE = 10;
 const SORT_UP = 1;
 const SORT_DOWN = -1;
 
@@ -119,7 +120,7 @@ const AdminUsersPage = (props) => {
 
     const handleSave = (userData) => {
         try {
-            fetch(WINDOW_LOCATION + '/users', {
+            fetch(WINDOW_LOCATION + '/update-users', {
                 method: 'POST',
                 body: JSON.stringify(userData),
                 headers: {
@@ -168,8 +169,38 @@ const AdminUsersPage = (props) => {
         });
     }
 
+    const getDefaultShowUser = (user) => {
+        const showUsers = user["show_users"]
+        for (let i = 0; i < showUsers.length; i++) {
+            if (showUsers[i]["show_id"] === default_show["id"]) {
+                return showUsers[i];
+            }
+        }
+        return "";
+    }
+
+    const sortDrumMajor = (users) => {
+        return users.sort(function(a, b) {
+            let aSU = getDefaultShowUser(a);
+            let bSU = getDefaultShowUser(b);
+
+            let keyA = aSU["is_drum_major"] !== null ? aSU["is_drum_major"] : false;
+            let keyB = bSU["is_drum_major"] !== null ? bSU["is_drum_major"] : false;
+
+            let oppDir = sortDirection === SORT_UP ? SORT_DOWN : SORT_UP;
+            if (keyA === false && keyB === true) return oppDir;
+            if (keyA === true && keyB === false) return sortDirection;
+
+            return 0;
+        });
+    }
+
     const sort = (data) => {
         if (sortBy === SORT_LABEL) { return sortLabels(data); }
+
+        if (sortBy === SORT_IS_DRUM_MAJOR)  {
+            return sortDrumMajor(data);
+        }
         
         let useKey = "";
 
@@ -252,10 +283,11 @@ const AdminUsersPage = (props) => {
                     <th onClick={() => handelHeaderClick(3)}>First Name</th>
                     <th onClick={() => handelHeaderClick(4)}>Last Name</th>
                     <th onClick={() => handelHeaderClick(5)}>Is Admin</th>
-                    <th onClick={() => handelHeaderClick(6)}>Is Verified</th>
-                    <th onClick={() => handelHeaderClick(7)}>Activated Date</th>
-                    <th onClick={() => handelHeaderClick(8)}>Created Date</th>
-                    <th onClick={() => handelHeaderClick(9)}>Last Login</th>
+                    <th onClick={() => handelHeaderClick(6)}>Is Drum Major</th>
+                    <th onClick={() => handelHeaderClick(7)}>Is Verified</th>
+                    <th onClick={() => handelHeaderClick(8)}>Activated Date</th>
+                    <th onClick={() => handelHeaderClick(9)}>Created Date</th>
+                    <th onClick={() => handelHeaderClick(10)}>Last Login</th>
                     <th>Edit</th>
                     <th>Edit Show Users</th>
                     <th>Delete</th>
@@ -271,6 +303,7 @@ const AdminUsersPage = (props) => {
                             <td><div className={CELL_STYLE}> {user.first_name} </div></td>
                             <td><div className={CELL_STYLE}> {user.last_name} </div></td>
                             <td><div className={CELL_STYLE}> <Boolean state={user.is_admin}/> </div></td>
+                            <td><div className={CELL_STYLE}> <Boolean state={getDefaultShowUser(user).is_drum_major}/> </div></td>
                             <td><div className={CELL_STYLE}> <Boolean state={user.verified_date !== null}/> </div></td>
                             <td><div className={CELL_STYLE}> {dateFormat(user.activated_date)} </div></td>
                             <td><div className={CELL_STYLE}> {dateFormat(user.created_date)} </div></td>

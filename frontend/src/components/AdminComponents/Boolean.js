@@ -7,14 +7,14 @@ const Boolean = (props) => {
     
     if (state) {
         return (
-            <i style={{height: "2rem", color: "green"}}>
+            <i style={{height: "1rem", color: "green"}}>
                 <Check height="100%" fill="currentColor"/>
             </i>
         );
     }
 
     return (
-        <i style={{height: "2rem", color: "red"}}>
+        <i style={{height: "1rem", color: "red"}}>
             <XMark height="100%" fill="currentColor"/>
         </i>
     );

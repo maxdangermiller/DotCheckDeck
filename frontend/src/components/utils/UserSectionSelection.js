@@ -6,7 +6,7 @@ import getApi from './getApi';
 const WINDOW_LOCATION = getApi();
 
 const UserSectionSelection = (props) => {
-    const {schoolCode, token, userData, showID} = props;
+    const {showCode, token, userData, showID} = props;
 
     const [show, setShow] = useState(true);
     const [sections, setSections] = useState(null);
@@ -29,7 +29,7 @@ const UserSectionSelection = (props) => {
         setShow(true);
 
         try {
-            fetch(WINDOW_LOCATION + "/get-sections?token=" + token + "&school_code=" + schoolCode)
+            fetch(WINDOW_LOCATION + "/get-sections?token=" + token + "&show_code=" + showCode)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('INVALID SCHOOL CODE');

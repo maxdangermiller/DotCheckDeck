@@ -184,7 +184,7 @@ const Viewer = (props) => {
      * @returns {AxiosPromise} axios request
      */
     const retrieveDataFromAPI = (_sets, set_index, show_code, _token) => {
-        const url1 = WINDOW_LOCATION + "/get-dots?school_code=" + show_code 
+        const url1 = WINDOW_LOCATION + "/get-dots?show_code=" + show_code 
 			+ "&set=" + _sets[set_index]["set_numb"] + "&token=" + _token;
 			
         return axios({
@@ -405,7 +405,7 @@ const Viewer = (props) => {
 		try {
 			if (sets.length === 0) { return; }
 			if (checkLocalSetNames()) { return; }
-			fetch(WINDOW_LOCATION + "/get-set-names?school_code=" + showCode + "&token=" + token)
+			fetch(WINDOW_LOCATION + "/get-set-names?show_code=" + showCode + "&token=" + token)
 				.then(res => res.json())
 				.then(
 					(result) => {
@@ -442,7 +442,7 @@ const Viewer = (props) => {
 		try {
 			if (curDatabaseTimestamp === -1) { return; }
 			if (!checkLocalSets()) {
-				fetch(WINDOW_LOCATION + "/sets?school_code=" + showCode + "&token=" + token)
+				fetch(WINDOW_LOCATION + "/sets?show_code=" + showCode + "&token=" + token)
 					.then(res => res.json())
 					.then(
 						(result) => {
@@ -806,7 +806,7 @@ const Viewer = (props) => {
 					<UserSectionSelection 
 						data={data} 
 						curSet={curSet} 
-						schoolCode={showCode} 
+						showCode={showCode} 
 						token={token} 
 						userData={userData}
 						showID={showID}
@@ -879,7 +879,7 @@ const Viewer = (props) => {
 				<UserSectionSelection 
 					data={data} 
 					curSet={curSet} 
-					schoolCode={showCode} 
+					showCode={showCode} 
 					token={token} 
 					userData={userData}
 					showID={showID}

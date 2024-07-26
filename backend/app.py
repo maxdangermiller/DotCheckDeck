@@ -1041,7 +1041,7 @@ class SetListResource(Resource):
 	def get(self):
 		setNumb = request.args.get('set_id', None)
 		measure = request.args.get('measure', None)
-		schoolCode = request.args.get('school_code', None) # TODO: Change name to show_code
+		schoolCode = request.args.get('show_code', None)
 
 		# REQUIRE A SCHOOL CODE
 		if schoolCode is None:
@@ -1092,7 +1092,7 @@ class SetListResource(Resource):
 class GetSectionsResource(Resource):
 	@jwt_required()
 	def get(self):
-		schoolCode = request.args.get('school_code', None) # TODO: Change name to show_code
+		schoolCode = request.args.get('show_code', None)
 
 		# REQUIRE A SCHOOL CODE
 		if schoolCode is None:
@@ -1109,15 +1109,13 @@ class GetSectionsResource(Resource):
 
 
 # Authorize a school code (used by activate account)
-# TODO: Refactor to show code
-class SchoolCodeAuthResource(Resource):
+class ShowCodeAuthResource(Resource):
 	def post(self):
-		# TODO: Refactor to "show_code"
-		if "school_code" not in request.json:
+		if "show_code" not in request.json:
 			return "Missing School Code param", 404
 
 		# Attempt to load the Show with that code
-		show = Show.query.filter(Show.code == request.json['school_code']).first()
+		show = Show.query.filter(Show.code == request.json['show_code']).first()
 
 		# Check to see if we got a show obj
 		if show is None:
@@ -1125,7 +1123,7 @@ class SchoolCodeAuthResource(Resource):
 		
 		school = School.query.filter(School.id == show.school_id).first()
 		
-		users = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.is_drum_major == False).all()
+		users = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.is_drum_major != True).all()
 		filteredUsers = []
 		for showUser in users:
 			if showUser.user_id is None and not showUser.is_locked:
@@ -1263,9 +1261,8 @@ class SetUpUserResource(Resource):
 		.then(console.log)
 	"""
 	def post(self):
-		# TODO: Refactor to "show_code"
-		if "school_code" not in request.json or request.json['school_code'] == "":
-			return "Missing School Code", 404
+		if "show_code" not in request.json or request.json['show_code'] == "":
+			return "Missing Show Code", 404
 		if "label" not in request.json or request.json['label'] == "":
 			return "Missing Label", 404
 		if "email" not in request.json or request.json['email'] == "":
@@ -1278,7 +1275,7 @@ class SetUpUserResource(Resource):
 			return "Missing Last Name", 404
 
 		# Attempt to load the Show with that code
-		show = Show.query.filter(Show.code == request.json['school_code']).first()
+		show = Show.query.filter(Show.code == request.json['show_code']).first()
 
 		# Check to see if we got a show obj
 		if show is None:
@@ -1465,13 +1462,13 @@ def getAllDotInfoForSet(show, set):
 	}
 
 
-def getAllDotsWithoutBuffer(schoolCode):
+def getAllDotsWithoutBuffer(showCode):
 	# REQUIRE A SCHOOL CODE
-	if schoolCode is None:
+	if showCode is None:
 		return "Missing School Code", 404
 
 	# Attempt to load the Show with that code
-	show = Show.query.filter(Show.code == schoolCode).first()
+	show = Show.query.filter(Show.code == showCode).first()
 
 	# Check to see if we got a school obj
 	if show is None:
@@ -1600,12 +1597,11 @@ def getBufferedDots(showCode, middleSet, bufferSize):
 class GetDotsWithBufferResource(Resource):
 	@jwt_required()
 	def get(self):
-		# TODO: Refactor to show_code
-		schoolCode = request.args.get('school_code', None)
+		showCode = request.args.get('show_code', None)
 		middleSet = request.args.get('set', "1")
 		bufferSize = int(request.args.get('buffer', 4))
 
-		return getBufferedDots(schoolCode, middleSet, bufferSize)
+		return getBufferedDots(showCode, middleSet, bufferSize)
 
 
 def getSetName(setNames, set_id):
@@ -1659,8 +1655,7 @@ def getBufferedUserDots(show, showUser):
 class GetUserDotsResource(Resource):
 	@jwt_required()
 	def get(self):
-		# TODO: Refactor to show_code
-		showCode = request.args.get('school_code', None)
+		showCode = request.args.get('show_code', None)
 
 		# REQUIRE A SHOW CODE
 		if showCode is None:
@@ -2562,7 +2557,7 @@ class SetNameListResource(Resource):
 	@jwt_required()
 	def get(self):
 		setNumb = request.args.get('set_id', None)
-		showCode = request.args.get('school_code', None) # TODO: Change name to show_code
+		showCode = request.args.get('show_code', None)
 
 		# REQUIRE A SCHOOL CODE
 		if showCode is None:
@@ -2913,31 +2908,38 @@ class APIGetData(Resource):
 	
 
 
+# Data Handling
 api.add_resource(SetListResource, '/sets')
-api.add_resource(SchoolCodeAuthResource, '/school-code-auth')
-api.add_resource(SetUpUserResource, '/users/activate')
 api.add_resource(GetDotsWithBufferResource, '/get-dots')
-api.add_resource(GetUserDotsResource, '/get-dots-user')
+# api.add_resource(GetUserDotsResource, '/get-dots-user') DEPRECATED
+api.add_resource(GetLastUpdateResource, '/database-version')
+api.add_resource(SetNameListResource, '/get-set-names')
+api.add_resource(GetSectionsResource, '/get-sections')
+
+# V2 Data Handling
+# TODO: Implement
+api.add_resource(APIGetData, "/api/get-data")
+
+# Auth
+api.add_resource(ShowCodeAuthResource, '/show-code-auth')
+api.add_resource(SetUpUserResource, '/users/activate')
+
+# Admin
+api.add_resource(GetDatabaseResource, '/get-all')
 api.add_resource(UpdateSetResource, '/update-set')
 api.add_resource(UpdateSetsResource, '/update-sets')
-api.add_resource(UpdateUserResource, '/users')
-api.add_resource(CreateUserResource, '/create-user')
-api.add_resource(InviteUserResource, '/invite-user')
-api.add_resource(GetDatabaseResource, '/get-all')
+api.add_resource(UpdateUserResource, '/update-users')
 api.add_resource(UpdateOrCreateSetNameResource, '/update-set-name')
 api.add_resource(UpdateSectionResource, '/update-section')
 api.add_resource(UpdateSetNameResource, '/update-set-name-admin')
 api.add_resource(UpdateShowResource, '/update-show')
-api.add_resource(GetLastUpdateResource, '/database-version')
-api.add_resource(GetDefaultJoinCode, '/default-join-code')
-api.add_resource(SetNameListResource, '/get-set-names')
-api.add_resource(GetSectionsResource, '/get-sections')
 api.add_resource(UpdateUserSectionResource, '/update-user-section')
-api.add_resource(AddShowUserResource, "/add-show-user-to-user")
-api.add_resource(PropsListResource, "/get-props")
 api.add_resource(UpdateSetNotesResource, "/update-notes")
-
-api.add_resource(APIGetData, "/api/get-data")
+api.add_resource(CreateUserResource, '/create-user')
+api.add_resource(InviteUserResource, '/invite-user')
+api.add_resource(GetDefaultJoinCode, '/default-join-code')
+api.add_resource(AddShowUserResource, "/add-show-user-to-user")
+# api.add_resource(PropsListResource, "/get-props") DEPRECATED
 
 
 
@@ -3146,6 +3148,35 @@ if __name__ == "__main__":
 				for user in users:
 					user.email = user.email.lower()
 					db.session.commit()
+		
+		if arg == "fix_user_defaults":
+			rebuild = True
+			with app.app_context():
+				users = User.query.filter().all()
+
+				for user in users:
+					if user.is_admin is not True:
+						user.is_admin = False
+					if user.send_admin_email is not True:
+						user.send_admin_email = False
+
+					db.session.commit()
+
+					showUsers = ShowUser.query.filter(ShowUser.user_id == user.id).all()
+
+					for showUser in showUsers:
+						if showUser.is_section_leader is not True:
+							showUser.is_section_leader = False
+						if showUser.is_drum_major is not True:
+							showUser.is_drum_major = False
+						if showUser.is_locked is not True:
+							showUser.is_locked = False
+						if showUser.is_prop is not True:
+							showUser.is_prop = False
+						if showUser.is_stationary is not True:
+							showUser.is_stationary = False
+
+						db.session.commit()
 				
 
 

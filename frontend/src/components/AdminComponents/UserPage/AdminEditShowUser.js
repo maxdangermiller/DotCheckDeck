@@ -3,7 +3,7 @@ import {Modal, Button, FloatingLabel, Form, ListGroup, Row, Col } from 'react-bo
 import { Autocomplete, TextField } from '@mui/material';
 
 const AdminEditShowUser = (props) => {
-    const {showEditShowUser, setShowEditShowUser, editUserData, setEditUserData, sections, shows, handleSave, ...rest} = props;
+    const {showEditShowUser, setShowEditShowUser, editUserData, setEditUserData, sections, shows, handleSave} = props;
 
     const setValue = (index, key, value) => {
         const newState = editUserData.show_users.map((val, i) => {
@@ -26,6 +26,10 @@ const AdminEditShowUser = (props) => {
 
     const setIsSectionLeader = (index, value) => {
         setValue(index, "is_section_leader", value);
+    }
+
+    const setIsDrumMajor = (index, value) => {
+        setValue(index, "is_drum_major", value);
     }
 
     const setBandSection = (index, value) => {
@@ -70,7 +74,7 @@ const AdminEditShowUser = (props) => {
     }
 
     const handleClose = () => setShowEditShowUser(false);
-    const handleShow = () => setShowEditShowUser(true);
+    // const handleShow = () => setShowEditShowUser(true);
 
     return (
         <Modal show={showEditShowUser} onHide={handleClose}>
@@ -115,6 +119,18 @@ const AdminEditShowUser = (props) => {
                                     />
                                     <label className="form-check-label ">
                                         Is Section Leader
+                                    </label>
+                                </div>
+                                <div className="mb-3 form-check">
+                                    <input 
+                                        className="form-check-input" 
+                                        type="checkbox" 
+                                        value="" 
+                                        onChange={() => setIsDrumMajor(index, !showUser.is_section_leader)} 
+                                        checked={showUser.is_drum_major} 
+                                    />
+                                    <label className="form-check-label ">
+                                        Is Drum Major
                                     </label>
                                 </div>
                                 <Autocomplete

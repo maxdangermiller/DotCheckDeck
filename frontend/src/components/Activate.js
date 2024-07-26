@@ -4,7 +4,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import './Activate.css'
 import axios from "axios";
 
-import SchoolCodePage from './ActivateFormPages/SchoolCodePage';
+import ShowCodePage from './ActivateFormPages/ShowCodePage';
 import SelectLabelPage from './ActivateFormPages/SelectLabelPage';
 import RegisterPage from './ActivateFormPages/RegisterPage';
 import TermsPage from './ActivateFormPages/TermsPage';
@@ -28,7 +28,7 @@ const Activate = (props) => {
     const {join_code} = useParams();
     const [curPage, setCurPage] = useState(0);
 	const [isLoading, setIsLoading] = useState(false);
-    const [schoolCode, setSchoolCode] = useState(join_code !== undefined ? join_code : "");
+    const [showCode, setShowCode] = useState(join_code !== undefined ? join_code : "");
     const [schoolInfo, setSchoolInfo] = useState("");
     const [userData, setUserData] = useState(null);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -77,7 +77,7 @@ const Activate = (props) => {
             method: 'POST',
             url: WINDOW_LOCATION + '/users/activate',
             data: {
-                school_code: schoolCode,
+                show_code: showCode,
                 label: label,
                 email: email, 
                 password: password, 
@@ -123,7 +123,7 @@ const Activate = (props) => {
 				data:{
 					email: email,
 					password: password,
-                    show_code: schoolCode,
+                    show_code: showCode,
                     label: label,
 				}
 			}).then((response) => {
@@ -157,13 +157,13 @@ const Activate = (props) => {
 		} 
     }
 
-    const checkSchoolCode = () => {
+    const checkShowCode = () => {
         setIsLoading(true);
         try {
-            fetch(WINDOW_LOCATION + '/school-code-auth', {
+            fetch(WINDOW_LOCATION + '/show-code-auth', {
                     method: 'POST',
                     body: JSON.stringify({
-                        school_code: schoolCode,
+                        show_code: showCode,
                     }),
                     headers: {
                         'Content-type': 'application/json; charset=UTF-8'
@@ -171,7 +171,7 @@ const Activate = (props) => {
             })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error('INVALID SCHOOL CODE');
+                    throw new Error('INVALID SHOW CODE');
                 }
                 return response.json();
             })
@@ -184,19 +184,19 @@ const Activate = (props) => {
             .catch((error) => {
                 setIsLoading(false);
                 setShowAlert(true);
-                setAlertText("INVALID SCHOOL CODE");
+                setAlertText("INVALID SHOW CODE");
             });
         } catch (error) {
             setIsLoading(false);
                 setShowAlert(true);
-                setAlertText("INVALID SCHOOL CODE");
+                setAlertText("INVALID SHOW CODE");
         }
     }
 
 	const btnClick = () => {
         // Code page
         if (curPage === 0) {
-            checkSchoolCode();
+            checkShowCode();
         } 
         
         // Are you sure page
@@ -248,7 +248,7 @@ const Activate = (props) => {
     const getPage = () => {
         // Code Page
         if (curPage === 0) {
-            return <SchoolCodePage setSchoolCode={setSchoolCode} />;
+            return <ShowCodePage setShowCode={setShowCode} />;
         }
 
         // Are you sure page
