@@ -344,7 +344,7 @@ const Canvas = (props) => {
                     
                     let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
 
-                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id && followDot === undefined) {
+                    if (highlightedUserData !== null && highlightedUserData.dot.show_user_id === dot.dot.show_user_id && followDot === undefined) {
                         if (userOptions.showMovementBrackets) {
                             drawUserName(dot);
 
@@ -384,9 +384,9 @@ const Canvas = (props) => {
                 else if (dot.dot.dot_icon_id === null) {
                     drawPoint(x, y, color, userLabel);
 
-                    let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
+                    let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions); 
 
-                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id && followDot === undefined) {
+                    if (highlightedUserData !== null && highlightedUserData.dot.show_user_id === dot.dot.show_user_id && followDot === undefined) {
                         if (userOptions.showMovementBrackets) {
                             drawUserName(dot);
 

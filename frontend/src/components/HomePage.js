@@ -15,9 +15,16 @@ const HomePage = (props) => {
 
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+    const getDivHeight = () => {
+        return window.innerHeight * 0.92;
+    }
+    const getDivWidth = () => {
+        return window.innerWidth;
+    }
+
     const fixBannerImage = () => {
-        const imgContainerHeight = window.innerHeight * 0.92;
-        const imgContainerWidth = window.innerWidth;
+        const imgContainerHeight = getDivHeight();
+        const imgContainerWidth = getDivWidth();
 
         // Landscape
         if (imgContainerWidth > imgContainerHeight * 0.8) {
@@ -40,7 +47,7 @@ const HomePage = (props) => {
             let height = imageHeight;
             let width = imageWidth;
             
-            let parentHeight = window.innerHeight * 0.92;
+            let parentHeight = getDivHeight();
 
             let scale = height / 1000;
             let overlap = (height - parentHeight) / 2;
@@ -59,13 +66,13 @@ const HomePage = (props) => {
                 y = ABSOLUTE_MIN_FROM_BOT;
             }
 
-            return {width: "100vw", bottom: y, left: "0px", position: "fixed"}
+            return {width: getDivWidth(), bottom: y, left: "0px", position: "fixed"}
         
         } catch (error) {
             console.log(error);
         }
 
-        return {width: "100vw", bottom: "0px", left: "0px", position: "fixed"}
+        return {width: getDivWidth(), bottom: "0px", left: "0px", position: "fixed"}
     }
 
     useEffect(() => {
@@ -83,7 +90,7 @@ const HomePage = (props) => {
     }, [])
 
     return (
-        <div className="d-flex justify-content-center align-items-center flex-column" style={{width: "100vw", height: "92vh", backgroundColor: "#212429"}}>
+        <div className="d-flex justify-content-center align-items-center flex-column" style={{width: getDivWidth(), height: getDivHeight(), backgroundColor: "#212429"}}>
             <img src={bannerLogo} alt="" width={imageWidth} height={imageHeight}/>
             
             <div 
@@ -99,7 +106,7 @@ const HomePage = (props) => {
             </div>
             <div 
                 className="d-flex justify-content-center align-items-center flex-column" 
-                style={{width: "100vw", bottom: "0px", left: "0px", position: "fixed", color: "white"}}
+                style={{width: getDivWidth(), bottom: "0px", left: "0px", position: "fixed", color: "white"}}
             >   
                 {
                     !isMobile ?
