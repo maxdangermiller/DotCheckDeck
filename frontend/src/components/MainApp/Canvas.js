@@ -264,7 +264,8 @@ const Canvas = (props) => {
 
                     context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
                 }
-                else {
+                // Make sure we're not going to draw a null dot, because the icon can't be loaded
+                else if (dot.dot.dot_icon_id === null) {
                     context.beginPath();
                     context.fillStyle = color;
                     context.arc(x, y, size / 2, 0, 2 * Math.PI);
@@ -337,7 +338,8 @@ const Canvas = (props) => {
                 }
 
                 // Otherwise draw the normal point
-                else {
+                // Make sure we're not going to draw a null dot, because the icon can't be loaded
+                else if (dot.dot.dot_icon_id === null) {
                     drawPoint(x, y, color, userLabel)
                     
                     let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
@@ -378,7 +380,8 @@ const Canvas = (props) => {
 
                     context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
                 }
-                else {
+                // Make sure we're not going to draw a null dot, because the icon can't be loaded
+                else if (dot.dot.dot_icon_id === null) {
                     drawPoint(x, y, color, userLabel);
 
                     let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
@@ -656,7 +659,8 @@ const Canvas = (props) => {
                         }
 
                         // Else dim others 
-                        else {
+                        // Make sure we're not going to draw a null dot, because the icon can't be loaded
+                        else if (dot.dot.dot_icon_id === null)  {
                             let color = getDotColor(dot, false, userOptions.useSectionColors)
                             drawPoint(useX, useY, color, dot.userLabel);
                         }
@@ -671,7 +675,8 @@ const Canvas = (props) => {
                     }
 
                     // If not, handel all of the not selected dots
-                    else {
+                    // Make sure we're not going to draw a null dot, because the icon can't be loaded
+                    else if (dot.dot.dot_icon_id === null)  {
                         let color = getDotColor(dot, !userOptions.dimOtherUsers, userOptions.useSectionColors)
                         drawPoint(useX, useY, color, dot.userLabel);
                     }
@@ -686,7 +691,8 @@ const Canvas = (props) => {
                 }
 
                 // Since nothing is selected, just highlight all
-                else {
+                // Make sure we're not going to draw a null dot, because the icon can't be loaded
+                else if (dot.dot.dot_icon_id === null)  {
                     let color = getDotColor(dot, true, userOptions.useSectionColors)
                     drawPoint(useX, useY, color, dot.userLabel);
                 }
