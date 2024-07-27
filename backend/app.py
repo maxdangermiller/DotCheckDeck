@@ -1040,14 +1040,14 @@ class SetListResource(Resource):
 	def get(self):
 		setNumb = request.args.get('set_id', None)
 		measure = request.args.get('measure', None)
-		schoolCode = request.args.get('show_code', None)
+		showCode = request.args.get('show_code', None)
 
-		# REQUIRE A SCHOOL CODE
-		if schoolCode is None:
-			return "Missing School Code", 404
+		# REQUIRE A SHOW CODE
+		if showCode is None:
+			return "Missing Show Code", 404
 
 		# CHECK IF CODE IS VALID
-		show = Show.query.filter(Show.code == schoolCode).first()
+		show = Show.query.filter(Show.code == showCode).first()
 		if show is None:
 			return "INVALID SHOW CODE", 404
 
@@ -1081,6 +1081,7 @@ class SetListResource(Resource):
 
 			schema = set_schema.dump(set)
 			schema["set_name"] = setName
+			schema["update_timestamp"] = show.last_update
 			
 			setsOutput.append(schema)
 

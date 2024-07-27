@@ -42,7 +42,7 @@ function App() {
 
 	const { token, refToken, setRefToken, removeToken, setToken } = useToken();
 	const [ userData, setUserData ] = useState({});
-	const [ schoolCode, setSchoolCode ] = useState("");
+	const [ showCode, setShowCode ] = useState("");
 	const [ showID, setShowID ] = useState(-1);
 	const [ isOffline, setIsOffline ] = useState(false);
 
@@ -57,7 +57,7 @@ function App() {
 			}
 			
 			setUserData(localUserData);
-			setSchoolCode(localShowCode);
+			setShowCode(localShowCode);
 			setShowID(localShowID);
 			return true;
 
@@ -85,7 +85,7 @@ function App() {
 						if (response.status === 202) {
 							setToken(response.data.access_token);
 							setUserData(response.data.user);
-							setSchoolCode(response.data.school_code);
+							setShowCode(response.data.school_code);
 							setShowID(response.data.show_id)
 
 							localStorage.setItem("app-user-data", JSON.stringify(response.data.user))
@@ -105,7 +105,7 @@ function App() {
 									window.location.href = "/error?message=No internet connection detected. \r\nYou must connect to the internet at least temporally&return=/login";
 								}
 								else {
-									window.location.href = "/error?message=No internet connection detected. \r\nYou can't login without internet access& right nowreturn=/login";
+									window.location.href = "/error?message=No internet connection detected. \r\nYou can't login without internet access!&return=/login";
 								}
 							}
 						}
@@ -233,23 +233,23 @@ function App() {
 
 					{/* Main App > Normal Viewer */}
 					<Route path="/app" exact errorElement={<ErrorPage />} element={
-						(token === "" && !isOffline) || schoolCode === ""
+						(token === "" && !isOffline) || showCode === ""
 						? <Navigate to="/login" />
-						: <Viewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
+						: <Viewer token={token} showCode={showCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
 					} />
 
 					{/* Main App > Normal Viewer - Quick Display */}
 					<Route path="/viewer-quick-display/:set_numb_param" exact errorElement={<ErrorPage />} element={
-						(token === "" && !isOffline) || schoolCode === ""
+						(token === "" && !isOffline) || showCode === ""
 						? <Navigate to="/login" />
-						: <Viewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
+						: <Viewer token={token} showCode={showCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
 					} />
 					
 					{/* Main App > Basic Viewer */}
 					<Route path="/app/basic" exact errorElement={<ErrorPage />} element={
-						(token === "" && !isOffline) || schoolCode === ""
+						(token === "" && !isOffline) || showCode === ""
 						? <Navigate to="/login" />
-						: <BasicViewer token={token} showCode={schoolCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
+						: <BasicViewer token={token} showCode={showCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
 					} />
 
 
@@ -259,49 +259,49 @@ function App() {
 					<Route path="/admin" exact errorElement={<ErrorPage />} element={
 						token === "" || token === undefined || !isAdminAuthorized()
 						? <Navigate to="/app" />
-						: <Admin token={token} schoolCode={schoolCode}/>
+						: <Admin token={token} schoolCode={showCode}/>
 					} />
 
 					{/* Admin > Timeline */}
 					<Route path="/admin-timeline" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
-						: <AdminTimeline token={token} schoolCode={schoolCode}/>
+						: <AdminTimeline token={token} schoolCode={showCode}/>
 					} />
 
 					{/* Admin > show join code */}
 					<Route path="/admin-join-code" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
-						: <AdminJoinCodeDisplay token={token} schoolCode={schoolCode}/>
+						: <AdminJoinCodeDisplay token={token} schoolCode={showCode}/>
 					} />
 
 					{/* Admin > show join code - WITH SPECIFIC SHOW ID */}
 					<Route path="/admin-join-code/:show_id" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
-						: <AdminJoinCodeDisplay token={token} schoolCode={schoolCode}/>
+						: <AdminJoinCodeDisplay token={token} schoolCode={showCode}/>
 					} />
 
 					{/* Admin > create show */}
 					<Route path="/admin-create-show" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
-						: <AdminCreateShow token={token} schoolCode={schoolCode}/>
+						: <AdminCreateShow token={token} schoolCode={showCode}/>
 					} />
 
 					{/* Admin >  add prop */}
 					<Route path="/admin-add-prop" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
-						: <AdminAddProp token={token} schoolCode={schoolCode}/>
+						: <AdminAddProp token={token} schoolCode={showCode}/>
 					} />
 
 					{/* Admin > convert to prop */}
 					<Route path="/admin-convert-to-prop" exact errorElement={<ErrorPage />} element={
 						token !== "" && token !== undefined && !isAdminAuthorized()
 						? <Navigate to="/app" />
-						: <AdminConvertToProp token={token} schoolCode={schoolCode}/>
+						: <AdminConvertToProp token={token} schoolCode={showCode}/>
 					} />
 
 
@@ -309,26 +309,26 @@ function App() {
 
 					{/* Auth > Activate Page */}
 					<Route path="/activate" exact errorElement={<ErrorPage />} element={
-						token !== "" && token !== undefined && schoolCode !== ""
+						token !== "" && token !== undefined && showCode !== ""
 						? <Navigate to="/app" />
 						: <Activate setToken={setToken} setRefToken={setRefToken}/>
 					} />
 
 					{/* Activate Page with given join code */}
 					<Route path="/activate/:join_code" exact errorElement={<ErrorPage />} element={
-						token !== "" && token !== undefined && schoolCode !== ""
+						token !== "" && token !== undefined && showCode !== ""
 						? <Navigate to="/app" />
 						: <Activate setToken={setToken} setRefToken={setRefToken}/>
 					} />
 
 					{/* Auth > Login Page */}
 					<Route path="/login" exact errorElement={<ErrorPage />} element={
-						token !== "" && token !== undefined && schoolCode !== ""
+						token !== "" && token !== undefined && showCode !== ""
 						? <Navigate to="/app" />
 						: <Login 
 							setToken={setToken} 
 							setRefToken={setRefToken} 
-							setSchoolCode={setSchoolCode} 
+							setSchoolCode={setShowCode} 
 							setUserData={setUserData}
 							setShowID={setShowID}
 						/>
