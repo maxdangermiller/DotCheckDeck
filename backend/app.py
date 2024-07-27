@@ -1123,7 +1123,7 @@ class ShowCodeAuthResource(Resource):
 		
 		school = School.query.filter(School.id == show.school_id).first()
 		
-		users = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.is_drum_major != True).all()
+		users = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.is_drum_major == False).all()
 		filteredUsers = []
 		for showUser in users:
 			if showUser.user_id is None and not showUser.is_locked:
@@ -1368,7 +1368,6 @@ class AddShowUserResource(Resource):
 		db.session.commit()
 
 		return "Success", 200
-
 
 # Get the index of a set in an array (that could be in any order) by it's set_name
 def getSetIndex(sets, middleSet) -> int:
@@ -3162,21 +3161,21 @@ if __name__ == "__main__":
 
 					db.session.commit()
 
-					showUsers = ShowUser.query.filter(ShowUser.user_id == user.id).all()
+				showUsers = ShowUser.query.filter().all()
 
-					for showUser in showUsers:
-						if showUser.is_section_leader is not True:
-							showUser.is_section_leader = False
-						if showUser.is_drum_major is not True:
-							showUser.is_drum_major = False
-						if showUser.is_locked is not True:
-							showUser.is_locked = False
-						if showUser.is_prop is not True:
-							showUser.is_prop = False
-						if showUser.is_stationary is not True:
-							showUser.is_stationary = False
+				for showUser in showUsers:
+					if showUser.is_section_leader is not True:
+						showUser.is_section_leader = False
+					if showUser.is_drum_major is not True:
+						showUser.is_drum_major = False
+					if showUser.is_locked is not True:
+						showUser.is_locked = False
+					if showUser.is_prop is not True:
+						showUser.is_prop = False
+					if showUser.is_stationary is not True:
+						showUser.is_stationary = False
 
-						db.session.commit()
+					db.session.commit()
 				
 
 

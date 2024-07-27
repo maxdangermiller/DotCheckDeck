@@ -29,7 +29,9 @@ import HomePage from './HomePage';
 // Main App
 import Viewer from './MainApp/Viewer';
 import BasicViewer from './MainApp/BasicViewer';
-import AppNavBar from './MainApp/MainAppNavBar/AppNavBar';
+// import AppNavBar from './MainApp/MainAppNavBar/AppNavBar';
+
+import logo from '../icons/logo.svg';
 
 import axios from "axios";
 
@@ -186,16 +188,19 @@ function App() {
 	}
 
 
-	if (token == null && !isOffline && window.location.pathname !== "/error") {
+	// Loading
+	if (token == null && !isOffline && window.location.pathname !== "/error" && !isOnHomePage()) {
 		return (
-			<div className="d-flex align-items-center justify-content-center flex-column fullScreen">
-				<div className="spinner-border" role="status">
-					<span className="visually-hidden">Loading...</span>
+			<div className="d-flex align-items-center justify-content-center flex-column fullScreen" style={{backgroundColor: "#212429"}}>
+				<div className="d-flex align-items-center justify-content-center flex-column" style={{width: "100%"}}>
+					<img src={logo} alt="" width="200px" height="200px" />
+					<div className="loader"></div>
 				</div>
 			</div>
 		);
 	} 
 	
+	// App Router
 	else {
 		return (
 			<Router>

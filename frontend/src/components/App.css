@@ -5,3 +5,27 @@
   overflow: hidden!important;
 
 }
+
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: fit-content;
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 30px;
+  background: radial-gradient(circle closest-side,#9ea2a8 94%,#212429) right/calc(200% - 1em) 100%;
+  animation: l24 1s infinite alternate linear;
+  margin-top: 1rem;
+}
+.loader::before {
+  content: "Loading...";
+  line-height: 1em;
+  color: #0000;
+  background: inherit;
+  background-image: radial-gradient(circle closest-side,#000 94%,#9ea2a8);
+  -webkit-background-clip:text;
+          background-clip:text;
+}
+
+@keyframes l24{
+  100%{background-position: left}
+}
