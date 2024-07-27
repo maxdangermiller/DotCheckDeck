@@ -3,12 +3,11 @@ from flask import Flask, request, jsonify, send_from_directory, session, abort, 
 from flask_migrate import Migrate
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, unset_jwt_cookies, jwt_required, \
 	JWTManager, create_refresh_token
-import datetime
 import pytz
 from azure.communication.email import EmailClient
 import json
@@ -114,7 +113,7 @@ show_update_reference = [
 		'updates': [
 			{
 				'timestamp_code': 12345678,
-				'time': datetime.datetime.now()
+				'time': datetime.now()
 			}
 		]
 	}
@@ -278,7 +277,7 @@ def create_token():
 					showString = show_user_schema.dump(showUser)
 					showString["show_user_id"] = showUser.id
 
-	user.last_login = datetime.datetime.now(pytz.timezone("US/Central"))
+	user.last_login = datetime.now(pytz.timezone("US/Central"))
 	db.session.commit()	
 
 	response = {
@@ -355,7 +354,7 @@ def get_jwt():
 					showString = show_user_schema.dump(showUser)
 					showString["show_user_id"] = showUser.id
 
-		user.last_login = datetime.datetime.now(pytz.timezone("US/Central"))
+		user.last_login = datetime.now(pytz.timezone("US/Central"))
 		db.session.commit()	
 
 		response = {
@@ -408,7 +407,7 @@ def verifyAccount(verify_encrypted_id):
 	if user is None:
 		return "USER DOESN'T EXIST!!!", 404
 	
-	user.verified_date = datetime.datetime.now(pytz.timezone("US/Central"))
+	user.verified_date = datetime.now(pytz.timezone("US/Central"))
 	db.session.commit()
 
 	return "Success", 200
@@ -728,7 +727,7 @@ def reset_password():
 
 	# We know this came from an email, so therefore we can say that this is authorized
 	if user.verified_date is None:
-		user.verified_date = datetime.datetime.now(pytz.timezone("US/Central"))
+		user.verified_date = datetime.now(pytz.timezone("US/Central"))
 		db.session.commit()
 	
 	remove_forgot_password_code(encrypted_id)
@@ -1306,7 +1305,7 @@ class SetUpUserResource(Resource):
 		user.email = request.json["email"]
 		user.first_name = request.json["first_name"]
 		user.last_name = request.json["last_name"]
-		user.activated_date = datetime.datetime.now(pytz.timezone("US/Central"))
+		user.activated_date = datetime.now(pytz.timezone("US/Central"))
 
 		user.set_password(request.json["password"])
 
@@ -1912,7 +1911,7 @@ class CreateUserResource(Resource):
 			is_admin = args.get('is_admin')
 		)
 
-		newUser.activated_date = datetime.datetime.now(pytz.timezone("US/Central"))
+		newUser.activated_date = datetime.now(pytz.timezone("US/Central"))
 		newUser.set_password(args.get('password'))
 
 		db.session.add(newUser)
@@ -2069,8 +2068,8 @@ def activateInvitedUser():
 		is_admin = is_admin
 	)
 
-	newUser.activated_date = datetime.datetime.now(pytz.timezone("US/Central"))
-	newUser.verified_date = datetime.datetime.now(pytz.timezone("US/Central"))
+	newUser.activated_date = datetime.now(pytz.timezone("US/Central"))
+	newUser.verified_date = datetime.now(pytz.timezone("US/Central"))
 	newUser.set_password(password)
 
 	db.session.add(newUser)
@@ -3056,7 +3055,7 @@ if __name__ == "__main__":
 					email = input("Email: "),
 					first_name = input("First Name: "),
 					last_name = input("Last Name: "),
-					activated_date = datetime.datetime.now(pytz.timezone("US/Central")),
+					activated_date = datetime.now(pytz.timezone("US/Central")),
 					is_admin = True
 				)
 
