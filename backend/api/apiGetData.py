@@ -24,6 +24,8 @@ from database.schemas import DotSchema, DotIconSchema, SetNameSchema, SetSchema,
 
 import dotCacheManager
 
+DATA_LOAD_SIZE = 8
+
 
 def getDotLinks(sets, showUser: ShowUser) -> list[dict]:
 	dots = list()
@@ -438,15 +440,17 @@ def auditCacheData(show: Show, data: dict, sinceVersion: int) -> bool:
 	return True
 
 
-def getBufferedShowUsers(data: dict, section: int, dataLoadSize: int) -> list:
+def getBufferedShowUsers(data: dict, dataSection: int, dataLoadSize: int) -> list:
 	numShowUsers = len(data["show_users"])
 	dataSectionSize = int(numShowUsers / dataLoadSize)
-	startIndex = 0 + section * dataSectionSize
+	startIndex = 0 + dataSection * dataSectionSize
 	endIndex = startIndex + dataSectionSize
 	
 	# Make sure the end won't give an out of bound error
 	if endIndex > numShowUsers:
 		endIndex = numShowUsers
+
+	print(startIndex, endIndex)
 
 	# var to store all of the sets
 	out = list()
@@ -457,8 +461,7 @@ def getBufferedShowUsers(data: dict, section: int, dataLoadSize: int) -> list:
 	return out
 
 
-def getBufferedDotsNew(show: Show, section: int, userDatabaseVersion: int):
-	DATA_LOAD_SIZE = 8
+def getBufferedDotsNew(show: Show, dataSection: int, userDatabaseVersion: int):
 
 	if len(dotCacheManager.show_data_cache) == 0:
 		return getShowData(show)
@@ -466,11 +469,19 @@ def getBufferedDotsNew(show: Show, section: int, userDatabaseVersion: int):
 	try:
 		data = dotCacheManager.show_data_cache[show.id]
 
+		if dataSection * DATA_LOAD_SIZE >= len(data["show_users"]):
+			lastDataSection = int(len(data["show_users"]) / DATA_LOAD_SIZE) 
+
+			return f"Data Section Out Of Range. Last Section is {lastDataSection}"
+
 		output = {}
 
-		output["sets"] = data["sets"]
-		output["band_sections"] = data["band_sections"]
-		output["show_users"] = getBufferedShowUsers(data, section, DATA_LOAD_SIZE)
+		# Only show sets and band sections if it's the first data section
+		if dataSection == 0:
+			output["sets"] = data["sets"]
+			output["band_sections"] = data["band_sections"]
+
+		output["show_users"] = getBufferedShowUsers(data, dataSection, DATA_LOAD_SIZE)
 		output["update_version"] = data["update_version"]
 
 		if userDatabaseVersion is None:
@@ -504,7 +515,6 @@ class APIGetData(Resource):
 		# Check to see if we got a show obj
 		if show is None:
 			return "INVALID SHOW CODE", 404
-
 
 		return getBufferedDotsNew(show, dataSection, userDatabaseVersion), 200
 	
