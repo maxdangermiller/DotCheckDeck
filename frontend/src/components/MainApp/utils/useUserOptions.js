@@ -6,7 +6,7 @@ const DEFAULT_USER_OPTIONS = {
 	"showNextSet": false, "showLastSet": false, "drawPath": false,
 	"highlightSection": false,
 	"useSectionColors": true,
-	"showMovementBrackets": false, "highlightUser": null,
+	"showMovementBrackets": true, "highlightUser": null,
 	"moveSpeed": 10, "useActualSetLength": false,
 	"dimOtherUsers": false, "showCollegeHash": true,
 	"followingUser": false, "useCollegeHash": false,

@@ -30,6 +30,7 @@ from database.show import Show
 from database.school import School
 from database.schemas import DotSchema, DotIconSchema, SetNameSchema, SetSchema, BandSectionSchema, ShowUserSchema, UserSchema, ShowSchema, SchoolSchema
 
+from api.apiGetData import APIGetData
 
 # TODO: Redis Queue
 # from rq import Queue
@@ -104,63 +105,8 @@ invite_user_code_reference = [
 	}
 ]
 
-
-# Show update tracker
-show_update_reference = [
-	"""
-	{
-		'id': 0,
-		'updates': [
-			{
-				'timestamp_code': 12345678,
-				'time': datetime.now()
-			}
-		]
-	}
-	"""
-]
-
-def addUpdate(updateShow, code):
-	DELETE_THRESHOLD = 86400 # 1 Day
-
-	update_dict = {
-		'timestamp_code': code,
-		'time': time.time()
-	}
-
-	for i in range(len(show_update_reference)):
-		if show_update_reference[i]["id"] == updateShow.id:
-			newUpdatesList = list()
-			# Check for any outdated updates
-			for update in show_update_reference[i]["updates"]:
-				if update_dict["time"] - update["time"] < DELETE_THRESHOLD:
-					newUpdatesList.append(update)
-			
-			newUpdatesList.append(update_dict)
-
-			show_update_reference[i]["updates"] = newUpdatesList
-			return
-	
-	show_update_reference.append({
-		'id': updateShow.id,
-		'updates': [update_dict]
-	})
-
-def getUpdatesForShow(show) -> list:
-	for _show in show_update_reference:
-		if _show["id"] == show.id:
-			return _show["updates"]
-	return []
-
-def getUpdateCodeTime(show, curCode: int) -> int:
-	updates = getUpdatesForShow(show)
-
-	for update in updates:
-		if update["timestamp_code"] == curCode:
-			return update["time"]
-		
-	return -1
-
+import dotCacheManager
+dotCacheManager.init()
 
 # Create the EmailClient object that you use to send Email messages.
 email_client = EmailClient.from_connection_string("endpoint=https://email-parent.communication.azure.com/;accesskey=hBpt4vHJOD0O8QsK2i/lGXcMylyQRUsyuIh9hEy1c0V8swtD4t2YnKjdGtLEhA37wC9QvBGczlYfyuD5ynA0Pw==")
@@ -186,6 +132,7 @@ shows_schema = ShowSchema(many=True)
 school_schema = SchoolSchema()
 band_section_schema = BandSectionSchema()
 band_sections_schema = BandSectionSchema(many=True)
+set_name_schema = SetNameSchema()
 set_names_schema = SetNameSchema(many=True)
 
 class SecureModelView(ModelView):
@@ -212,6 +159,7 @@ admin.add_view(SecureModelView(User, db.session))
 admin.add_view(SecureModelView(BandSection, db.session))
 admin.add_view(ShowModelView(Show, db.session))
 admin.add_view(SchoolModelView(School, db.session))
+
 
 # Admin Routes
 @app.route('/admin-logout', methods=["GET"])
@@ -602,6 +550,9 @@ def upload_dot_sheet():
 	show.changeUpdateTime()  
 	db.session.commit()
 
+	update = dotCacheManager.Update(dotCacheManager.UpdateType.MAJOR_UPDATE, show_schema.dump(show))
+	dotCacheManager.addUpdate(show, show.last_update, [update])
+
 	getAllDotsWithoutBuffer(show.code)
 
 	return "Success!", 200
@@ -766,6 +717,8 @@ def add_prop_to_show():
 	
 	print(show)
 
+	updates = list()
+
 	dotIcon = DotIcon(
 		school_id = user.school_id,
 		show_id = show.id,
@@ -774,6 +727,7 @@ def add_prop_to_show():
 	)
 	db.session.add(dotIcon)
 	db.session.commit()	
+	updates.append(dotCacheManager.Update(dotCacheManager.UpdateType.DOT_ICON, dot_icon_schema.dump(dotIcon)))
 
 	print(request.files)
 
@@ -798,6 +752,7 @@ def add_prop_to_show():
 	)
 	db.session.add(showUser)
 	db.session.commit()	
+	updates.append(dotCacheManager.Update(dotCacheManager.UpdateType.SHOW_USER, show_user_schema.dump(showUser)))
 
 	sets = Set.query.filter(Set.show_id == show.id).all()
 
@@ -819,11 +774,14 @@ def add_prop_to_show():
 		)
 		db.session.add(dot)
 		db.session.commit()	
+		updates.append(dotCacheManager.Update(dotCacheManager.UpdateType.DOT, dot_schema.dump(dot)))
 
 	# There has been a change made to the show's date, 
 	# so we must change the "last update time" var in the show object
 	show.changeUpdateTime()  
 	db.session.commit()
+
+	dotCacheManager.addUpdate(show, show.last_update, updates)
 
 	return "Done.", 201
 
@@ -883,6 +841,12 @@ def convert_user_to_prop():
 	# so we must change the "last update time" var in the show object
 	show.changeUpdateTime()  
 	db.session.commit()
+	
+	# TODO: Finish making like add_prop_to_show
+	updates = [
+		dotCacheManager.Update(dotCacheManager.UpdateType.DOT_ICON, dot_icon_schema.dump(dotIcon))
+	]
+	dotCacheManager.addUpdate(show, show.last_update, updates)
 
 	return "Done.", 200
 
@@ -951,6 +915,12 @@ def move_stationary_prop():
 	Show.query.filter(Show.id == prop.show_id).first().changeUpdateTime()  
 	db.session.commit()
 
+	# TODO: Finish making like add_prop_to_show
+	updates = [
+		dotCacheManager.Update(dotCacheManager.UpdateType.DOT_ICON, dot_icon_schema.dump(dotIcon))
+	]
+	dotCacheManager.addUpdate(show, show.last_update, updates)
+
 	return "Done.", 200
 
 
@@ -1009,6 +979,12 @@ def make_all_dots_for_prop_an_icon():
 	# so we must change the "last update time" var in the show object
 	Show.query.filter(Show.id == prop.show_id).first().changeUpdateTime()
 	db.session.commit()
+
+	# TODO: Finish making like add_prop_to_show
+	updates = [
+		dotCacheManager.Update(dotCacheManager.UpdateType.USER, user_schema.dump(prop))
+	]
+	dotCacheManager.addUpdate(show, show.last_update, updates)
 
 	return "Done.", 200
 	
@@ -1298,19 +1274,19 @@ class SetUpUserResource(Resource):
 		
 		user = User(school_id = show.school_id)
 		db.session.add(user)
-		db.session.commit()
+		# db.session.commit()
 
 		showUsers[0].user_id = user.id
-		db.session.commit()
 
 		user.email = request.json["email"]
 		user.first_name = request.json["first_name"]
 		user.last_name = request.json["last_name"]
 		user.activated_date = datetime.now(pytz.timezone("US/Central"))
+		db.session.commit()
 
 		user.set_password(request.json["password"])
 
-		db.session.add(user)
+		# db.session.add(user)
 
 		sendVerifyEmail(user)
 		notifyAdminOfNewUser(show.school_id, user)
@@ -1319,6 +1295,12 @@ class SetUpUserResource(Resource):
 		# so we must change the "last update time" var in the show object
 		show.changeUpdateTime()  
 		db.session.commit()
+
+		updates = [
+			dotCacheManager.Update(dotCacheManager.UpdateType.USER, user_schema.dump(user)),
+			dotCacheManager.Update(dotCacheManager.UpdateType.SHOW_USER, show_user_schema.dump(showUsers[0]))
+		]
+		dotCacheManager.addUpdate(show, show.last_update, updates)
 
 		updateBufferWithNewUser(user, showUsers[0], show)
 
@@ -1512,7 +1494,7 @@ def updateSetInDotsCache(show):
 
 
 def getBufferedDots(showCode, middleSet, bufferSize):
-	# REQUIRE A SCHOOL CODE
+	# REQUIRE A SHOW CODE
 	if showCode is None:
 		return "Missing Show Code", 404
 
@@ -1735,6 +1717,11 @@ class UpdateSetResource(Resource):
 		show.changeUpdateTime()  
 		db.session.commit()
 
+		updates = [
+			dotCacheManager.Update(dotCacheManager.UpdateType.SET, set_schema.dump(set))
+		]
+		dotCacheManager.addUpdate(show, show.last_update, updates)
+
 		return "Updated Successfully", 201
 
 
@@ -1759,12 +1746,16 @@ class UpdateSetsResource(Resource):
 			set.start_time_code = _set["start_time_code"]
 			set.end_time_code = _set["end_time_code"]
 
-		
 			# There has been a change made to the show's date, 
 			# so we must change the "last update time" var in the show object
 			show.changeUpdateTime() 
-
 			db.session.commit()
+
+			updates = [
+				dotCacheManager.Update(dotCacheManager.UpdateType.SET, set_schema.dump(set)),
+			]
+			dotCacheManager.addUpdate(show, show.last_update, updates)
+		
 
 		return "Updated Successfully", 201
 
@@ -1825,19 +1816,25 @@ class UpdateUserResource(Resource):
 			showUser = ShowUser.query.filter(ShowUser.id == show["id"]).first()
 
 
-			if showUser.label != show["label"] or showUser.symbol != show["symbol"] or showUser.section_id != show["section_id"]:
+			if showUser.label != show["label"] or showUser.symbol != show["symbol"] or showUser.section_id != show["section_id"] or showUser.is_section_leader != show["is_section_leader"]:
 				showUser.label = show["label"]
 				showUser.symbol = show["symbol"]
 				showUser.section_id = show["section_id"]
+				showUser.is_section_leader = show["is_section_leader"]
 
 				# There has been a change made to the show's date, 
 				# so we must change the "last update time" var in the show object
-				Show.query.filter(Show.id == showUser.show_id).first().changeUpdateTime()
+				showObj = Show.query.filter(Show.id == showUser.show_id).first()
+				showObj.changeUpdateTime()
 
-			showUser.is_section_leader = show["is_section_leader"]
+				updates = [
+					dotCacheManager.Update(dotCacheManager.UpdateType.USER, user_schema.dump(user)),
+					dotCacheManager.Update(dotCacheManager.UpdateType.SHOW_USER, show_user_schema.dump(showUser))
+				]
+				dotCacheManager.addUpdate(showObj, showObj.last_update, updates)
+
 			db.session.commit()
 
-		
 		db.session.commit()
 
 		return "Success", 201
@@ -1872,10 +1869,14 @@ class UpdateUserSectionResource(Resource):
 		# so we must change the "last update time" var in the show object
 		show = Show.query.filter(Show.id == showUser.show_id).first()
 		show.changeUpdateTime()
+		db.session.commit()
+
+		updates = [
+			dotCacheManager.Update(dotCacheManager.UpdateType.SHOW_USER, show_user_schema.dump(showUser))
+		]
+		dotCacheManager.addUpdate(show, show.last_update, updates)
 
 		updateBufferWithNewUser(loggedInUser, showUser, show)
-		
-		db.session.commit()
 
 		return "Success", 201
 
@@ -2284,6 +2285,11 @@ class UpdateOrCreateSetNameResource(Resource):
 
 		db.session.commit()
 
+		updates = [
+			dotCacheManager.Update(dotCacheManager.UpdateType.SET_NAME, set_name_schema.dump(setName))
+		]
+		dotCacheManager.addUpdate(show, show.last_update, updates)
+
 		return {"message": "Successfully Updated/Created Set Name for the given set/band section.", "sn-update-timestamp": show.last_set_name_update}, 201
 
 
@@ -2336,7 +2342,13 @@ class UpdateSectionResource(Resource):
 
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
-		Show.query.filter(Show.id == section.show_id).first().changeUpdateTime()  
+		show = Show.query.filter(Show.id == section.show_id).first()
+		show.changeUpdateTime()  
+
+		updates = [
+			dotCacheManager.Update(dotCacheManager.UpdateType.BAND_SECTION, band_section_schema.dump(section))
+		]
+		dotCacheManager.addUpdate(show, show.last_update, updates)
 
 		db.session.commit()
 
@@ -2386,6 +2398,11 @@ class UpdateSetNameResource(Resource):
 			show.changeSetNameUpdateTime()  
 			db.session.commit()
 
+			updates = [
+				dotCacheManager.Update(dotCacheManager.UpdateType.SET_NAME, set_name_schema.dump(setName))
+			]
+			dotCacheManager.addUpdate(show, show.last_update, updates)
+
 			updateBufferWithSetName(show, setName)
 
 			return "Created Successfully.", 201
@@ -2396,6 +2413,11 @@ class UpdateSetNameResource(Resource):
 			# so we must change the "last update time" var in the show object
 			show.changeSetNameUpdateTime()
 			db.session.commit()
+
+			updates = [
+				dotCacheManager.Update(dotCacheManager.UpdateType.SET_NAME, set_name_schema.dump(setName))
+			]
+			dotCacheManager.addUpdate(show, show.last_update, updates)
 
 			updateBufferWithSetName(show, setName)
 
@@ -2434,8 +2456,12 @@ class UpdateShowResource(Resource):
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
 		show.changeUpdateTime()  
-
 		db.session.commit()
+
+		updates = [
+			dotCacheManager.Update(dotCacheManager.UpdateType.SHOW, show_schema.dump(show))
+		]
+		dotCacheManager.addUpdate(show, show.last_update, updates)
 
 		return "Updated Successfully!", 201
 
@@ -2613,6 +2639,11 @@ class UpdateSetNotesResource(Resource):
 		show.changeUpdateTime()  
 		db.session.commit()
 
+		updates = [
+			dotCacheManager.Update(dotCacheManager.UpdateType.SET, set_schema.dump(set))
+		]
+		dotCacheManager.addUpdate(show, show.last_update, updates)
+
 		return "Updated Successfully", 201
 
 
@@ -2638,273 +2669,6 @@ class PropsListResource(Resource):
 		showUsers = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.is_prop == True).all()
 
 		return show_users_schema.dump(showUsers), 200
-
-
-# NEW DATA HANDLING
-
-
-def getDotLinks(sets, showUser: ShowUser):
-	dots = list()
-
-	for set in sets:
-		dot = Dot.query.filter(Dot.set_id == set.id, Dot.show_user_id == showUser.id).first()
-
-		dots.append(dot)
-
-	dotCords = list()
-
-	for i in range(len(dots)):
-		curDot = dots[i]
-
-		curDotInfo = {"id": curDot.id, "dot_info": curDot.posToBits(), "dot_icon_id": curDot.dot_icon_id}
-		nextDotInfo = {"id": -1, "dot_info": -1, "dot_icon_id": -1}
-		
-		if i + 1 < len(dots):
-			nextDot = dots[i + 1]
-			nextDotInfo = {"id": nextDot.id, "dot_info": nextDot.posToBits(), "dot_icon_id": nextDot.dot_icon_id}
-
-		dotCords.append({
-			"counts": sets[i].counts,
-			"setID": curDot.set_id,
-			"cur_dot": curDotInfo,
-			"next_dot": nextDotInfo
-		})
-
-	return dotCords
-
-
-def getShowData(show: Show):
-
-	"""
-	"sets": [
-        {
-            "id": 109,
-            "set_numb": "1",
-            "counts": 16,
-            "total_counts": 16,
-            "measure": "measure",
-            "start_time_code": -1,
-            "end_time_code": -1,
-            "show_index": 0,
-            "notes": "NOTES"
-        }
-		...
-    ],
-    "users": [
-        {
-            "id": 0,
-            "email": "EMAIL",
-            "first_name": "Henry",
-            "last_name": "Schaefer",
-            "password_hash": "PASSWORD"
-        }
-		...
-    ],
-    "band_sections": [
-        {
-            "id": 32,
-            "r": 0,
-            "g": 0,
-            "b": 0
-        }
-    ],
-    "show_users": [
-        {
-            "show_user": {
-                "id": 0,
-                "symbol": "D",
-                "label": "D9",
-                "is_section_leader": true,
-                "is_locked": false,
-                "is_prop": false,
-                "is_stationary": false,
-                "created_date": "null",
-                "last_updated": 0,
-                "last_updated_date": "null"
-            },
-            "user": {
-                "id": 0,
-                "first_name": "Henry",
-                "last_name": "Schaefer"
-            },
-            "dot_links": [
-                {
-                    "counts": 16,
-                    "setID": 109,
-                    "last_dot": {"id": 69,"dot_info": 346048773,"dot_icon_id": null},
-                    "cur_dot": {"id": 7910,"dot_info": 202917640,"dot_icon_id": null}
-                }
-				...
-            ]
-        }
-		...
-    ]
-
-	"""
-
-	# Define the final dictionary returned
-	out = {}
-
-	# Get all sets in the show
-	sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
-	showUsers = ShowUser.query.filter(ShowUser.show_id == show.id).all()
-	bandSections = BandSection.query.filter(BandSection.show_id == show.id).all()
-
-	# ADD SETS
-	set_out = list()
-
-	for _set in sets:
-		#TODO: Add set name
-		set_out.append({
-			"id": _set.id,
-            "set_numb": _set.set_numb,
-            "counts": _set.counts,
-            "total_counts": _set.total_counts,
-            "measure": _set.measure,
-            "start_time_code": _set.start_time_code,
-            "end_time_code": _set.end_time_code,
-            "show_index": _set.showIndex,
-            "notes": _set.notes,
-			"user_set_name": "TODO"
-		})
-
-	out["sets"] = set_out
-
-	# ADD BAND SECTIONS
-
-	band_sections_out = list()
-
-	for bandSection in bandSections:
-		band_sections_out.append({
-			"id": bandSection.id,
-            "r": bandSection.color_r,
-            "g": bandSection.color_g,
-            "b": bandSection.color_b
-		})
-
-	out["band_sections"] = band_sections_out
-
-
-	# ADD SHOW USERS & USERS
-
-	# There is supposed to be a section with passwords and emails in this method, 
-	# but we don't want that sent to the end user so it's commented out here.
-	# usersOut = list()
-	showUsersOut = list()
-
-	for showUser in showUsers:
-		dotLinks = getDotLinks(sets, showUser)
-		
-		user = User.query.filter(User.id == showUser.user_id).first()
-		bandSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
-
-		userInfo = {"id": -1, "first_name": "None", "last_name": None}
-
-		if user is not None:
-			userInfo = {
-                "id": user.id,
-                "first_name": user.first_name,
-                "last_name": user.last_name
-            }
-
-		showUsersOut.append({
-			"show_user": {
-                "id": showUser.id,
-                "symbol": showUser.symbol,
-                "label": showUser.label,
-                "is_section_leader": showUser.is_section_leader,
-                "is_locked": showUser.is_locked,
-                "is_prop": showUser.is_prop,
-                "is_stationary": showUser.is_stationary,
-                # "created_date": showUser.created_date,
-                "last_updated": showUser.last_updated,
-                # "last_updated_date": showUser.last_updated_date,
-
-				"band_section_id": showUser.section_id,
-				# "section_color_r": bandSection.color_r,
-				# "section_color_g": bandSection.color_g,
-				# "section_color_b": bandSection.color_b
-            },
-            "user": userInfo,
-            "dot_links": dotLinks
-		})
-
-	out["show_users"] = showUsersOut
-
-	print("SAVING NEW CACHE")
-	with open(f"cache/dots-new/{show.id}.json", "w") as outfile:
-		json.dump(out, outfile, indent=4)
-
-	
-	return out
-
-# TODO: Audit
-def auditCacheData(show: Show):
-	pass
-
-def getBufferedShowUsers(data: dict, section: int, dataLoadSize: int) -> list:
-	numShowUsers = len(data["show_users"])
-	dataSectionSize = int(numShowUsers / dataLoadSize)
-	startIndex = 0 + section * dataSectionSize
-	endIndex = startIndex + dataSectionSize
-	
-	# Make sure the end won't give an out of bound error
-	if endIndex > numShowUsers:
-		endIndex = numShowUsers
-
-	# var to store all of the sets
-	out = list()
-	
-	for i in range(startIndex, endIndex):
-		# TODO: Audit somewhere else
-
-		out.append(data["show_users"][i])
-
-	return out
-
-
-def getBufferedDotsNew(show: Show, section: int, curDatabaseVersion: int):
-	DATA_LOAD_SIZE = 8
-
-	try:
-		with open(f"cache/dots-new/{show.id}.json", "r") as file:
-			data = json.load(file)
-
-			output = {}
-
-			output["sets"] = data["sets"]
-			output["band_sections"] = data["band_sections"]
-			output["show_users"] = getBufferedShowUsers(data, section, DATA_LOAD_SIZE)
-
-				
-			return output
-	except:
-		print("Error")
-		return getShowData(show)
-
-
-
-class APIGetData(Resource):
-	@jwt_required()
-	def get(self):
-		showCode = request.args.get('show_code', None)
-		dataSection = int(request.args.get('data_section', 0))
-
-		# REQUIRE A SHOW CODE
-		if showCode is None:
-			return "Missing Show Code", 404
-
-		# Attempt to load the Show with that code
-		show = Show.query.filter(Show.code == showCode).first()
-
-		# Check to see if we got a show obj
-		if show is None:
-			return "INVALID SHOW CODE", 404
-		
-		curDatabaseVersion = show.last_update
-
-		return getBufferedDotsNew(show, dataSection, curDatabaseVersion), 200
-	
 
 
 # Data Handling
