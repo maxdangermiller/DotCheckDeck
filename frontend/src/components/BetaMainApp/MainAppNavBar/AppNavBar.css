@@ -1,0 +1,29 @@
+.customNavbar {
+    height: calc(var(--app-height) * 0.08);
+    width: 100vw;
+    margin-top: 0 !important;
+}
+
+.customULNav {
+    margin-top: 0.5vh !important;
+    margin-bottom: 0.5vh !important;
+    margin-left: 2%;
+    margin-right: 2%;
+    height: 100%;
+    width:96%;
+}
+
+.logo {
+    height: 4vh;
+}
+
+.customNavbarText {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-weight: bold;
+    font-size: 4vh;
+
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    color: var(--bs-navbar-color);
+}

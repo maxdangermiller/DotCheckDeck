@@ -237,6 +237,7 @@ def getShowData(show: Show) -> dict:
 	out["show_users"] = showUsersOut
 
 	out["update_version"] = show.last_update
+	out["total_data_sections"] = int(len(showUsersOut) / DATA_LOAD_SIZE) 
 
 	print("SAVING NEW CACHE")
 	# with open(f"cache/dots-new/{show.id}.json", "w") as outfile:
@@ -468,11 +469,10 @@ def getBufferedDotsNew(show: Show, dataSection: int, userDatabaseVersion: int):
 
 	try:
 		data = dotCacheManager.show_data_cache[show.id]
+		lastDataSection = int(len(data["show_users"]) / DATA_LOAD_SIZE) 
 
 		if dataSection * DATA_LOAD_SIZE >= len(data["show_users"]):
-			lastDataSection = int(len(data["show_users"]) / DATA_LOAD_SIZE) 
-
-			return f"Data Section Out Of Range. Last Section is {lastDataSection}"
+			return {"error": "Data Section Out Of Range", "msg": f"Data Section Out Of Range. Last Section is {lastDataSection}"}
 
 		output = {}
 
@@ -483,6 +483,7 @@ def getBufferedDotsNew(show: Show, dataSection: int, userDatabaseVersion: int):
 
 		output["show_users"] = getBufferedShowUsers(data, dataSection, DATA_LOAD_SIZE)
 		output["update_version"] = data["update_version"]
+		output["total_data_sections"] = lastDataSection
 
 		if userDatabaseVersion is None:
 			userDatabaseVersion = output["update_version"]

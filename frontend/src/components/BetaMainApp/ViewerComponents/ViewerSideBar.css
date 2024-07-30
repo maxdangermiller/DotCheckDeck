@@ -1,0 +1,168 @@
+.sideBarClass {
+    width: 20vw;
+    height: 92vh;
+    border-style: solid;
+    border-width: 5px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.setInfoDisplay {
+    width: 100%;
+    max-width: 20vw;
+    height: 25%;
+    max-height: 200px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.optionsDiv {
+    width: 100%;
+    max-width: 20vw;
+    height: 25%;
+    max-height: 200px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.optionsDivRow {
+    width: 80%;
+    height: 50%;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.invisibleInput {
+    font-size: 8vh;
+    font-weight: bold;
+    width: 80%;
+    text-align: center;
+    border: none;
+    height: 12vh!important;
+}
+
+.setNumberInput {
+    font-size: 10vh;
+    font-weight: bold;
+    width: 80%;
+    text-align: center;
+    border-style: solid;
+    border-width: 5px;
+    border-radius: 20px;
+    height: 80%!important;
+    overflow-x:visible!important;
+    overflow-y: hidden!important;
+    
+}
+
+.setNumberInput:focus {
+    outline:none;
+}
+
+.spinnerSuspender {
+    height: 10vh;
+    width:80%;
+}
+
+.viewerSideBarHeader {
+    font-size: 4vh;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    border: none;
+    margin-bottom: 0;
+}
+
+.viewerSideBarNameField {
+    font-size: 4vh;
+    width: 100%;
+    text-align: center;
+    border: none;
+    margin-bottom: 0;
+    height: 20% !important;
+}
+
+.centerText {
+    text-align: center;
+    font-size: 3vh;
+    width: 100%;
+    margin-bottom: 0;
+    overflow: hidden;
+}
+
+.customViewerSideBarBtn {
+    background: none;
+    border: none; 
+    height: min(8vh, 40px);
+    padding: 0;
+    cursor:pointer;
+}
+
+.customViewerIconButton {
+    width: min(8vh, 40px);
+}
+
+.forwardBtn {
+    color:#03542e;
+}
+
+.forwardBtn:hover {
+    color:#01361d;
+}
+
+.backwardBtn {
+    color:#0320a1;
+}
+
+.backwardBtn:hover {
+    color:#01156b;
+}
+
+.customViewerPlayPauseBtn {
+    font-size: 8vh;
+}
+
+.mediaControlRow {
+    height: 25%;
+    width: 80%;
+    background-color: #ddd;
+    border: none;
+    color: black;
+    cursor: default;
+    border-radius: 4vh;
+  
+}
+
+.normalBtn {
+    color:#2e2e2e;
+}
+
+.normalBtn:hover {
+    color:#000000;
+}
+
+.normalBtn:disabled {
+    color: #949292 !important;;
+}
+
+.viewerButton {
+    width: 100%;
+}

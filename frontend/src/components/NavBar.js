@@ -20,7 +20,7 @@ const NavBar = (props) => {
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 	const isPWAAdded = window.matchMedia('(display-mode: standalone)').matches;
 
-	if (!show || location.pathname.substring(0, 4) === "/app"){
+	if (!show || location.pathname.substring(0, 4) === "/app" || location.pathname.substring(0, 5) === "/beta"){
 		return <></>
 	}
 
