@@ -60,9 +60,10 @@ function useLocalData(isOffline) {
 				let parsedData = JSON.parse(localData);
 
 				// Check version number
+				/*
 				if (!isOffline) {
 					for (let i = 0; i < parsedData.length; i++) {
-						let timestamp = parsedData[i].update_timestamp;
+						let timestamp = parsedData[i]["show_user"]["last_updated"];
 						if (timestamp !== curDatabaseTimestamp) {
 							console.log("Found timestamp of: " + timestamp + ", when the current timestamp is: " + curDatabaseTimestamp)
 							// Start UPDATING THOSE SETS
@@ -70,6 +71,7 @@ function useLocalData(isOffline) {
 						}
 					}
 				}
+				*/
 
 				if (parsedData.length < sets.length || sets.length === 0) {
 					console.log("USING INCOMPLETE LOCAL DATA!", parsedData.length, sets.length);

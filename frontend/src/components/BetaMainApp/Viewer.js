@@ -228,9 +228,9 @@ const BetaViewer = (props) => {
                 // If this is the first recursion, save the sets
                 if (dataSection === 0) {
                     // Get Sets 
+					console.log("SAVING SETS")
                     let set_data = response.data["sets"];
                     saveSets(set_data);
-
                 }
 
                 // Loop through showUsers to add
@@ -263,7 +263,8 @@ const BetaViewer = (props) => {
                 saveLocalData(localData);
 
 				if (response.data["update_version"] !== newestTimestamps.data) {
-					setNewestTimestamps(response.data["update_version"], newestTimestamps.sn);
+					console.log("Found timestamp of ", response.data["update_version"])
+					saveCurTimestamps({data: response.data["update_version"], sn: newestTimestamps.sn});
 				}
                 
                 // Recurse
@@ -311,7 +312,7 @@ const BetaViewer = (props) => {
      */
     const checkCurData = () => {
         // Wait until both sets and curDatabaseTimestamp are loaded
-		if (curDatabaseTimestamp === "") {
+		if (curDatabaseTimestamp === -1) {
 			console.log("Currently missing sets and or timestamp", sets.length, curDatabaseTimestamp)
 			// Stall for time
 			return;
@@ -346,7 +347,7 @@ const BetaViewer = (props) => {
 			console.log("ERROR " + error);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []) // curSet, sets, curDatabaseTimestamp
+	}, [curSet, curDatabaseTimestamp]) // curSet, sets, curDatabaseTimestamp
 
 	// Get Audio From API
 	useEffect(() => {
@@ -723,6 +724,7 @@ const BetaViewer = (props) => {
 					/>
 					<UserInfoDialogue hoverUserInfo={hoverUserInfo} canvasRef={canvasRef}/>
 				</div>
+				{/*
 				<ViewerSideBar 
 					curSetInfo={getCurSetInfo()} 
 					getCurSetNumb={getCurSetNumb()} 
@@ -760,6 +762,7 @@ const BetaViewer = (props) => {
 					setShow={setShowUpdatePrompt}
 					update={changeTimestampsToNewUpdate}
 				/>
+				*/}
 			</div>
 		</div>
 	);

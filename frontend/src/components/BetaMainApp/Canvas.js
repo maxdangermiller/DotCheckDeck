@@ -345,8 +345,7 @@ const Canvas = (props) => {
                     let width = 10;
                     let height = 10;
 
-                    // TODO: ADD BACK
-                    // context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
+                    context.drawImage(getLoadedIcon(dotInfo["dot_link"]["dot_icon_id"]), x - width / 2, y - height / 2, width, height);
                 }
 
                 // Otherwise draw the normal point
@@ -381,7 +380,7 @@ const Canvas = (props) => {
                         followDotCords = {x: x, y: y};
                         if (!userOptions.showMovementBrackets) {
                             // TODO: ADD BACK
-                            // drawUserDialogue(x, y, dot);
+                            // drawUserDialogue(x, y, dotInfo["show_user"]);
                         }
                     }
                 }
@@ -414,10 +413,10 @@ const Canvas = (props) => {
                         followDot === undefined
                     ) {
                         if (userOptions.showMovementBrackets) {
-                            drawUserName(dot);
+                            drawUserName(dotInfo["show_user"]);
 
                             // Find actual dot when it's between 2
-                            let actDot = cordsToDot(x,y, curDimensions["w"], curDimensions["h"], dot.dot);
+                            let actDot = cordsToDot(x,y, curDimensions["w"], curDimensions["h"], dotInfo["dot_link"]);
                             drawMovementBrackets(x, y, actDot);
                         }
 
@@ -428,7 +427,7 @@ const Canvas = (props) => {
                     if (followDot !== undefined && followDot["user"]["id"] === user_id) {
                         followDotCords = {x: x, y: y};
                         if (!userOptions.showMovementBrackets) {
-                            drawUserDialogue(x, y, dot);
+                            drawUserDialogue(x, y, dotInfo["show_user"]);
                         }
                     }
                 }
@@ -632,11 +631,7 @@ const Canvas = (props) => {
             if (userOptions.highlightUser !== null) {
                 for (let x = 0; x < data.length; x++) {
                     if (userOptions.highlightUser.id === data[x]["show_user"]["id"]) {
-                        return {
-                            "dot_link": data[x]["dot_links"][curSet],
-                            "show_user": data[x]["show_user"],
-                            "user": data[x]["user"],
-                        };
+                        return constructDotInfo(data[x]["dot_links"][curSet], data[x]["show_user"], data[x]["user"]);
                     }
                 }
             }
@@ -644,27 +639,58 @@ const Canvas = (props) => {
             return null;
         }
 
-        // STOPED REFACTORING HERE
+        /**
+         * Construct Dot Info
+         * @param {Object} show_user 
+         * @param {Object} user 
+         * @param {Object} dot_link 
+         * @returns {DotInfo} dot info
+         */
+        const constructDotInfo = (show_user, user, dot_link) => {
+            return {
+                "dot_link": dot_link,
+                "show_user": show_user,
+                "user": user,
+            };
+        }
+
+        /**
+         * Get User Name
+         * @param {Object} show_user_data 
+         * @returns {String} user name
+         */
+        const getUserName = (show_user_data) => {
+            const first_name = show_user_data["user"]["first_name"];
+            const last_name = show_user_data["user"]["last_name"];
+
+            if (first_name === null || first_name === undefined || last_name === null || last_name === undefined) {
+                return "Inactivated";
+            }
+            return first_name + " " + last_name;
+        }
+
         /**
          * Takes data from API and draws them, used to condense the render method
-         * @param {Object} data 
-         * @param {Integer} index 
+         * FIXED
+         * @param {Object} data
+         * @param {Integer} curSetIndex
          * @returns {Object} new dots
          */
-        const drawDots = (data, index) => {
+        const drawDots = (data, curSetIndex) => {
             let newDots = [];
             let drawBracket = {useX:null, useY:null, dot:null};
-            let curSetData = data[index].dots;
+            let highlightedUserData = getHighlightedUserData(data, curSetIndex, userOptions);
 
-            let highlightedUserData = getHighlightedUserData(data, index, userOptions);
-
-
-            for (let x = 0; x < curSetData.length; x++) {
-                const dot = curSetData[x];
-                newDots.push(dot);
+            // Loop Through Show Users
+            for (let i = 0; i < data.length; i++) {
+                const show_user = data[i];
+                const dot_link = show_user["dot_links"][curSetIndex]["dot_link"];
+                const dot_info = constructDotInfo(show_user["show_user"], show_user["user"], dot_link);
+                
+                newDots.push(dot_info);
 
                 // NEW IMPLEMENTATION 5/28/23
-                let cords = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+                let cords = convertDotToCords(dot_info, curDimensions["w"], curDimensions["h"]);
                 
                 let useX = cords.x;
                 let useY = cords.y;
@@ -672,70 +698,74 @@ const Canvas = (props) => {
                 // Check if there is a user highlighted
                 if (highlightedUserData !== null) {
                     // Check if the current dot being read is that label
-                    if (highlightedUserData.dot.show_user_id === dot.dot.show_user_id) {
+                    if (highlightedUserData["show_user"]["id"] === show_user["show_user"]["id"]) {
                         if (userOptions.showMovementBrackets) {
-                            drawBracket = {useX:useX, useY:useY, dot:dot};
+                            drawBracket = {useX:useX, useY:useY, dot:dot_info};
                         }
 
-                        let color = getDotColor(dot, true, userOptions.useSectionColors)
-                        drawHighlightedPoint(data, index, x, userOptions, color, dot.userLabel)
+                        let color = getDotColor(dot_info, true, userOptions.useSectionColors)
+                        drawHighlightedPoint(data, curSetIndex, i, userOptions, color, getUserName(show_user["show_user"]))
                     }
 
                     // Check if we're highlighting the section
                     else if (userOptions.highlightSection) {
                         // Check if this dot is part of the highlighted section
-                        if (highlightedUserData.section_id === dot.section_id) {
-                            let color = getDotColor(dot, true, userOptions.useSectionColors)
-                            drawHighlightedPoint(data, index, x, userOptions, color, dot.userLabel)
+                        if (highlightedUserData["show_user"]["band_section_id"] === show_user["show_user"]["band_section_id"]) {
+                            let color = getDotColor(dot_info, true, userOptions.useSectionColors)
+                            drawHighlightedPoint(data, curSetIndex, i, userOptions, color, getUserName(show_user["show_user"]))
                         }
 
                         // If it's an icon dot
-                        else if (dot.dot.dot_icon_id !== null && !isOffline) {
-                            let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
-                            let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+                        else if (dot_link["dot_icon_id"] !== null && !isOffline) {
+                            // TODO: Add Back
+                            // let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                            // let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                            context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
+                            // context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
                         }
 
                         // Else dim others 
                         // Make sure we're not going to draw a null dot, because the icon can't be loaded
-                        else if (dot.dot.dot_icon_id === null)  {
-                            let color = getDotColor(dot, false, userOptions.useSectionColors)
-                            drawPoint(useX, useY, color, dot.userLabel);
+                        else if (dot_link["dot_icon_id"] === null)  {
+                            let color = getDotColor(dot_info, false, userOptions.useSectionColors)
+                            drawPoint(useX, useY, color, dot_info["show_user"]["label"]);
                         }
                     }
 
                     // If it's an icon dot
-                    else if (dot.dot.dot_icon_id !== null && !isOffline) {
-                        let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
-                        let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+                    else if (dot_link["dot_icon_id"] !== null && !isOffline) {
+                        // TODO
+                        // let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                        // let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                        context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
+                        // context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
                     }
 
                     // If not, handel all of the not selected dots
                     // Make sure we're not going to draw a null dot, because the icon can't be loaded
-                    else if (dot.dot.dot_icon_id === null)  {
-                        let color = getDotColor(dot, !userOptions.dimOtherUsers, userOptions.useSectionColors)
-                        drawPoint(useX, useY, color, dot.userLabel);
+                    else if (dot_link["dot_icon_id"] === null)  {
+                        let color = getDotColor(dot_info, !userOptions.dimOtherUsers, userOptions.useSectionColors)
+                        drawPoint(useX, useY, color, dot_info["show_user"]["label"]);
                     }
                 }
                 
-                else if (dot.dot.dot_icon_id !== null && !isOffline) {
-                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
-                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+                else if (dot_link["dot_icon_id"] !== null && !isOffline) {
+                    // TODO: ADD BACK
+                    // let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                    // let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
 
-                    context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
+                    // context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), useX - width / 2, useY - height / 2, width, height);
                 }
 
                 // Since nothing is selected, just highlight all
                 // Make sure we're not going to draw a null dot, because the icon can't be loaded
-                else if (dot.dot.dot_icon_id === null)  {
-                    let color = getDotColor(dot, true, userOptions.useSectionColors)
-                    drawPoint(useX, useY, color, dot.userLabel);
+                else if (dot_link["dot_icon_id"] === null)  {
+                    let color = getDotColor(dot_info, true, userOptions.useSectionColors)
+                    drawPoint(useX, useY, color, dot_info["show_user"]["label"]);
                 }
             }
+
 
             if (drawBracket.useX !== null && followDot === undefined) {
                 drawUserName(drawBracket.dot)
@@ -745,20 +775,8 @@ const Canvas = (props) => {
             return newDots;
         }
 
-        /**
-         * Get Matching User With ID
-         * @param {Object} data 
-         * @param {Integer} id 
-         * @returns {Object} data
-         */
-        const getMatchingUserWithID = (data, id) => {
-            for (let i = 0; i < data.length; i++) {
-                if (data[i]["userID"] === id) {
-                    return data[i];
-                }
-            }
-            return undefined;
-        }
+        // STOPPED REFACTORING HERE
+
         /**
          * Takes data from API, and draws the animation
          */
@@ -766,84 +784,99 @@ const Canvas = (props) => {
             // This is so if we're playing the show, the sets don't overlap
             const MARGIN = 100;
 
-            if (drawInfo.length !== 0 && (curSet !== lastSetID || isCountsMode()) && drawInfo[curSet] !== undefined) {
-                let startTime = animationStartTime;
-                let curActualTime = (audioPlaying || isCountsMode()) ? curPlayTime * 1000 : Date.now();
+            const set_info = drawInfo["sets"][curSet];
+
+            // If there is nothing to animate, or it shouldn't be animating.... don't animate
+            if (drawInfo.length === 0 && (curSet !== lastSetID || isCountsMode()) && set_info !== undefined) {
+                setIsAnimation(false); 
+                setAnimationStartTime(0);
+            }
+
+            let startTime = animationStartTime;
+            let curActualTime = (audioPlaying || isCountsMode()) ? curPlayTime * 1000 : Date.now();
+            let durationInSecs = 2000; // Default Value
+            
+            // If audio is playing or is in counts mode
+            if (audioPlaying || isCountsMode()) {
+                startTime = set_info["start_time_code"];
+                curActualTime = curPlayTime * 1000;
+            } 
+            // Otherwise if this is the start, set the start time to the current time
+            else if (animationStartTime === 0) {
+                startTime = Date.now();
+                curActualTime = Date.now();
+                setAnimationStartTime(startTime); 
+            }
+
+            // Find what the data says the duration is if it's supposed to
+            if (audioPlaying || isCountsMode() || userOptions.useActualSetLength) {
+                let setStartTime = set_info["start_time_code"];
+                let setEndTime = set_info["end_time_code"];
+                if (setStartTime !== null && setEndTime !== null) {
+                    durationInSecs = setEndTime - setStartTime - MARGIN;
+                }
+            }
+
+            // If the duration is 0, then just end the animation here. 
+            // This is because below when it finds curTime it divides and you cannot divide by zero
+            if (durationInSecs === 0) { setIsAnimation(false); setAnimationStartTime(0); return; }
+
+            let counts = set_info.counts;
+
+            // 2000 / 2000
+            let curTime = (curActualTime - startTime) / ((durationInSecs / counts))
+
+            // -1: Backward
+            //  0: No Move
+            //  1: Forward
+            let direction = 0;
+
+            let curSetData = drawInfo[curSet].dots;
+            let lastSetData = drawInfo[lastSetID].dots;
+
+            if (isCountsMode() && curSet > 0) {
+                lastSetData = drawInfo[curSet - 1].dots;
+            }
+
+            if (curSet > lastSetID) { direction = 1;  }
+            else                    { direction = -1; }
+
+            if (animationDirection !== direction) { setAnimationDirection(direction); }
+
+            // console.log(curSet, lastSetID, curTime + 1 > counts);
+
+            let highlightedUserData = getHighlightedUserData(data, curSet, userOptions);
+            
+            for (let x = 0; x < Math.min(curSetData.length, lastSetData.length); x++) {
+                const dot = curSetData[x];
+                let lastDot = lastSetData[x];
                 
-                if (audioPlaying || isCountsMode()) {
-                    startTime = drawInfo[curSet]["start_time_code"];
-                    curActualTime = curPlayTime * 1000;
-                } else if (animationStartTime === 0) {
-                    startTime = Date.now();
-                    curActualTime = Date.now();
-                    setAnimationStartTime(startTime); 
-                }
 
-                // let curActualTime = audioPlaying ? curPlayTime * 1000 : Date.now();
-                let durationInSecs = 2000; // Default Value
-
-                // console.log(curActualTime, animationStartTime)
-
-                // Find what the API says the duration is
-                if (audioPlaying || isCountsMode() || userOptions.useActualSetLength) {
-                    let setStartTime = drawInfo[curSet]["start_time_code"];
-                    let setEndTime = drawInfo[curSet]["end_time_code"];
-                    if (setStartTime !== null && setEndTime !== null) {
-                        durationInSecs = setEndTime - setStartTime - MARGIN;
-                    }
-                }
-
-                // If the duration is 0, then just end the animation here. 
-                // This is because below when it finds curTime it divides and you cannot divide by zero
-                if (durationInSecs === 0) { setIsAnimation(false); setAnimationStartTime(0); return; }
-
-                let counts = drawInfo[curSet].counts;
-
-                // 2000 / 2000
-                let curTime = (curActualTime - startTime) / ((durationInSecs / counts))
-
-                let direction = 0;
-
-                let curSetData = drawInfo[curSet].dots;
-                let lastSetData = drawInfo[lastSetID].dots;
-
-                if (isCountsMode() && curSet > 0) {
-                    lastSetData = drawInfo[curSet - 1].dots;
-                }
-
-                if (curSet > lastSetID) { direction = 1;  }
-                else                    { direction = -1; }
-
-                if (animationDirection !== direction) { setAnimationDirection(direction); }
-
-                // console.log(curSet, lastSetID, curTime + 1 > counts);
-
-                let highlightedUserData = getHighlightedUserData(data, curSet, userOptions);
-                
-                for (let x = 0; x < Math.min(curSetData.length, lastSetData.length); x++) {
-                    const dot = curSetData[x];
-                    let lastDot = lastSetData[x];
+                // Check if there is a highlighted user
+                if (highlightedUserData !== null) {
+                    // Check if this dot is the highlighted User
+                    if (highlightedUserData.userLabel === dot.userLabel) {
+                        let color = getDotColor(dot, true, userOptions.useSectionColors)
+                        let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
+                        let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+                        
                     
-                    if (dot["userID"] !== lastDot["userID"]) { 
-                        // console.log("FAIL! Labels don't match between sets in animation. Attempting to fix."); 
-                        lastDot = getMatchingUserWithID(lastSetData, dot["userID"]);
-
-                        // If we didn't find the last dot
-                        if (lastDot === undefined) {
-                            continue;
-                        }
-
+                        drawPointAnimation(
+                            cords0.x, cords0.y, 
+                            cords1.x, cords1.y, 
+                            counts, curTime, 
+                            color, dot["userLabel"], true, dot
+                        );
                     }
-                    
 
-                    // Check if there is a highlighted user
-                    if (highlightedUserData !== null) {
-                        // Check if this dot is the highlighted User
-                        if (highlightedUserData.userLabel === dot.userLabel) {
+                    // Check if we're highlighting the section
+                    else if (userOptions.highlightSection) {
+                        let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
+                        let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+
+                        // Check if this dot is part of the highlighted section
+                        if (highlightedUserData.section_id === dot.section_id) {
                             let color = getDotColor(dot, true, userOptions.useSectionColors)
-                            let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
-                            let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
-                            
                         
                             drawPointAnimation(
                                 cords0.x, cords0.y, 
@@ -852,54 +885,22 @@ const Canvas = (props) => {
                                 color, dot["userLabel"], true, dot
                             );
                         }
-
-                        // Check if we're highlighting the section
-                        else if (userOptions.highlightSection) {
-                            let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
-                            let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
-
-                            // Check if this dot is part of the highlighted section
-                            if (highlightedUserData.section_id === dot.section_id) {
-                                let color = getDotColor(dot, true, userOptions.useSectionColors)
-                            
-                                drawPointAnimation(
-                                    cords0.x, cords0.y, 
-                                    cords1.x, cords1.y, 
-                                    counts, curTime, 
-                                    color, dot["userLabel"], true, dot
-                                );
-                            }
-                            // Else dim others 
-                            else {
-                                let color = getDotColor(dot, false, userOptions.useSectionColors)
-
-                                drawPointAnimation(
-                                    cords0.x, cords0.y, 
-                                    cords1.x, cords1.y, 
-                                    counts, curTime, 
-                                    color, dot["userLabel"], true, dot
-                                );
-                            }
-                        }
-
-                        // No change needed
+                        // Else dim others 
                         else {
-                            let color = getDotColor(dot, !userOptions.dimOtherUsers, userOptions.useSectionColors);
-                            let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
-                            let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+                            let color = getDotColor(dot, false, userOptions.useSectionColors)
 
                             drawPointAnimation(
                                 cords0.x, cords0.y, 
                                 cords1.x, cords1.y, 
                                 counts, curTime, 
-                                color, dot["userLabel"], false, dot
+                                color, dot["userLabel"], true, dot
                             );
                         }
                     }
 
                     // No change needed
                     else {
-                        let color = getDotColor(dot, true, userOptions.useSectionColors);
+                        let color = getDotColor(dot, !userOptions.dimOtherUsers, userOptions.useSectionColors);
                         let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
                         let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
 
@@ -912,10 +913,22 @@ const Canvas = (props) => {
                     }
                 }
 
-                if (curTime + 0.1 >= counts)   { setIsAnimation(false); setAnimationStartTime(0);  }
-                
-                // console.log(curTime);
-            } else { setIsAnimation(false); setAnimationStartTime(0); }
+                // No change needed
+                else {
+                    let color = getDotColor(dot, true, userOptions.useSectionColors);
+                    let cords0 = convertDotToCords(lastDot, curDimensions["w"], curDimensions["h"]);
+                    let cords1 = convertDotToCords(dot, curDimensions["w"], curDimensions["h"]);
+
+                    drawPointAnimation(
+                        cords0.x, cords0.y, 
+                        cords1.x, cords1.y, 
+                        counts, curTime, 
+                        color, dot["userLabel"], false, dot
+                    );
+                }
+            }
+
+            if (curTime + 0.1 >= counts)   { setIsAnimation(false); setAnimationStartTime(0);  }
         }
 
         /**
@@ -926,7 +939,11 @@ const Canvas = (props) => {
             ctx.save();
 
             // Dynamic resizing!
-            dynamicResize();
+            try {
+                dynamicResize();   
+            } catch (error) {
+                console.log("Failed to Resize")
+            }
 
             // console.log(curDimensions);
 
@@ -948,13 +965,14 @@ const Canvas = (props) => {
             let isNewFrame = lastSetID !== curSet && animationDirection !== 0 && !loading  && data.length !== 0;
             let isRerender = hadResize && !loading && data.length !== 0 && data !== drawInfo;
             
+            drawDots(drawInfo, curSet);
 
             // If it is an animation, draw the animation
             if (isAnimation || (isCountsMode() && lastSetID !== -1 && curSet > 0)) {
                 // console.log("DRAWING ANIMATION between "+ lastSetID + " and " + curSet);
                 // Sometimes there's problems
                 try {
-                    drawAnimation();
+                    // drawAnimation();
                 } catch (error) {
                     console.log("CAUGHT ERROR")
                     console.log(error)
