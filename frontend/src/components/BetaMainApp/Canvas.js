@@ -168,14 +168,17 @@ const Canvas = (props) => {
             let size = canvas.height * 0.012;
 
             
-            let curDef = data[curSetIndex]["dot_links"][curSetIndex] !== undefined && data[curSetIndex].dots[curUserIndex] !== undefined;
-         
-            let preDot = getMatchingUserDot(data, curSetIndex - 1, data[curSetIndex].dots[curUserIndex]);
+            let curDot = data[curUserIndex]["dot_links"][curSetIndex];
+            let curDef = curDot !== undefined;
+            
+            let preDot = data[curUserIndex]["dot_links"][curSetIndex - 1];
             let preDef = preDot !== undefined;
-            let nextDot = getMatchingUserDot(data, curSetIndex + 1, data[curSetIndex].dots[curUserIndex]);
+
+            let nextDot = data[curUserIndex]["dot_links"][curSetIndex + 1]
             let nextDef = nextDot !== undefined;
 
-            // Draw Path between previous and current
+
+            // Draw Path between previous and current (forwards)
             if (preDef && curDef && userOptions.drawPath && userOptions.showLastSet) {
                 let cords0 = convertDotToCords(
                     preDot, 
@@ -186,7 +189,7 @@ const Canvas = (props) => {
                 let y0 = cords0.y
                 
                 let cords1 = convertDotToCords(
-                    data[curSetIndex].dots[curUserIndex], 
+                    curDot, 
                     curDimensions["w"], 
                     curDimensions["h"]
                 );
@@ -202,7 +205,7 @@ const Canvas = (props) => {
                 context.closePath();
             }
 
-            // Draw Path between next and current
+            // Draw Path between next and current (backwards)
             if (nextDef && curDef && userOptions.drawPath && userOptions.showNextSet) {
                 let cords0 = convertDotToCords(
                     nextDot, 
@@ -213,7 +216,7 @@ const Canvas = (props) => {
                 let y0 = cords0.y
                 
                 let cords1 = convertDotToCords(
-                    data[curSetIndex].dots[curUserIndex], 
+                    curDot, 
                     curDimensions["w"], 
                     curDimensions["h"]
                 );
@@ -249,13 +252,13 @@ const Canvas = (props) => {
             // Center point
             if (curDef) {
                 let cords0 = convertDotToCords(
-                    data[curSetIndex].dots[curUserIndex], 
+                    curDot, 
                     curDimensions["w"], 
                     curDimensions["h"]
                 );
                 let x = cords0.x
                 let y = cords0.y
-                let dot = data[curSetIndex].dots[curUserIndex];
+                let dot = curDot;
 
                 if (dot.dot.dot_icon_id !== null && !isOffline) {
                     let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
@@ -281,9 +284,9 @@ const Canvas = (props) => {
     
 
                 if (followDot !== undefined) {
-                    if (userOptions.highlightUser.id === data[curSetIndex].dots[curUserIndex].dot.show_user_id) {
+                    if (userOptions.highlightUser.id === data[curUserIndex]["show_user"]["show_user_id"]) {
                         followDotCords = {x: x, y: y};
-                        drawUserDialogue(x, y, data[curSetIndex].dots[curUserIndex]);
+                        drawUserDialogue(x, y, curDot);
                     }
                 }
             }
@@ -308,6 +311,7 @@ const Canvas = (props) => {
 
         /**
          * Draw Point Animation
+         * FIXED
          * @param {Float} x0 start x
          * @param {Float} y0 start y
          * @param {Float} x1 end x
@@ -317,9 +321,13 @@ const Canvas = (props) => {
          * @param {Color} color 
          * @param {String} userLabel 
          * @param {Boolean} isHighlighted 
-         * @param {Dot} dot dot info of the user
+         * @param {DotInfo} dotInfo {dot_link, show_user, user}
          */
-        const drawPointAnimation = (x0, y0, x1, y1, counts, count, color, userLabel, isHighlighted, dot) => {
+        const drawPointAnimation = (x0, y0, x1, y1, counts, count, color, userLabel, isHighlighted, dotInfo) => {
+            const dot_icon_id = dotInfo["dot_link"]["cur_dot"]["dot_icon_id"];
+            const show_user_id = dotInfo["show_user"]["id"];
+            const user_id = dotInfo["user"]["id"];
+            
             // y = mx + b
             if (x1 - x0 !== 0) {
                 const m = (y1 - y0) / (x1 - x0)
@@ -328,28 +336,39 @@ const Canvas = (props) => {
                 const x = ((x1 - x0) / counts * count) + x0;
                 const y = m * x + b;
 
-                // If it's an icon, draw the icon
-                if (dot.dot.dot_icon_id !== null && !isOffline) {
-                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
-                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
 
-                    context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
+                // If it's an icon, draw the icon
+                if (dot_icon_id !== null && !isOffline) {
+                    // TODO: Reimplement
+                    // let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                    // let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+                    let width = 10;
+                    let height = 10;
+
+                    // TODO: ADD BACK
+                    // context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
                 }
 
                 // Otherwise draw the normal point
                 // Make sure we're not going to draw a null dot, because the icon can't be loaded
-                else if (dot.dot.dot_icon_id === null) {
+                else if (dot_icon_id === null) {
                     drawPoint(x, y, color, userLabel)
                     
-                    let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions);
+                    let highlightedUserData = getHighlightedUserData(data, curSet, userOptions);
 
-                    if (highlightedUserData !== null && highlightedUserData.dot.show_user_id === dot.dot.show_user_id && followDot === undefined) {
+                    if (
+                        highlightedUserData !== null && 
+                        highlightedUserData.show_user.show_user_id === dotInfo["show_user"]["show_user_id"] && 
+                        followDot === undefined
+                    ) {
                         if (userOptions.showMovementBrackets) {
-                            drawUserName(dot);
+                            // TODO: ADD BACK
+                            // drawUserName(dot);
 
                             // Find actual dot when it's between 2
-                            let actDot = cordsToDot(x,y, curDimensions["w"], curDimensions["h"], dot.dot);
-                            drawMovementBrackets(x, y, actDot);
+                            // TODO: FIX cordsToDot
+                            // let actDot = cordsToDot(x, y, curDimensions["w"], curDimensions["h"], dot.dot);
+                            // drawMovementBrackets(x, y, actDot);
                         }
 
                     }
@@ -358,10 +377,11 @@ const Canvas = (props) => {
 
                 if (isHighlighted) {
                     // console.log(followDot, dot)
-                    if (followDot !== undefined && followDot.userID === dot.userID) {
+                    if (followDot !== undefined && followDot["user"]["id"] === dotInfo["user"]["id"]) {
                         followDotCords = {x: x, y: y};
                         if (!userOptions.showMovementBrackets) {
-                            drawUserDialogue(x, y, dot);
+                            // TODO: ADD BACK
+                            // drawUserDialogue(x, y, dot);
                         }
                     }
                 }
@@ -373,19 +393,26 @@ const Canvas = (props) => {
                 const x = x0
                 const y = ((y1 - y0) / counts * count) + y0;
 
-                if (dot.dot.dot_icon_id !== null && !isOffline) {
-                    let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
-                    let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+                if (dot_icon_id !== null && !isOffline) {
+                    // TODO: Reimplement
+                    // let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+                    // let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+                    let width = 10;
+                    let height = 10;
 
-                    context.drawImage(getLoadedIcon(dot.dot.dot_icon_id), x - width / 2, y - height / 2, width, height);
+                    context.drawImage(getLoadedIcon(dot_icon_id), x - width / 2, y - height / 2, width, height);
                 }
                 // Make sure we're not going to draw a null dot, because the icon can't be loaded
-                else if (dot.dot.dot_icon_id === null) {
+                else if (dot_icon_id === null) {
                     drawPoint(x, y, color, userLabel);
 
-                    let highlightedUserData = getHighlightedUserData(data[curSet].dots, userOptions); 
+                    let highlightedUserData = getHighlightedUserData(data, curSet, userOptions); 
 
-                    if (highlightedUserData !== null && highlightedUserData.dot.show_user_id === dot.dot.show_user_id && followDot === undefined) {
+                    if (
+                        highlightedUserData !== null && 
+                        highlightedUserData.show_user.show_user_id === show_user_id && 
+                        followDot === undefined
+                    ) {
                         if (userOptions.showMovementBrackets) {
                             drawUserName(dot);
 
@@ -398,7 +425,7 @@ const Canvas = (props) => {
                 }
 
                 if (isHighlighted) {
-                    if (followDot !== undefined && followDot.userID === dot.userID) {
+                    if (followDot !== undefined && followDot["user"]["id"] === user_id) {
                         followDotCords = {x: x, y: y};
                         if (!userOptions.showMovementBrackets) {
                             drawUserDialogue(x, y, dot);
@@ -564,13 +591,22 @@ const Canvas = (props) => {
 
         /**
          * Get Color of Dot
-         * @param {Object} _dotData 
+         * Fixed
+         * @param {DotInfo} dotInfo {dot_link, show_user, user}
          * @param {Boolean} highlighted 
          * @param {Boolean} useSectionColors 
          * @returns {Color} color of user
          */
-        const getDotColor = (_dotData, highlighted, useSectionColors) => {
-            let color = "rgb(" + _dotData.r + ", " + _dotData.g + ", " + _dotData.b + ")";
+        const getDotColor = (dotInfo, highlighted, useSectionColors) => {
+            // Get Band Section
+            let show_user_section_id = dotInfo["r"]["band_section_id"];
+
+            if (dotInfo.r === undefined || dotInfo.g === undefined || dotInfo.b === undefined) {
+                return CURRENT_DOT_COLOR;
+            }
+            
+
+            let color = "rgb(" + dotInfo.r + ", " + dotInfo.g + ", " + dotInfo.b + ")";
             if (!useSectionColors && highlighted) {
                 color = CURRENT_DOT_COLOR;
             }
@@ -578,7 +614,7 @@ const Canvas = (props) => {
                 color = CURRENT_DOT_HIGHLIGHT_COLOR;
             }
             else if (!highlighted) {
-                color = "rgba(" + _dotData.r + ", " + _dotData.g + ", " + _dotData.b + ", 0.4)"
+                color = "rgba(" + dotInfo.r + ", " + dotInfo.g + ", " + dotInfo.b + ", 0.4)"
             }
 
             return color
@@ -586,18 +622,21 @@ const Canvas = (props) => {
 
         /**
          * Get Highlighted User Data
-         * @param {Object} data 
+         * FIXED!
+         * @param {Object} data root data object
+         * @param {Integer} curSet 
          * @param {Object} userOptions 
-         * @returns {Object} dot data
+         * @returns {DotInfo} {dot_link, show_user, user}
          */
-        const getHighlightedUserData = (data, userOptions) => {
+        const getHighlightedUserData = (data, curSet, userOptions) => {
             if (userOptions.highlightUser !== null) {
                 for (let x = 0; x < data.length; x++) {
-                    const dot = data[x];
-                    
-                    if (userOptions.highlightUser.id === dot.dot.show_user_id) {
-                        // console.log(userOptions.highlightUser, dot)
-                        return dot;
+                    if (userOptions.highlightUser.id === data[x]["show_user"]["id"]) {
+                        return {
+                            "dot_link": data[x]["dot_links"][curSet],
+                            "show_user": data[x]["show_user"],
+                            "user": data[x]["user"],
+                        };
                     }
                 }
             }
@@ -605,6 +644,7 @@ const Canvas = (props) => {
             return null;
         }
 
+        // STOPED REFACTORING HERE
         /**
          * Takes data from API and draws them, used to condense the render method
          * @param {Object} data 
@@ -616,7 +656,7 @@ const Canvas = (props) => {
             let drawBracket = {useX:null, useY:null, dot:null};
             let curSetData = data[index].dots;
 
-            let highlightedUserData = getHighlightedUserData(curSetData, userOptions);
+            let highlightedUserData = getHighlightedUserData(data, index, userOptions);
 
 
             for (let x = 0; x < curSetData.length; x++) {
@@ -778,7 +818,7 @@ const Canvas = (props) => {
 
                 // console.log(curSet, lastSetID, curTime + 1 > counts);
 
-                let highlightedUserData = getHighlightedUserData(curSetData, userOptions);
+                let highlightedUserData = getHighlightedUserData(data, curSet, userOptions);
                 
                 for (let x = 0; x < Math.min(curSetData.length, lastSetData.length); x++) {
                     const dot = curSetData[x];

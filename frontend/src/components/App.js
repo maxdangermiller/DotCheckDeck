@@ -30,7 +30,7 @@ import HomePage from './HomePage';
 import Viewer from './MainApp/Viewer';
 import BasicViewer from './MainApp/BasicViewer';
 
-import BetaViewer from './BetaMainApp/Viewer';
+// import BetaViewer from './BetaMainApp/Viewer';
 
 import logo from '../icons/logo.svg';
 
@@ -244,13 +244,13 @@ function App() {
 						: <Viewer token={token} showCode={showCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
 					} />
 
-					{/* Main App > BETA Viewer */}
+					{/* Main App > BETA Viewer 
 					<Route path="/beta/app" exact errorElement={<ErrorPage />} element={
 						(token === "" && !isOffline) || showCode === ""
 						? <Navigate to="/login" />
 						: <BetaViewer token={token} showCode={showCode} userData={userData} showID={showID} isOffline={isOffline} logout={logout}/>
 					} />
-
+					*/}
 					{/* Main App > Normal Viewer - Quick Display */}
 					<Route path="/viewer-quick-display/:set_numb_param" exact errorElement={<ErrorPage />} element={
 						(token === "" && !isOffline) || showCode === ""

@@ -236,7 +236,23 @@ const BetaViewer = (props) => {
                 // Loop through showUsers to add
                 for (let i = 0; i < response.data["show_users"].length; i++) {
                     // const showUserID = response.data["show_users"][i]["show_user"]["id"];
-                    localData.push(response.data["show_users"][i]);
+					
+					// Add in section colors into each show user in a band section
+					let band_section_id = response.data["show_users"][i]["show_user"]["band_section_id"];
+
+					let found = false;
+
+					for (let j = 0; j < response.data["band_sections"].length; j++) {
+						if (response.data["band_sections"][j]["id"] === band_section_id) {
+							localData.push({...response.data["band_sections"][j], ...response.data["show_users"][i]});
+							found = true;
+							break;
+						}
+					}
+
+					if (!found) {
+						localData.push(response.data["show_users"][i]);
+					}
                 }
                 
                 // console.log("Currently have loaded show user(s): " + localData.length + ".")

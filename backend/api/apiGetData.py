@@ -479,7 +479,8 @@ def getBufferedDotsNew(show: Show, dataSection: int, userDatabaseVersion: int):
 		# Only show sets and band sections if it's the first data section
 		if dataSection == 0:
 			output["sets"] = data["sets"]
-			output["band_sections"] = data["band_sections"]
+		
+		output["band_sections"] = data["band_sections"]
 
 		output["show_users"] = getBufferedShowUsers(data, dataSection, DATA_LOAD_SIZE)
 		output["update_version"] = data["update_version"]

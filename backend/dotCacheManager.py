@@ -63,7 +63,8 @@ def addUpdate(updateShow: Show, databaseVersion: int, updates: list[Update]):
 
 			# Check for any outdated updates
 			for oldUpdateObj in show_update_reference[i]["showUpdates"]:
-				if newUpdateObj.time - oldUpdateObj.time < DELETE_THRESHOLD:
+				difference = newUpdateObj.time - oldUpdateObj.time
+				if difference.total_seconds() < DELETE_THRESHOLD:
 					newUpdatesList.append(oldUpdateObj)
 			
 			# Add newest update
