@@ -810,7 +810,7 @@ def convert_user_to_prop():
 		return "Invalid show label", 404
 	
 	showUser.is_locked = True
-	showUser.is_prop = True,
+	showUser.is_prop = True
 	showUser.is_stationary = False
 	db.session.commit()	
 
