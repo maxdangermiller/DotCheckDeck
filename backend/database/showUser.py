@@ -34,8 +34,8 @@ class ShowUser(CacheableMixin, db.Model):
 
 
 	def __repr__(self):
-		return f"ShowUser({self.symbol}{self.label})"
+		return f"ShowUser(show_id={self.show_id}-{self.symbol}{self.label})"
 
 	def __str__(self):
-		return f"ShowUser({self.symbol}{self.label})"
+		return f"ShowUser(show_id={self.show_id}-{self.symbol}{self.label})"
 
