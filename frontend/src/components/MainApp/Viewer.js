@@ -147,8 +147,14 @@ const Viewer = (props) => {
 						localStorage.setItem("database-timestamp", result.timestamp);
 						localStorage.setItem("sn-database-timestamp", result.set_name_timestamp);
 					}
+					
 					else if (localTimestamp !== result.timestamp || localSNTimestamp !== result.set_name_timestamp) {
-						setShowUpdatePrompt(true);
+						if (localTimestamp !== result.timestamp) {
+							setShowUpdatePrompt(true);
+						}
+						if (localSNTimestamp !== result.set_name_timestamp) {
+							checkSetNames();
+						}
 					 	setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
 
 						if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {

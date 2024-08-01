@@ -904,7 +904,7 @@ def move_stationary_prop():
 
 	# Get Image and save it
 	if "image" in request.files:
-		fileLocation = f"./static/{show.id}/{dotIcon.id}.svg"
+		fileLocation = f"./static/{prop.show_id}/{dotIcon.id}.svg"
 		request.files["image"].save(fileLocation)
 
 		with open(fileLocation, "rb") as file:
