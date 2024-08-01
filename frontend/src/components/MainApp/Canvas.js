@@ -81,10 +81,12 @@ const Canvas = (props) => {
         let img = new Image();
 
         img.onerror = function() { 
-            window.location.href = "/error?message=Your login token is expired. Press 'Go Back' to return to login&return=/login";
+            console.log("Failed to get image")
+            // window.location.href = "/error?message=Your login token is expired. Press 'Go Back' to return to login&return=/login";
         };
         img.onabort = function() { 
-            window.location.href = "/error?message=Your login token is expired. Press 'Go Back' to return to login&return=/login";
+            console.log("Failed to get image");
+            // window.location.href = "/error?message=Your login token is expired. Press 'Go Back' to return to login&return=/login";
         };
 
         img.src = WINDOW_LOCATION + '/get-icon/' + icon_id + "?token=" + token;
