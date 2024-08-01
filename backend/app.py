@@ -1293,8 +1293,9 @@ class SetUpUserResource(Resource):
 
 		# There has been a change made to the show's date, 
 		# so we must change the "last update time" var in the show object
-		show.changeUpdateTime()  
-		db.session.commit()
+		# TODO: ADD BACK
+		# show.changeUpdateTime()  
+		# db.session.commit()
 
 		updates = [
 			dotCacheManager.Update(dotCacheManager.UpdateType.USER, user_schema.dump(user)),
