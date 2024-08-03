@@ -205,6 +205,8 @@ def create_token():
 	access_token = create_access_token(identity=email)
 	refresh_token = create_refresh_token(identity=email)
 
+	# userShowUsers = FINISH
+
 	userString = {}
 	showString = {}
 	schoolCode = ""
@@ -224,9 +226,12 @@ def create_token():
 				if showUser is not None:
 					showString = show_user_schema.dump(showUser)
 					showString["show_user_id"] = showUser.id
+				# TODO: USE THIS TO FIX BUG
+				# elif user.is_admin is not True:
+				# 	return "You must have a valid show user in order to access this show!", 401
 
 	user.last_login = datetime.now(pytz.timezone("US/Central"))
-	db.session.commit()	
+	db.session.commit()
 
 	response = {
 		"access_token": access_token, 
@@ -1272,19 +1277,19 @@ class SetUpUserResource(Resource):
 		if user is not None:
 			return "User has already been activated, please use the existing user option", 400
 		
-		user = User(school_id = show.school_id)
+		user = User(
+			school_id = show.school_id, 
+			email = request.json["email"],
+			first_name = request.json["first_name"],
+			last_name = request.json["last_name"],
+			activated_date = datetime.now(pytz.timezone("US/Central"))
+		)
 		db.session.add(user)
-		# db.session.commit()
-
-		showUsers[0].user_id = user.id
-
-		user.email = request.json["email"]
-		user.first_name = request.json["first_name"]
-		user.last_name = request.json["last_name"]
-		user.activated_date = datetime.now(pytz.timezone("US/Central"))
+		user.set_password(request.json["password"])
 		db.session.commit()
 
-		user.set_password(request.json["password"])
+		showUsers[0].user_id = user.id
+		db.session.commit()
 
 		# db.session.add(user)
 
@@ -1296,6 +1301,7 @@ class SetUpUserResource(Resource):
 		# TODO: ADD BACK
 		# show.changeUpdateTime()  
 		# db.session.commit()
+		# updateBufferWithNewUser(user, showUsers[0], show)
 
 		updates = [
 			dotCacheManager.Update(dotCacheManager.UpdateType.USER, user_schema.dump(user)),
@@ -1303,7 +1309,6 @@ class SetUpUserResource(Resource):
 		]
 		dotCacheManager.addUpdate(show, show.last_update, updates)
 
-		updateBufferWithNewUser(user, showUsers[0], show)
 
 		return "Successfully activated user", 201
 
@@ -2820,7 +2825,7 @@ if __name__ == "__main__":
 					email = input("Email: "),
 					first_name = input("First Name: "),
 					last_name = input("Last Name: "),
-					activated_date = datetime.now(pytz.timezone("US/Central")),
+					activated_date = datetime.now(tz=pytz.timezone("US/Central")),
 					is_admin = True
 				)
 
