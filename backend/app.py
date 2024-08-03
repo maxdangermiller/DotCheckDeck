@@ -181,6 +181,27 @@ def admin_login():
 
 # FUNCTIONAL API
 
+# This is for Azure to detect if the server is still working
+@app.route('/api/health', methods=["GET"])
+def health_check():
+	return "Alive and Well.", 200
+
+
+# This takes 2 json dictionaries and merges them
+def mergeJsonDicts(a, b):
+	merged_dict = {}
+
+	for key, val in a.items():
+		merged_dict[key] = val
+
+	for key, val in b.items():
+		if key not in merged_dict:
+			merged_dict[key] = val
+
+	# string dump of the merged dict
+	return merged_dict
+
+
 # This creates a new token on login
 @app.route('/token', methods=["POST"])
 def create_token():
@@ -205,119 +226,163 @@ def create_token():
 	access_token = create_access_token(identity=email)
 	refresh_token = create_refresh_token(identity=email)
 
-	# userShowUsers = FINISH
-
-	userString = {}
-	showString = {}
-	schoolCode = ""
-	showID = -1
-	if user is not None:
-		userString = user_schema.dump(user)
-
-		userSchool = School.query.filter(School.id == user.school_id).first()
-		if userSchool is not None:
-			userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default.desc()).first()
-
-			if userShow is not None:
-				schoolCode = userShow.code
-				showID = userShow.id
-
-				showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
-				if showUser is not None:
-					showString = show_user_schema.dump(showUser)
-					showString["show_user_id"] = showUser.id
-				# TODO: USE THIS TO FIX BUG
-				# elif user.is_admin is not True:
-				# 	return "You must have a valid show user in order to access this show!", 401
-
+	# Change last login
 	user.last_login = datetime.now(pytz.timezone("US/Central"))
 	db.session.commit()
 
-	response = {
-		"access_token": access_token, 
-		"refresh_token": refresh_token, 
-		"user": mergeJsonDicts(userString, showString),
-		"school_code": schoolCode,
-		"show_id": showID
-	}
-	return response
+	showUsers = ShowUser.query.filter(ShowUser.user_id == user.id).all()
 
+	# Protect from an internal server error caused by missing references
+	try:
+		# User doesn't have access to any shows
+		if len(showUsers) == 0 and user.is_admin is False:
+			return "You don't have access to any shows. Try different credentials", 401
+		
+		# Get default show info
+		if len(showUsers) == 0 and user.is_admin is True:
+			show = Show.query.filter(Show.school_id == user.school_id).order_by(Show.is_default.desc()).first()
 
-# This allows someone to get a new token a refresh it
-@app.route('/refresh-token', methods=["POST"])
-@jwt_required(refresh=True)
-def refresh_expiring_jwts():
-	identity = get_jwt_identity()
-	access_token = create_access_token(identity=identity)
-	return jsonify(access_token=access_token)
+			# TODO: Refactor to show_code
+			return {
+				"access_token": access_token, 
+				"refresh_token": refresh_token, 
+				"user": user_schema.dump(user),
+				"school_code": show.code,
+				"show_id": show.id
+			}, 202
+		
+		# If this is a normal user, find the default show user
+		if len(showUsers) > 0:
+			for showUser in showUsers:
+				show = Show.query.filter(Show.id == showUser.show_id).first()
 
+				if show.is_default is True:
+					userString = show_user_schema.dump(showUser)
+					showString = show_user_schema.dump(showUser)
+					# Make sure we have an ID in there
+					showString["show_user_id"] = showUser.id
 
-# This takes 2 json dictionaries and merges them
-def mergeJsonDicts(a, b):
-	merged_dict = {}
+					# TODO: Refactor to show_code
+					return {
+						"access_token": access_token, 
+						"refresh_token": refresh_token, 
+						"user": mergeJsonDicts(userString, showString),
+						"school_code": show.code,
+						"show_id": show.id
+					}, 202
+		
+		return "You don't have access to any shows. Try different credentials", 404
+	except:
+		return "This user is missing a database reference", 404
 
-	for key, val in a.items():
-		merged_dict[key] = val
+"""
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTcyMjcwNzY1NSwianRpIjoiODdhZjEyNWUtZmRmNy00NDhkLTljNjEtODM1MjE4YzM3YTUxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Im1taWxsZXI1QGlsc3R1LmVkdSIsIm5iZiI6MTcyMjcwNzY1NSwiZXhwIjoxNzIyNzk0MDU1fQ.d1PPRk3v2Lv7LSNWv4-4V8yjJIk1dpmS-QwyZXl--4Q",
+    "school_code": "8P0PT0M3",
+    "show_id": 1,
+    "user": {
+        "activated_date": "2024-08-03T12:10:43",
+        "created_date": "2024-08-03T12:10:44",
+        "email": "mmiller5@ilstu.edu",
+        "first_name": "Max",
+        "id": 2,
+        "is_admin": true,
+        "last_login": "2024-08-03T12:53:25.270768",
+        "last_name": "Miller",
+        "last_updated": "2024-08-03T12:53:25.272975",
+        "school": 1,
+        "school_id": 1,
+        "send_admin_email": false,
+        "show_users": [],
+        "verified_date": "2024-08-03T12:15:23"
+    }
+}
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTcyMjcwNzgxMSwianRpIjoiNjA3MTJjOWYtYjM2Zi00NzMwLThiZTktZGQxNjhlNTkxY2ZiIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Im1taWxsZXI1QGlsc3R1LmVkdSIsIm5iZiI6MTcyMjcwNzgxMSwiZXhwIjoxNzIyNzk0MjExfQ.6ZZtlTm6HsOINGTLhMTeCb8t7EaVMHhZL4PYCN2FHYA",
+    "school_code": "8P0PT0M3",
+    "show_id": 1,
+    "user": {
+        "activated_date": "2024-08-03T12:10:43",
+        "created_date": "2024-08-03T12:10:44",
+        "email": "mmiller5@ilstu.edu",
+        "first_name": "Max",
+        "id": 2,
+        "is_admin": true,
+        "last_login": "2024-08-03T12:56:51.841446",
+        "last_name": "Miller",
+        "last_updated": "2024-08-03T12:56:51.847693",
+        "school": 1,
+        "school_id": 1,
+        "send_admin_email": false,
+        "show_users": [],
+        "verified_date": "2024-08-03T12:15:23"
+    }
+}
+"""
 
-	for key, val in b.items():
-		if key not in merged_dict:
-			merged_dict[key] = val
-
-	# string dump of the merged dict
-	return merged_dict
-
-
-# This is for Azure to detect if the server is still working
-@app.route('/api/health', methods=["GET"])
-def health_check():
-	return "Alive and Well.", 200
-
-
-# This allows someone to get a new token a refresh it, while also getting all of the data 
+# This allows someone to get a new token with their old token
 @app.route('/get-token', methods=["POST"])
 @jwt_required(refresh=True)
-def get_jwt():
+def refresh_token():
 	try:
 		identity = get_jwt_identity()
 		access_token = create_access_token(identity=get_jwt_identity())
 		user = User.query.filter_by(email=identity).first()
 
-		if user is None:
-			return "User doesn't exist!", 401
 		
+		if not user:
+			return  "Wrong email or password. You may need to create an account, press activate in the top right corner", 401
+
 		# Require User to be verified
 		if user.verified_date is None:
-			return "User email hasn't been verified yet!", 403
+			return "User email hasn't been verified yet! You must click on the link in your email", 403
 
-		userString = user_schema.dump(user)
-		showString = {}
-		schoolCode = ""
-		showID = -1
-
-		userSchool = School.query.filter(School.id == user.school_id).first()
-		if userSchool is not None:
-			userShow = Show.query.filter(Show.school_id == userSchool.id).order_by(Show.is_default.desc()).first()
-
-			if userShow is not None:
-				schoolCode = userShow.code
-				showID = userShow.id
-
-				showUser = ShowUser.query.filter(ShowUser.show_id == userShow.id, ShowUser.user_id == user.id).first()
-				if showUser is not None:
-					showString = show_user_schema.dump(showUser)
-					showString["show_user_id"] = showUser.id
-
+		# Change last login
 		user.last_login = datetime.now(pytz.timezone("US/Central"))
-		db.session.commit()	
+		db.session.commit()
 
-		response = {
-			"access_token": access_token, 
-			"user": mergeJsonDicts(userString, showString),
-			"school_code": schoolCode,
-			"show_id": showID
-		}
-		# print(response)
-		return response, 202
+		showUsers = ShowUser.query.filter(ShowUser.user_id == user.id).all()
+
+		# Protect from an internal server error caused by missing references
+		try:
+			# User doesn't have access to any shows
+			if len(showUsers) == 0 and user.is_admin is False:
+				return "You don't have access to any shows. Try different credentials", 401
+			
+			# Get default show info
+			if len(showUsers) == 0 and user.is_admin is True:
+				show = Show.query.filter(Show.school_id == user.school_id).order_by(Show.is_default.desc()).first()
+
+				# TODO: Refactor to show_code
+				return {
+					"access_token": access_token, 
+					"user": user_schema.dump(user),
+					"school_code": show.code,
+					"show_id": show.id
+				}, 202
+			
+			# If this is a normal user, find the default show user
+			if len(showUsers) > 0:
+				for showUser in showUsers:
+					show = Show.query.filter(Show.id == showUser.show_id).first()
+
+					if show.is_default is True:
+						userString = show_user_schema.dump(showUser)
+						showString = show_user_schema.dump(showUser)
+						# Make sure we have an ID in there
+						showString["show_user_id"] = showUser.id
+
+						# TODO: Refactor to show_code
+						return {
+							"access_token": access_token, 
+							"user": mergeJsonDicts(userString, showString),
+							"school_code": show.code,
+							"show_id": show.id
+						}, 202
+			
+			return "You don't have access to any shows. Try different credentials", 404
+		except:
+			return "This user is missing a database reference", 404
 	except (RuntimeError, KeyError):
 		# Case where there is not a valid JWT. Just return the original response
 		return "There was an error", 401
@@ -1136,6 +1201,7 @@ def sendVerifyEmail(user):
 	try:
 		fernet = Fernet(verify_key)
 		apiKey = fernet.encrypt(str(user.id).encode()).decode('utf8')
+		activateURL = f"https://dotcheckdeck.com/activate-account/{apiKey}"
 
 		message = {
 			"content": {
@@ -1148,7 +1214,7 @@ def sendVerifyEmail(user):
 						<body>
 							<img src="https://dotcheckdeck.com/logo512.png" alt="" width="64" height="64" />
 							<p>Hey! We know you aren't going to read this text, but like, everyone writes it so yeah. Just click the link I guess:</p>
-							<a href="https://dotcheckdeck.com/activate-account/{apiKey}">Activate New Account</a>
+							<a href="{activateURL}">Activate New Account</a>
 						</body>
 					</html>
 				"""
@@ -1166,6 +1232,7 @@ def sendVerifyEmail(user):
 
 		email_client.begin_send(message)
 		print(f"Sent Email to {user.email}")
+		print(f"Activate URL: {activateURL}")
 	except Exception as ex:
 		print('Exception:')
 		print(ex)
@@ -1183,6 +1250,9 @@ def notifyAdminOfNewUser(school_id:int, added_user:User):
 				"displayName": f"{user.first_name} {user.last_name}"
 			})
 	
+	if len(emails) == 0:
+		return
+
 	try:
 
 		message = {

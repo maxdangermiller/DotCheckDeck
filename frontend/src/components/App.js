@@ -83,7 +83,7 @@ function App() {
 						},
 						timeout: 5000
 					}).then((response) => {
-						// console.log(response.data)
+						console.log(response.data)
 						if (response.status === 202) {
 							setToken(response.data.access_token);
 							setUserData(response.data.user);

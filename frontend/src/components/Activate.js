@@ -352,7 +352,7 @@ const Activate = (props) => {
 				showAlert ?
 				<div className="alert alert-danger alert-dismissible customAlert" role="alert">
 					<div>
-						<strong>Something went wrong! We guess it's possible that we did something wrong, but it's probably on you.</strong> 
+						<strong>Something went wrong!</strong> 
 					</div>
 					{alertText}
 					<button className="btn-close" onClick={(e) => setShowAlert(false)}></button>
