@@ -1288,29 +1288,12 @@ def notifyAdminOfNewUser(school_id:int, added_user:User):
 # To allow a user to setup their credentials, as by default they cannot login
 class SetUpUserResource(Resource):
 	# REQUIRES: {
-	#   "school_code": "12345678", "label": "d7",
+	#   "show_code": "12345678", "label": "d7",
 	#   "email": "mmiller5@uhigh.illinoisstate.edu",
 	#   "password": "Password12345",
 	#   "first_name": "Max", "last_name": "Miller"
 	# }
-	"""
-	fetch('http://127.0.0.1:5000/users/activate', {
-		method: 'POST',
-		body: JSON.stringify({
-			school_code: '12345678',
-			label: 'd7',
-			email: "mmiller5@uhigh.illinoisstate.edu", 
-			password: "Password12345", 
-			first_name: "Max", 
-			last_name: "Miller"
-		}),
-		headers: {
-			'Content-type': 'application/json; charset=UTF-8'
-		}
-		})
-		.then(res => res.json())
-		.then(console.log)
-	"""
+
 	def post(self):
 		if "show_code" not in request.json or request.json['show_code'] == "":
 			return "Missing Show Code", 404
@@ -1355,6 +1338,7 @@ class SetUpUserResource(Resource):
 			activated_date = datetime.now(pytz.timezone("US/Central"))
 		)
 		db.session.add(user)
+		db.session.commit()
 		user.set_password(request.json["password"])
 		db.session.commit()
 
@@ -2196,7 +2180,7 @@ class InviteUserResource(Resource):
 		if user is not None:
 			return "USER ALREADY EXISTS", 404
 		
-		email = args.get('email')
+		email = args.get('email').lower()
 		is_admin = args.get('is_admin')
 		is_drum_major = args.get('is_drum_major')
 		school_id = activeUser.school_id
