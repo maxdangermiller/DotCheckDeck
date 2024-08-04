@@ -257,7 +257,7 @@ def create_token():
 				show = Show.query.filter(Show.id == showUser.show_id).first()
 
 				if show.is_default is True:
-					userString = show_user_schema.dump(showUser)
+					userString = user_schema.dump(user)
 					showString = show_user_schema.dump(showUser)
 					# Make sure we have an ID in there
 					showString["show_user_id"] = showUser.id
@@ -275,50 +275,6 @@ def create_token():
 	except:
 		return "This user is missing a database reference", 404
 
-"""
-{
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTcyMjcwNzY1NSwianRpIjoiODdhZjEyNWUtZmRmNy00NDhkLTljNjEtODM1MjE4YzM3YTUxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Im1taWxsZXI1QGlsc3R1LmVkdSIsIm5iZiI6MTcyMjcwNzY1NSwiZXhwIjoxNzIyNzk0MDU1fQ.d1PPRk3v2Lv7LSNWv4-4V8yjJIk1dpmS-QwyZXl--4Q",
-    "school_code": "8P0PT0M3",
-    "show_id": 1,
-    "user": {
-        "activated_date": "2024-08-03T12:10:43",
-        "created_date": "2024-08-03T12:10:44",
-        "email": "mmiller5@ilstu.edu",
-        "first_name": "Max",
-        "id": 2,
-        "is_admin": true,
-        "last_login": "2024-08-03T12:53:25.270768",
-        "last_name": "Miller",
-        "last_updated": "2024-08-03T12:53:25.272975",
-        "school": 1,
-        "school_id": 1,
-        "send_admin_email": false,
-        "show_users": [],
-        "verified_date": "2024-08-03T12:15:23"
-    }
-}
-{
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTcyMjcwNzgxMSwianRpIjoiNjA3MTJjOWYtYjM2Zi00NzMwLThiZTktZGQxNjhlNTkxY2ZiIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Im1taWxsZXI1QGlsc3R1LmVkdSIsIm5iZiI6MTcyMjcwNzgxMSwiZXhwIjoxNzIyNzk0MjExfQ.6ZZtlTm6HsOINGTLhMTeCb8t7EaVMHhZL4PYCN2FHYA",
-    "school_code": "8P0PT0M3",
-    "show_id": 1,
-    "user": {
-        "activated_date": "2024-08-03T12:10:43",
-        "created_date": "2024-08-03T12:10:44",
-        "email": "mmiller5@ilstu.edu",
-        "first_name": "Max",
-        "id": 2,
-        "is_admin": true,
-        "last_login": "2024-08-03T12:56:51.841446",
-        "last_name": "Miller",
-        "last_updated": "2024-08-03T12:56:51.847693",
-        "school": 1,
-        "school_id": 1,
-        "send_admin_email": false,
-        "show_users": [],
-        "verified_date": "2024-08-03T12:15:23"
-    }
-}
-"""
 
 # This allows someone to get a new token with their old token
 @app.route('/get-token', methods=["POST"])
@@ -345,6 +301,8 @@ def refresh_token():
 
 		# Protect from an internal server error caused by missing references
 		try:
+
+			print(f"\r\n\r\nFound {len(showUsers)} show users for {identity}\r\n\r\n")
 			# User doesn't have access to any shows
 			if len(showUsers) == 0 and user.is_admin is False:
 				return "You don't have access to any shows. Try different credentials", 401
@@ -367,10 +325,12 @@ def refresh_token():
 					show = Show.query.filter(Show.id == showUser.show_id).first()
 
 					if show.is_default is True:
-						userString = show_user_schema.dump(showUser)
+						userString = user_schema.dump(user)
 						showString = show_user_schema.dump(showUser)
 						# Make sure we have an ID in there
 						showString["show_user_id"] = showUser.id
+
+						print(mergeJsonDicts(userString, showString))
 
 						# TODO: Refactor to show_code
 						return {
@@ -2292,7 +2252,7 @@ def updateBufferWithSetName(show, setName):
 		getSetNamesWithoutBuffer(show)
 
 
-
+# Called By Viewer when a section leader wants to add in a set name
 class UpdateOrCreateSetNameResource(Resource):
 	@jwt_required()
 	def post(self):
@@ -2321,9 +2281,11 @@ class UpdateOrCreateSetNameResource(Resource):
 		showUser = ShowUser.query.filter(ShowUser.show_id == show_id, ShowUser.user_id == activeUser.id).first()
 		section_id = showUser.section_id
 
+		# Make sure that the user is either a section leader or an admin
 		if not showUser.is_section_leader and not activeUser.is_admin:
 			return "INVALID AUTHORIZATION", 401
 
+		# Create Set Name if it doesn't already exist
 		if (setName is None):
 			setName = SetName(
 				school_id=school_id, 
@@ -2333,6 +2295,8 @@ class UpdateOrCreateSetNameResource(Resource):
 				name = args.get("set_name")
 			)
 			db.session.add(setName)
+		
+		# Otherwise just change the name
 		else:
 			setName.name = args.get("set_name")
 		
@@ -2340,10 +2304,10 @@ class UpdateOrCreateSetNameResource(Resource):
 		# so we must change the "last update time" var in the show object
 		show = Show.query.filter(Show.id == show_id).first()
 		show.changeSetNameUpdateTime()
+		db.session.commit()
 
 		updateBufferWithSetName(show, setName)
 
-		db.session.commit()
 
 		updates = [
 			dotCacheManager.Update(dotCacheManager.UpdateType.SET_NAME, set_name_schema.dump(setName))
@@ -2641,10 +2605,9 @@ def getBufferedSetNames(show, showUser):
 class SetNameListResource(Resource):
 	@jwt_required()
 	def get(self):
-		setNumb = request.args.get('set_id', None)
 		showCode = request.args.get('show_code', None)
 
-		# REQUIRE A SCHOOL CODE
+		# REQUIRE A SHOW CODE
 		if showCode is None:
 			return "Missing Show Code", 404
 
@@ -2653,16 +2616,14 @@ class SetNameListResource(Resource):
 		if show is None:
 			return "INVALID SHOW CODE", 404
 
-		sets = Set.query.filter(Set.show_id == show.id).order_by(Set.showIndex).all()
-
 		identity = get_jwt_identity()
 		loggedInUser = User.query.filter(User.email == identity).first()
 		showUser = ShowUser.query.filter(ShowUser.show_id == show.id, ShowUser.user_id == loggedInUser.id).first()
-		
-		if showUser is not None and showUser.section_id is not None:
-			loggedInUserSection = BandSection.query.filter(BandSection.id == showUser.section_id).first()
-		else:
-			loggedInUserSection = None
+
+		if loggedInUser is None:
+			return "Invalid User", 401
+		if showUser is None: 
+			return "User is not connected to a show label, so it has no set names!", 404
 
 		return getBufferedSetNames(show, showUser)
 

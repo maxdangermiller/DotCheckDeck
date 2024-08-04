@@ -52,6 +52,7 @@ const BasicViewer = (props) => {
         setCurDatabaseTimestamp,
         setCurDatabaseSNTimestamp,
         saveCurTimestamps,
+        saveSNTimestamp,
         getLocalTimestamps,
         updateSpecificSetName,  // For SetNameModel.js
         // Vars
@@ -114,27 +115,42 @@ const BasicViewer = (props) => {
 			.then(res => res.json())
 			.then(
 				(result) => {
-					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
+					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp, "Old time stamps: ", localTimestamp, localSNTimestamp)
 
+					
+					// If any timestamps are COMPLETELY missing, then we must save them
 					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
-						console.log(localTimestamp, localSNTimestamp)
-						setCurDatabaseTimestamp(result.timestamp);
-                    	setCurDatabaseSNTimestamp(result.set_name_timestamp);
-						localStorage.setItem("database-timestamp", result.timestamp);
-						localStorage.setItem("sn-database-timestamp", result.set_name_timestamp);
+						saveCurTimestamps(result.timestamp, result.set_name_timestamp);
 					}
+					
+					// If either timestamps are outdated...
 					else if (localTimestamp !== result.timestamp || localSNTimestamp !== result.set_name_timestamp) {
-						setShowUpdatePrompt(true);
-					 	setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
+						// If it's the main dot data then show update prompt
+						if (localTimestamp !== result.timestamp) {
+							setShowUpdatePrompt(true);
+						}
 
+						// If it's just set names, then just update the set name timestamp
+						if (localSNTimestamp !== result.set_name_timestamp) {
+							saveSNTimestamp(result.set_name_timestamp);
+							checkSetNames();
+							
+						}
+
+						// Save what are the newest timestamps for a captive download
+						setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
+
+						// Check if the newest timestamp is different from the one actually loaded in data
 						if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
-							console.log("Using old data")
+							console.log("Using outdated data with older database version number")
 							setCurDatabaseTimestamp(localTimestamp);
 							setCurDatabaseSNTimestamp(localSNTimestamp);
 						}
-					} 
+					}
+
+					// Check if the newest timestamp is different from the one actually loaded in data
 					else if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
-						console.log("Using old data")
+						console.log("Using outdated data with older database version number")
 						setCurDatabaseTimestamp(localTimestamp);
                     	setCurDatabaseSNTimestamp(localSNTimestamp);
 					}
@@ -283,11 +299,14 @@ const BasicViewer = (props) => {
                 }
                 
                 console.log("Currently have loaded set(s): " + convertIndicesListToRangeString(localData, sets) + ".")
-                
                 setDownloadingProgress(parseInt(localData.length / sets.length * 100));
                 console.log(localData);
                 
                 saveLocalData(localData);
+
+				if (response.data["data-timestamp"] !== newestTimestamps.data || response.data["set_name_timestamp"] !== newestTimestamps.sn) {
+					setNewestTimestamps(response.data["data-timestamp"], response.data["set_name_timestamp"])
+				}
                 
                 // Recurse
                 captiveDownload(localData, localSets, timestamp, depth + 1);
@@ -296,15 +315,13 @@ const BasicViewer = (props) => {
                 if (error.response && (error.response.status === 401 || error.response.status === 400)) {
                     console.log(error.response)
 
-                    window.location.href = "/login";
+                    window.location.href = "/error?message=Unauthorized! Try logging in again&return=/login";
                 } else if (error.response && error.response.status === 404) {
-                    window.localStorage.removeItem("localSets")
-                    window.location.reload();
+                    window.location.href = "/error?message=An Unknown Problem Occurred. \r\nIt is recommended to press the 'Reset Client' button&return=/app";
                 }
             })
         } catch (error) {
-            window.localStorage.clear();
-			window.location.reload();
+            window.location.href = "/error?message=An Unknown Problem Occurred. \r\nIt is recommended to press the 'Reset Client' button&return=/app";
         }
 
 

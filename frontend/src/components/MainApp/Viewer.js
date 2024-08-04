@@ -65,6 +65,7 @@ const Viewer = (props) => {
         setCurDatabaseTimestamp,
         setCurDatabaseSNTimestamp,
         saveCurTimestamps,
+		saveSNTimestamp,
         getLocalTimestamps,
 		updateSpecificSetName,  // For SetNameModel.js
         // Vars
@@ -89,7 +90,7 @@ const Viewer = (props) => {
      */
 	const changeTimestampsToNewUpdate = () => {
 		console.log("Initiating Update!")
-        saveCurTimestamps(newestTimestamps.data, newestTimestamps.sn);
+        saveCurTimestamps(newestTimestamps.data, curDatabaseSNTimestamp);
 		setShowUpdatePrompt(false);
 
 		console.log(getLocalTimestamps())
@@ -138,33 +139,42 @@ const Viewer = (props) => {
 			.then(res => res.json())
 			.then(
 				(result) => {
-					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
+					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp, "Old time stamps: ", localTimestamp, localSNTimestamp)
 
+					
+					// If any timestamps are COMPLETELY missing, then we must save them
 					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
-						console.log(localTimestamp, localSNTimestamp)
-						setCurDatabaseTimestamp(result.timestamp);
-                    	setCurDatabaseSNTimestamp(result.set_name_timestamp);
-						localStorage.setItem("database-timestamp", result.timestamp);
-						localStorage.setItem("sn-database-timestamp", result.set_name_timestamp);
+						saveCurTimestamps(result.timestamp, result.set_name_timestamp);
 					}
 					
+					// If either timestamps are outdated...
 					else if (localTimestamp !== result.timestamp || localSNTimestamp !== result.set_name_timestamp) {
+						// If it's the main dot data then show update prompt
 						if (localTimestamp !== result.timestamp) {
 							setShowUpdatePrompt(true);
 						}
-						if (localSNTimestamp !== result.set_name_timestamp) {
-							checkSetNames();
-						}
-					 	setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
 
+						// If it's just set names, then just update the set name timestamp
+						if (localSNTimestamp !== result.set_name_timestamp) {
+							saveSNTimestamp(result.set_name_timestamp);
+							checkSetNames();
+							
+						}
+
+						// Save what are the newest timestamps for a captive download
+						setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
+
+						// Check if the newest timestamp is different from the one actually loaded in data
 						if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
-							console.log("Using old data")
+							console.log("Using outdated data with older database version number")
 							setCurDatabaseTimestamp(localTimestamp);
 							setCurDatabaseSNTimestamp(localSNTimestamp);
 						}
-					} 
+					}
+
+					// Check if the newest timestamp is different from the one actually loaded in data
 					else if (localTimestamp !== curDatabaseTimestamp || localSNTimestamp !== curDatabaseSNTimestamp) {
-						console.log("Using old data")
+						console.log("Using outdated data with older database version number")
 						setCurDatabaseTimestamp(localTimestamp);
                     	setCurDatabaseSNTimestamp(localSNTimestamp);
 					}
@@ -307,7 +317,7 @@ const Viewer = (props) => {
 				getDatabaseVersion();
 			}
 			else {
-				saveCurTimestamps(newestTimestamps.data, newestTimestamps.sn);
+				saveCurTimestamps(newestTimestamps.data, curDatabaseSNTimestamp);
 			}
 
 			return; 
@@ -411,11 +421,14 @@ const Viewer = (props) => {
 		try {
 			if (sets.length === 0) { return; }
 			if (checkLocalSetNames()) { return; }
+
+			console.log("Updating set names!")
+
 			fetch(WINDOW_LOCATION + "/get-set-names?show_code=" + showCode + "&token=" + token)
 				.then(res => res.json())
 				.then(
 					(result) => {
-						console.log(result);
+						console.log("Got Updated Set Names: ", result);
 						saveLocalSetNames(result);
 						updateSetNames(result);
 					},
