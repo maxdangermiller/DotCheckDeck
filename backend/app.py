@@ -1292,7 +1292,7 @@ class SetUpUserResource(Resource):
 		
 		user = User(
 			school_id = show.school_id, 
-			email = request.json["email"],
+			email = request.json["email"].lower(),
 			first_name = request.json["first_name"],
 			last_name = request.json["last_name"],
 			activated_date = datetime.now(pytz.timezone("US/Central"))
