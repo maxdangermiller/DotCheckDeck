@@ -893,6 +893,7 @@ const Viewer = (props) => {
 					updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
 					updateSpecificSetName={updateSpecificSetName}
 					isAdminAuthorized={isAdminAuthorized()}
+					isOffline={isOffline}
 				/>
 
 				<UserSectionSelection 

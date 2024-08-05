@@ -637,7 +637,10 @@ const BasicViewer = (props) => {
                             <div style={{right: "1rem", bottom: "1rem", position: "absolute"}}>    
                                 {
                                     userData.is_section_leader ?
-                                    <button className='btn btn-secondary' onClick={(e) => openEditSetName(sets[index])}>Edit</button>
+                                        !isOffline ?
+                                        <button className='btn btn-secondary' onClick={(e) => openEditSetName(sets[index])}>Edit</button>
+                                        :
+                                        <button className='btn btn-danger' onClick={(e) => alert("You must be ONLINE to name sets")}>Edit</button>
                                     : null
                                 }
                             </div>

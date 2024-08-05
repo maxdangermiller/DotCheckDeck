@@ -32,6 +32,7 @@ const FOLLOWING_USER_COLOR = "#ECA72C";
 const NOTES_AVAILABLE_COLOR = "#047d5d";
 const REHEARSAL_MODE_COLOR = "#824C71";
 const NOT_REHEARSAL_MODE_COLOR = "#4A2545";
+const OFFLINE_BTN_COLOR = "#732626";
 
 
 const ViewerSideBar = (props) => {
@@ -42,7 +43,7 @@ const ViewerSideBar = (props) => {
         audioPlaying, setAudioPlaying, audio, 
         curPlayTime, setCurPlayTime, token, userData,
         updateSetBasedOnAudioTime, updateSpecificSetName,  // For SetNameModel.js
-        isAdminAuthorized
+        isAdminAuthorized, isOffline
     } = props;
 
     const [showSettings, setShowSettings] = useState(false);
@@ -207,15 +208,27 @@ const ViewerSideBar = (props) => {
                     </div>
 
                     <div className='optionsDivRow'>
-                        <button 
-                            type="button" 
-                            className='customViewerSideBarBtn normalBtn'
-                            style={{color: NORMAL_BTN_COLOR}}
-                            onClick={() => {openEditSetName()}}
-                            disabled={!userData.is_section_leader}
-                        >
-                            <EditSetIcon height="100%" fill="currentColor"/>
-                        </button>
+                        {
+                            !isOffline ?
+                            <button 
+                                type="button" 
+                                className='customViewerSideBarBtn normalBtn'
+                                style={{color: NORMAL_BTN_COLOR}}
+                                onClick={() => {openEditSetName()}}
+                                disabled={!userData.is_section_leader}
+                            >
+                                <EditSetIcon height="100%" fill="currentColor"/>
+                            </button>
+                            :
+                            <button 
+                                type="button" 
+                                className='customViewerSideBarBtn normalBtn'
+                                style={{color: OFFLINE_BTN_COLOR}}
+                                onClick={() => {alert("You must be ONLINE to name sets")}}
+                            >
+                                <EditSetIcon height="100%" fill={OFFLINE_BTN_COLOR}/>
+                            </button>
+                        }
 
                         <button 
                             type="button" 
