@@ -51,8 +51,12 @@ function useUserOptions(userData) {
 			options = DEFAULT_USER_OPTIONS;
 			window.localStorage.setItem(LOCAL_USER_OPTIONS_KEY, JSON.stringify(options));
 		}
+
 		
-		if (userData.label !== undefined) {
+		if (userData.is_admin && userData.label === undefined) {
+			// DO NOTHING
+		}
+		else if (userData.label !== undefined) {
 			setUserOptions({...options,  "highlightUser": {"id": userData.show_user_id, "label": userData.label}, "followingUser": false});
 		} else {
 			setUserOptions({...options,  "highlightUser": null, "followingUser": false});

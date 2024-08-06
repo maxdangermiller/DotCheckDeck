@@ -975,7 +975,7 @@ const Canvas = (props) => {
     }, [curSet]);
 
     const dotHover = (event) => {
-        if (followDot !== undefined)  { return; }
+        if (followDot !== undefined && !userData.user.is_admin)  { return; }
 
         let x = (event.pageX - (canvasRef.current.offsetLeft + canvasRef.current.clientLeft) - translation.x) / translation.s,
             y = (event.pageY - (canvasRef.current.offsetTop + canvasRef.current.clientTop) - translation.y) / translation.s;
@@ -991,8 +991,10 @@ const Canvas = (props) => {
             let cords = convertDotToCords(dot, canvasRef.current.width, canvasRef.current.height);
             if (y > cords.y - margin && y < cords.y + margin  && x > cords.x - margin && x < cords.x + margin) {
                 wasOnDot = true;
-                // console.log("ON DOT")
-                if (userOptions.showMovementBrackets && userOptions.highlightUser.id !== dot.dot.show_user_id) {
+                console.log("ON DOT")
+                // console.log(userOptions)
+                if (userOptions.showMovementBrackets && (userOptions.highlightUser === null || userOptions.highlightUser.id !== dot.dot.show_user_id)) {
+                    console.log("Setting user options")
                     setUserOptions({...userOptions, "highlightUser": {"id": dot.dot.show_user_id, "label": dot.userLabel}})
                 }
                 else {
@@ -1001,6 +1003,7 @@ const Canvas = (props) => {
             }
         });
         
+        console.log(userData)
 
         if (!wasOnDot && !userOptions.showMovementBrackets && hoverDot["x"]  !== undefined) {
             setHoverDot({});
@@ -1015,7 +1018,7 @@ const Canvas = (props) => {
             if (hoverDot["x"] !== undefined) {
                 setHoverDot({});
             }
-            if (userOptions.highlightUser.id !== userData.show_user_id) {
+            if (userData.label !== undefined && userOptions.highlightUser.id !== userData.show_user_id) {
                 setUserOptions({...userOptions, "highlightUser": {"id": userData.show_user_id, "label": userData.label}})
             }
         }
