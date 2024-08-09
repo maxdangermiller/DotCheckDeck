@@ -46,6 +46,9 @@ const AppNavBar = (props) => {
      * @returns HTML
      */
 	const getViewerOptions = () => {
+        if (!isBasicSafe()) {
+            return <></>;
+        }
 		if (window.location.pathname === "/app/basic") {
 			return <Nav.Link href="/app">Normal</Nav.Link>;
 		}
@@ -65,6 +68,22 @@ const AppNavBar = (props) => {
 		}
 		return false;
 	}
+
+    const isBasicSafe = () => {
+        const admin = isAdminAuthorized();
+        if (userData["show_users"].length == 0) {
+            return false;
+        }
+        
+        /*
+        TODO: CHECK IF SHOW USER IS VALID
+        for (let i = 0; i < userData["show_users"].length; i++) {
+            if (userData["show_users"][i][""])
+        }
+        */
+
+        return true;
+    }
 
     const getAppInfoDisplay = () => {
         if (!showSetInfo) {

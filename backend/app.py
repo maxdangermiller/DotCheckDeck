@@ -2268,25 +2268,33 @@ class UpdateOrCreateSetNameResource(Resource):
 		parser.add_argument('set_name', type=str, default=None, required=True, help="You must include the Set Name")
 		args = parser.parse_args()
 
-		setName = SetName.query.filter(SetName.set_id == args.get("id")).first()
-
 		# Get School
 		school_id = activeUser.school_id
 		# Get Set
 		set = Set.query.filter(Set.id == args.get("id")).first()
-		set_id = set.id
-		# Get Show
-		show_id = set.show_id
-		# Get Section
+
+		if set is None:
+			return "Invalid Set ID!!", 404
+		
+		set_id = set.id			# SET ID
+		show_id = set.show_id	# SHOW ID
+		
 		showUser = ShowUser.query.filter(ShowUser.show_id == show_id, ShowUser.user_id == activeUser.id).first()
+
+		if showUser is None:
+			return "User doesn't have access to this set or show!", 401
+		
 		section_id = showUser.section_id
 
-		# Make sure that the user is either a section leader or an admin
-		if not showUser.is_section_leader and not activeUser.is_admin:
+		setName = SetName.query.filter(SetName.set_id == set_id, SetName.section_id == section_id).first()
+
+		
+		# Make sure that the user is a section leader
+		if not showUser.is_section_leader:
 			return "INVALID AUTHORIZATION", 401
 
 		# Create Set Name if it doesn't already exist
-		if (setName is None):
+		if setName is None:
 			setName = SetName(
 				school_id=school_id, 
 				set_id = set_id, 
