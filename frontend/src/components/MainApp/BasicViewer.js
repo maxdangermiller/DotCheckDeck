@@ -368,7 +368,7 @@ const BasicViewer = (props) => {
 		try {
 			if (sets.length === 0) { return; }
 			if (checkLocalSetNames()) { return; }
-			fetch(WINDOW_LOCATION + "/get-set-names?show_code=" + props.schoolCode + "&token=" + props.token)
+			fetch(WINDOW_LOCATION + "/get-set-names?show_code=" + showCode + "&token=" + token)
 				.then(res => res.json())
 				.then(
 					(result) => {
