@@ -991,10 +991,8 @@ const Canvas = (props) => {
             let cords = convertDotToCords(dot, canvasRef.current.width, canvasRef.current.height);
             if (y > cords.y - margin && y < cords.y + margin  && x > cords.x - margin && x < cords.x + margin) {
                 wasOnDot = true;
-                console.log("ON DOT")
                 // console.log(userOptions)
                 if (userOptions.showMovementBrackets && (userOptions.highlightUser === null || userOptions.highlightUser.id !== dot.dot.show_user_id)) {
-                    console.log("Setting user options")
                     setUserOptions({...userOptions, "highlightUser": {"id": dot.dot.show_user_id, "label": dot.userLabel}})
                 }
                 else {
@@ -1002,8 +1000,6 @@ const Canvas = (props) => {
                 }
             }
         });
-        
-        console.log(userData)
 
         if (!wasOnDot && !userOptions.showMovementBrackets && hoverDot["x"]  !== undefined) {
             setHoverDot({});

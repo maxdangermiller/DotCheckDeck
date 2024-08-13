@@ -84,6 +84,21 @@ const Viewer = (props) => {
     const setInput = useRef(null);
 	const canvasRef = useRef(null);
 
+	const getIfUserHasShowUserForShow = () => {
+		if (userData["show_users"].length === 0) {
+			return false;
+		}
+
+		for (let i = 0; i < userData["show_users"].length; i++) {
+			let showUser = userData["show_users"][i];
+			if (showUser["show"]["code"] === showCode) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
     /**
      * Call when an update is requested by user
      * Takes the most up to date timestamps and sets the current timestamps
@@ -419,6 +434,7 @@ const Viewer = (props) => {
      */
     const checkSetNames = () => {
 		try {
+			if (!getIfUserHasShowUserForShow()) { return; }
 			if (sets.length === 0) { return; }
 			if (checkLocalSetNames()) { return; }
 
