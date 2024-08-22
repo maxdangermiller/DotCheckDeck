@@ -149,13 +149,24 @@ class ShowModelView(SecureModelView):
 class SchoolModelView(SecureModelView):
 	form_excluded_columns = ('users', 'show_users', 'sets', 'dots', 'band_sections', 'set_names')
 
+class DotModelView(SecureModelView):
+	column_searchable_list = ['show_user.label', 'show.code', 'set.set_numb', 'school.name']
+	column_filters = ['show_user.label', 'show.code', 'set.set_numb', 'school.name']
+	page_size = 50
 
-admin.add_view(SecureModelView(Dot, db.session))
+
+class UserModelView(SecureModelView):
+	column_searchable_list = ['email', 'first_name', 'last_name']
+	column_filters = ['email', 'first_name', 'last_name', 'is_admin', 'send_admin_email', 'activated_date']
+	page_size = 50
+
+
+admin.add_view(DotModelView(Dot, db.session))
 admin.add_view(SecureModelView(DotIcon, db.session))
 admin.add_view(SecureModelView(SetName, db.session))
 admin.add_view(SecureModelView(Set, db.session))
 admin.add_view(SecureModelView(ShowUser, db.session))
-admin.add_view(SecureModelView(User, db.session))
+admin.add_view(UserModelView(User, db.session))
 admin.add_view(SecureModelView(BandSection, db.session))
 admin.add_view(ShowModelView(Show, db.session))
 admin.add_view(SchoolModelView(School, db.session))
@@ -2791,7 +2802,6 @@ def addAllDataFromPDF(file):
 			)
 			db.session.add(_dot)
 			db.session.commit()
-
 
 
 if __name__ == "__main__":
