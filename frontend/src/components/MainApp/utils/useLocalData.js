@@ -239,7 +239,7 @@ function useLocalData(isOffline) {
         // setCurDatabaseSNTimestamp(sn_timestamp);
 
         localStorage.setItem(LOCAL_TIME_KEY, timestamp);
-        // localStorage.setItem(LOCAL_SN_TIME_KEY, sn_timestamp);
+        localStorage.setItem(LOCAL_SN_TIME_KEY, sn_timestamp);
     }
 
     /**

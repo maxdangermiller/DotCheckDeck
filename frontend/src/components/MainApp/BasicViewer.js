@@ -68,6 +68,25 @@ const BasicViewer = (props) => {
     } = useUserOptions(userData);
 
     /**
+	 * Get If User Has Show User For Show
+	 * @returns {boolean} if user has a show user for the show thats being viewed
+	 */
+	const getIfUserHasShowUserForShow = () => {
+		if (userData["show_users"].length === 0) {
+			return false;
+		}
+
+		for (let i = 0; i < userData["show_users"].length; i++) {
+			let showUser = userData["show_users"][i];
+			if (showUser["show"]["code"] === showCode) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+    /**
      * Call when an update is requested by user
      * Takes the most up to date timestamps and sets the current timestamps
      */
@@ -120,13 +139,15 @@ const BasicViewer = (props) => {
 					
 					// If any timestamps are COMPLETELY missing, then we must save them
 					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
-						saveCurTimestamps(result.timestamp, result.set_name_timestamp);
+                        console.log("Timestamps were missing")
+						// saveCurTimestamps(result.timestamp, result.set_name_timestamp);
 					}
 					
 					// If either timestamps are outdated...
 					else if (localTimestamp !== result.timestamp || localSNTimestamp !== result.set_name_timestamp) {
 						// If it's the main dot data then show update prompt
 						if (localTimestamp !== result.timestamp) {
+                            console.log("Showing update prompt")
 							setShowUpdatePrompt(true);
 						}
 
@@ -366,13 +387,17 @@ const BasicViewer = (props) => {
      */
     const checkSetNames = () => {
 		try {
+			if (!getIfUserHasShowUserForShow()) { return; }
 			if (sets.length === 0) { return; }
 			if (checkLocalSetNames()) { return; }
+
+			console.log("Updating set names!")
+
 			fetch(WINDOW_LOCATION + "/get-set-names?show_code=" + showCode + "&token=" + token)
 				.then(res => res.json())
 				.then(
 					(result) => {
-						console.log(result);
+						console.log("Got Updated Set Names: ", result);
 						saveLocalSetNames(result);
 						updateSetNames(result);
 					},
@@ -388,17 +413,27 @@ const BasicViewer = (props) => {
 		}
 	}
 
-    // Update Viewer Effect
-    useEffect(() => {
-		try {
+    const update = () => {
+        try {
 			getDatabaseVersion();
 			checkCurData();
 			checkSetNames();
 		} catch (error) {
 			console.log("ERROR " + error);
 		}
+    }
+
+    // Update Viewer Effect
+    useEffect(() => {
+		update();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [curSet, sets, curDatabaseTimestamp])
+
+    useEffect(() => {
+        const intervalId = setInterval(update, 60000);
+
+        return () => clearTimeout(intervalId);
+    }, [])
     
     // On initial open, call the API and get all of the sets
     useEffect(() => {

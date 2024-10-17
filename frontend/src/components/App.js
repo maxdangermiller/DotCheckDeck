@@ -29,7 +29,7 @@ import HomePage from './HomePage';
 import Viewer from './MainApp/Viewer';
 import BasicViewer from './MainApp/BasicViewer';
 
-import BetaViewer from './BetaMainApp/Viewer';
+import BetaViewer from './BetaMainApp/BetaViewer';
 
 import logo from '../icons/logo.svg';
 

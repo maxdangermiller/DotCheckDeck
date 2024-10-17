@@ -84,6 +84,11 @@ const Viewer = (props) => {
     const setInput = useRef(null);
 	const canvasRef = useRef(null);
 
+
+	/**
+	 * Get If User Has Show User For Show
+	 * @returns {boolean} if user has a show user for the show thats being viewed
+	 */
 	const getIfUserHasShowUserForShow = () => {
 		if (userData["show_users"].length === 0) {
 			return false;

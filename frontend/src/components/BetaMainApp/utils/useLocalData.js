@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
-const LOCAL_SETS_KEY    = "local-sets-beta";
-const LOCAL_DATA_KEY    = "local-data-beta";
-const LOCAL_SN_DATA_KEY = "local-set-name-data-beta";
-const LOCAL_TIME_KEY    = "database-timestamp-beta";
-const LOCAL_SN_TIME_KEY = "sn-database-timestamp-beta";
+const LOCAL_SETS_KEY    = "beta-local-sets";
+const LOCAL_DATA_KEY    = "beta-local-data";
+const LOCAL_SN_DATA_KEY = "beta-local-set-name-data";
+const LOCAL_TIME_KEY    = "beta-database-timestamp";
+const LOCAL_SN_TIME_KEY = "beta-sn-database-timestamp";
 
 function useLocalData(isOffline) {
 
@@ -38,8 +38,8 @@ function useLocalData(isOffline) {
 						}
 					}
 				}
-				console.log("USING LOCAL SETS!");
-				console.log(parsedSets);
+
+				console.log("USING LOCAL SETS!", parsedSets);
 				setSets(parsedSets);
 				return true;
 			}
@@ -60,10 +60,9 @@ function useLocalData(isOffline) {
 				let parsedData = JSON.parse(localData);
 
 				// Check version number
-				/*
 				if (!isOffline) {
 					for (let i = 0; i < parsedData.length; i++) {
-						let timestamp = parsedData[i]["show_user"]["last_updated"];
+						let timestamp = parsedData[i].update_timestamp;
 						if (timestamp !== curDatabaseTimestamp) {
 							console.log("Found timestamp of: " + timestamp + ", when the current timestamp is: " + curDatabaseTimestamp)
 							// Start UPDATING THOSE SETS
@@ -71,7 +70,6 @@ function useLocalData(isOffline) {
 						}
 					}
 				}
-				*/
 
 				if (parsedData.length < sets.length || sets.length === 0) {
 					console.log("USING INCOMPLETE LOCAL DATA!", parsedData.length, sets.length);
@@ -180,35 +178,43 @@ function useLocalData(isOffline) {
 		// Check if Saved
 		let localData = window.localStorage.getItem(LOCAL_SN_DATA_KEY);
 		try {
-			if (localData !== "" && localData !== null) {
-				let parsedData = JSON.parse(localData);
+			if (localData === "" || localData === null) {
+				// console.log("useLocalData - checkLocalSetNames - Debug 1");
+				return false;
+			}
 
-				if (parsedData === undefined) {
-					return false;
-				}
+			let parsedData = JSON.parse(localData);
 
-				// Check version number
-				if (!isOffline) {
-					for (let i = 0; i < parsedData.length; i++) {
-						let timestamp = parsedData[i].update_timestamp;
-						if (timestamp !== curDatabaseSNTimestamp) {
-							// Start UPDATING THOSE SET NAMES
-							return false;
-						}
+			if (parsedData === undefined) {
+				// console.log("useLocalData - checkLocalSetNames - Debug 2");
+				return false;
+			}
+
+			// If not offline, then Check the version number of each set name
+			if (!isOffline) {
+				for (let i = 0; i < Object.keys(parsedData).length; i++) {
+					let timestamp = parsedData[i].update_timestamp;
+
+					// console.log("Checking Timestamp: " + curDatabaseSNTimestamp + " against set name timestamp: " + timestamp)
+
+					if (timestamp !== curDatabaseSNTimestamp) {
+						// Start UPDATING THOSE SET NAMES
+						// console.log("useLocalData - checkLocalSetNames - Debug 3");
+						return false;
 					}
 				}
-
-				// console.log(parsedData.length, sets.length)
-				// console.log("Trying to use local Data", parsedData.length, sets.length)
-				if (parsedData.length < sets.length || sets.length === 0) {
-					return false;
-				}
-				updateSetNames(parsedData);
-
-				return true;
 			}
-			return false;
+			
+			if (Object.keys(parsedData).length < sets.length || sets.length === 0) {
+				// console.log("useLocalData - checkLocalSetNames - Debug 4");
+				return false;
+			}
+			updateSetNames(parsedData);
+
+			// console.log("useLocalData - checkLocalSetNames - Debug 5");
+			return true;
 		} catch {
+			// console.log("useLocalData - checkLocalSetNames - Debug 6");
 			return false;
 		}
 	}
@@ -228,10 +234,22 @@ function useLocalData(isOffline) {
      * @param {Integer} sn_timestamp current Set Name timestamp
      */
     const saveCurTimestamps = (timestamp, sn_timestamp) => {
+		// console.log("saving cur timestamps ", timestamp, " ", sn_timestamp);
         setCurDatabaseTimestamp(timestamp);
-        setCurDatabaseSNTimestamp(sn_timestamp);
+        // setCurDatabaseSNTimestamp(sn_timestamp);
 
         localStorage.setItem(LOCAL_TIME_KEY, timestamp);
+        localStorage.setItem(LOCAL_SN_TIME_KEY, sn_timestamp);
+    }
+
+    /**
+     * Set state for sn timestamps and saves to local data
+     * @param {Integer} sn_timestamp current Set Name timestamp
+     */
+    const saveSNTimestamp = (sn_timestamp) => {
+		console.log("SAVING NEWEST SN TIMESTAMP!!");
+        setCurDatabaseSNTimestamp(sn_timestamp);
+
         localStorage.setItem(LOCAL_SN_TIME_KEY, sn_timestamp);
     }
 
@@ -241,8 +259,8 @@ function useLocalData(isOffline) {
      */
     const getLocalTimestamps = () => {
         try {
-			const localTimestamp = parseInt(localStorage.getItem("database-timestamp"));
-            const localSNTimestamp = parseInt(localStorage.getItem("sn-database-timestamp"));
+			const localTimestamp = parseInt(localStorage.getItem(LOCAL_TIME_KEY));
+            const localSNTimestamp = parseInt(localStorage.getItem(LOCAL_SN_TIME_KEY));
 			return { localTimestamp: localTimestamp, localSNTimestamp: localSNTimestamp }; 
 		} catch (error) {
 			console.log("NO SAVED TIMESTAMP!");
@@ -289,6 +307,7 @@ function useLocalData(isOffline) {
         setCurDatabaseTimestamp: setCurDatabaseTimestamp,
         setCurDatabaseSNTimestamp: setCurDatabaseSNTimestamp,
         saveCurTimestamps: saveCurTimestamps,
+		saveSNTimestamp: saveSNTimestamp,
         getLocalTimestamps: getLocalTimestamps,
 		updateSpecificSetName:updateSpecificSetName,
         data,

@@ -256,7 +256,7 @@ def create_token():
 			# TODO: Refactor to show_code
 			return {
 				"access_token": access_token, 
-				"refresh_token": refresh_token, 
+				"refresh_token": refresh_token,
 				"user": user_schema.dump(user),
 				"school_code": show.code,
 				"show_id": show.id
@@ -276,12 +276,24 @@ def create_token():
 					# TODO: Refactor to show_code
 					return {
 						"access_token": access_token, 
-						"refresh_token": refresh_token, 
+						"refresh_token": refresh_token,
 						"user": mergeJsonDicts(userString, showString),
 						"school_code": show.code,
 						"show_id": show.id
 					}, 202
-		
+
+			# In the case that no default shows are available and the user is an admin
+			if user.is_admin is True:
+				show = Show.query.filter(Show.school_id == user.school_id).order_by(Show.is_default.desc()).first()
+
+				# TODO: Refactor to show_code
+				return {
+					"access_token": access_token, 
+					"refresh_token": refresh_token,
+					"user": user_schema.dump(user),
+					"school_code": show.code,
+					"show_id": show.id
+				}, 202
 		return "You don't have access to any shows. Try different credentials", 404
 	except:
 		return "This user is missing a database reference", 404
@@ -313,7 +325,6 @@ def refresh_token():
 		# Protect from an internal server error caused by missing references
 		try:
 
-			print(f"\r\n\r\nFound {len(showUsers)} show users for {identity}\r\n\r\n")
 			# User doesn't have access to any shows
 			if len(showUsers) == 0 and user.is_admin is False:
 				return "You don't have access to any shows. Try different credentials", 401
@@ -341,8 +352,6 @@ def refresh_token():
 						# Make sure we have an ID in there
 						showString["show_user_id"] = showUser.id
 
-						print(mergeJsonDicts(userString, showString))
-
 						# TODO: Refactor to show_code
 						return {
 							"access_token": access_token, 
@@ -350,7 +359,18 @@ def refresh_token():
 							"school_code": show.code,
 							"show_id": show.id
 						}, 202
-			
+
+				# In the case that no default shows are available and the user is an admin
+				if user.is_admin is True:
+					show = Show.query.filter(Show.school_id == user.school_id).order_by(Show.is_default.desc()).first()
+
+					# TODO: Refactor to show_code
+					return {
+						"access_token": access_token, 
+						"user": user_schema.dump(user),
+						"school_code": show.code,
+						"show_id": show.id
+					}, 202
 			return "You don't have access to any shows. Try different credentials", 404
 		except:
 			return "This user is missing a database reference", 404
@@ -949,7 +969,7 @@ def move_stationary_prop():
 		request.files["image"].save(fileLocation)
 
 		with open(fileLocation, "rb") as file:
-			storage_obj.save_file(f"static/{show.id}", f"{dotIcon.id}.svg", file)
+			storage_obj.save_file(f"static/{new_show.id}", f"{dotIcon.id}.svg", file)
 
 	# There has been a change made to the show's date, 
 	# so we must change the "last update time" var in the show object
@@ -960,7 +980,7 @@ def move_stationary_prop():
 	updates = [
 		dotCacheManager.Update(dotCacheManager.UpdateType.DOT_ICON, dot_icon_schema.dump(dotIcon))
 	]
-	dotCacheManager.addUpdate(show, show.last_update, updates)
+	dotCacheManager.addUpdate(new_show, new_show.last_update, updates)
 
 	return "Done.", 200
 
@@ -1025,7 +1045,7 @@ def make_all_dots_for_prop_an_icon():
 	updates = [
 		dotCacheManager.Update(dotCacheManager.UpdateType.USER, user_schema.dump(prop))
 	]
-	dotCacheManager.addUpdate(show, show.last_update, updates)
+	dotCacheManager.addUpdate(new_show, new_show.last_update, updates)
 
 	return "Done.", 200
 	
@@ -1459,6 +1479,7 @@ def getAllDotInfoForSet(show, set):
 			"section_id": showUserObj.section_id,
 		})
 
+	print(set.showIndex)
 	return {
 		'setID': set.id,
 		'setNumb': set.set_numb,
@@ -2877,8 +2898,8 @@ if __name__ == "__main__":
 			print("Configuring Show Indices!")
 			rebuild = True
 			with app.app_context():
-				show = Show.query.filter().first()
-				sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
+				new_show = Show.query.filter().first()
+				sets = Set.query.filter(Set.show_id == new_show.id).order_by(Set.id).all()
 				for set in sets:
 					set.showIndex = set.id - 1
 
@@ -2889,8 +2910,8 @@ if __name__ == "__main__":
 			print("Configuring Show Indices!")
 			rebuild = True
 			with app.app_context():
-				show = Show.query.filter().first()
-				sets = Set.query.filter(Set.show_id == show.id).order_by(Set.id).all()
+				new_show = Show.query.filter().first()
+				sets = Set.query.filter(Set.show_id == new_show.id).order_by(Set.id).all()
 				for set in sets:
 					set.notes = ""
 					set.total_counts = set.counts
@@ -2901,9 +2922,9 @@ if __name__ == "__main__":
 			# Currently builds a file with all the section info because I don't want to have to deal with it.
 			rebuild = True
 			with app.app_context():
-				show = Show.query.filter().first()
-				sections = BandSection.query.filter(BandSection.show_id == show.id).all()
-				sets = Set.query.filter(Set.show_id == show.id).all()
+				new_show = Show.query.filter().first()
+				sections = BandSection.query.filter(BandSection.show_id == new_show.id).all()
+				sets = Set.query.filter(Set.show_id == new_show.id).all()
 
 				with open("section_info.json", "w") as outfile:
 					outfile.write(json.dumps(band_sections_schema.dump(sections), indent=4))
@@ -2914,7 +2935,7 @@ if __name__ == "__main__":
 			# Currently builds a file with all the section info because I don't want to have to deal with it.
 			rebuild = True
 			with app.app_context():
-				show = Show.query.filter().first()
+				new_show = Show.query.filter().first()
 				sections = []
 
 				with open("section_info.json", "r") as inFile:
@@ -2928,14 +2949,14 @@ if __name__ == "__main__":
 						color_r = s["color_r"], 
 						color_g = s["color_g"],
 						color_b = s["color_b"],
-						school_id = show.school_id,
-						show_id = show.id
+						school_id = new_show.school_id,
+						show_id = new_show.id
 					)
 					db.session.add(section)
 					db.session.commit()
 
 				for s in sets:
-					set = Set.query.filter(Set.showIndex == s["showIndex"], Set.show_id == show.id).first()
+					set = Set.query.filter(Set.showIndex == s["showIndex"], Set.show_id == new_show.id).first()
 
 					if set is not None:
 						set.start_time_code = s["start_time_code"]
@@ -2980,6 +3001,147 @@ if __name__ == "__main__":
 
 					db.session.commit()
 				
+		if arg == "duplicate_show":
+			rebuild = True
+			with app.app_context():
+				existing_show = None
+
+				while True:
+					show_id = input("Show Id: ")
+					
+					existing_show = Show.query.filter(Show.id == int(show_id)).first()
+					if existing_show is not None:
+						print(f"LOADED SHOW OF NAME: {existing_show.name}\r\n")
+
+						if input("Is this correct (y/n)?  ") == "y":
+							break
+
+						print("ABORTING!")
+					
+					else:
+						print(f"SHOW OF ID {show_id} DOESN'T EXIST!\r\n")
+
+				new_show = Show(
+					school_id=existing_show.school_id, 
+					name=f"{existing_show.name} COPY"
+				)
+				new_show.generateCode()
+
+				db.session.add(new_show)
+				db.session.commit()
+
+
+				import shutil
+
+				# Copy audio
+				oldFileLocation = f"./static/{existing_show.id}/audio.mp3"
+				newFileLocation = f"./static/{new_show.id}/audio.mp3"
+				os.makedirs(f"./static/{new_show.id}")
+				shutil.copyfile(oldFileLocation, newFileLocation)
+
+
+				# Save to cloud
+				with open(newFileLocation, "rb") as data:
+					storage_obj.save_file(f"static/{new_show.id}", "audio.mp3", data)
+
+
+				band_sections = BandSection.query.filter(BandSection.show_id == existing_show.id).all()
+				show_users = ShowUser.query.filter(ShowUser.show_id == existing_show.id).all()
+				
+				for band_section in band_sections:
+					new_band_section = BandSection(
+						name = band_section.name, 
+						color_r = band_section.color_r, 
+						color_g = band_section.color_g,
+						color_b = band_section.color_b,
+						school_id = band_section.school_id,
+						show_id = new_show.id
+					)
+					
+					db.session.add(new_band_section)
+					db.session.commit()
+				
+				for show_user in show_users:
+					if show_user.is_stationary:
+						continue
+					
+					new_band_section_id = None
+
+					try:
+
+						old_band_section = BandSection.query.filter(BandSection.id == show_user.section_id).first()
+						
+						new_band_section = BandSection.query.filter(
+							BandSection.show_id == new_show.id, 
+							BandSection.name == old_band_section.name
+						).first()
+
+						new_band_section_id = new_band_section.id
+					except:
+						pass
+
+					new_show_user = ShowUser(
+						school_id = show_user.school_id,
+						show_id = new_show.id, 
+						section_id = new_band_section_id,
+						# user_id = show_user.user_id,
+						symbol = show_user.symbol,
+						label = show_user.label,
+
+						is_section_leader = show_user.is_section_leader,
+						is_drum_major = show_user.is_drum_major,
+						is_locked = show_user.is_locked,
+						is_prop = show_user.is_prop,
+						is_stationary = show_user.is_stationary
+					)
+
+					db.session.add(new_show_user)
+					db.session.commit()
+
+					show_user_dots = Dot.query.filter(Dot.show_user_id == show_user.id).all()
+
+					for dot in show_user_dots:
+
+						# Make sure the set exists / Find it
+						set = Set.query.filter(Set.id==dot.set_id).first()
+						new_set = Set.query.filter(Set.show_id == new_show.id, Set.set_numb == set.set_numb).first()
+
+						# Create The Set
+						if new_set is None:
+							new_set = Set(
+								set_numb=set.set_numb, 
+								measure=set.measure, 
+								counts=set.counts, 
+								total_counts=set.total_counts,
+								school_id=set.school_id, 
+								show_id=new_show.id,
+								start_time_code=set.start_time_code,
+								end_time_code=set.end_time_code,
+								showIndex=set.showIndex,
+								notes=set.notes
+							)
+							db.session.add(new_set)
+							db.session.commit()
+
+						new_dot = Dot(
+							direction=dot.direction,
+							line=dot.line, 
+							steps=dot.steps, 
+							side=dot.side, 
+							fb_steps=dot.fb_steps,
+							fb_direction=dot.fb_direction, 
+							use_hash=dot.use_hash, 
+							school_id=dot.school_id, 
+							show_id = new_show.id,
+							set_id=new_set.id, 
+							show_user_id=new_show_user.id
+						)
+
+						db.session.add(new_dot)
+					db.session.commit()
+			
+			print("\r\nCompleted Copying Show!\r\n")
+
 
 
 	# from GUITest import GUITest

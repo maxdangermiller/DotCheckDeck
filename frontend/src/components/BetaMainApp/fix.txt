@@ -1,3 +1,0 @@
-drawUserDialogue(x, y, dotInfo["show_user"]);
-cordsToDot
-convertDotToCords

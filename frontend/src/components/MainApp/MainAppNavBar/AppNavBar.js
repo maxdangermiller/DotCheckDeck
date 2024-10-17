@@ -70,8 +70,8 @@ const AppNavBar = (props) => {
 	}
 
     const isBasicSafe = () => {
-        const admin = isAdminAuthorized();
-        if (userData["show_users"].length == 0) {
+        // const admin = isAdminAuthorized();
+        if (userData["show_users"].length === 0) {
             return false;
         }
         
