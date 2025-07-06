@@ -3159,6 +3159,7 @@ if __name__ == "__main__":
 """
 Startup Command
 
+cd backend
 python app.py
 
 cd frontend
