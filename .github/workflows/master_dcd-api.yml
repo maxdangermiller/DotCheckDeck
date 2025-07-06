@@ -58,10 +58,6 @@ jobs:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
 
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -84,4 +80,4 @@ jobs:
         with:
           app-name: 'dcd-api'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_37684D3A3DD647A9A2DDF3F96DE3A2F2 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1FE2140F7FC04ECDAF1E4220EA5ECDE2 }}
