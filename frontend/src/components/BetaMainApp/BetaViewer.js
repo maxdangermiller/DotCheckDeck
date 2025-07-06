@@ -152,6 +152,8 @@ const BetaViewer = (props) => {
         }
 
         try {
+			// console.log("Retrieving Data Section " + dataSection);
+
             retrieveDataFromAPI(showCode, token, dataSection).then((response) => {     
 
                 // Test if everything is loaded
@@ -159,6 +161,7 @@ const BetaViewer = (props) => {
                     // WE'RE DONE!!!
                     // TODO: MODIFY FOR NEW PURPOSES
                     console.log("DATA FULLY DOWNLOADED! Set count: " + localData.length);
+					console.log("Data being saved: ", localData)
                     localDataHandler.saveData(localData);
                     setIsDownloading(false); 
                     setShowUpdatePrompt(false);
@@ -229,7 +232,7 @@ const BetaViewer = (props) => {
                 }
             })
         } catch (error) {
-            window.location.href = "/error?message=An Unknown Problem Occurred. \r\nIt is recommended to press the 'Reset Client' button&return=/app";
+            window.location.href = "/error?message=An Unknown Problem Occurred (Captive Download Error 10). \r\nIt is recommended to press the 'Reset Client' button&return=/app";
         }
 
 

@@ -70,6 +70,8 @@ const NormalViewerSideBar = (props) => {
                 />
                 */}
 
+                <button onClick={() => changeCurSetNumb(curSet+1)}> Next</button>
+
                 <div className='optionsDiv'>
                     <div className='optionsDivRow'>
 

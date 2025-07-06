@@ -28,22 +28,34 @@ const NormalViewer = (props) => {
     // Refs
     const setInputRef = useRef(null);
 	const canvasRef = useRef(null);
+    const showDisplayRef = useRef(null);
+
 
     const setCurSetNumb = () => {
 
     }
-    const changeCurSetNumb = () => {
-
+    const changeCurSetNumb = (x) => {
+        setCurSet(x);
     }
     const getSetName = () => {
         return "NO NAME"
     }
+
+    // TODO: REMOVE - for testing only
+    useEffect(() => {
+        if (showDisplayRef !== null) {
+            const data = localDataHandler.data;
+
+            showDisplayRef.current.update_show_display(data)
+        }
+    }, [showDisplayRef]);
 
     return (
         <>
             <div className="flex-row justify-content-center d-flex align-items-center canvasDivClass" ref={canvasRef}>
                 <ShowDisplay 
                     data={localDataHandler.data}
+                    sets={localDataHandler.sets}
                     userOptionsHandler={userOptionsHandler}
                     userData={userData}
                     token={token}
@@ -54,6 +66,7 @@ const NormalViewer = (props) => {
                     curPlayTime={curPlayTime}
                     hoverUserInfo={hoverUserInfo}
                     setHoverUserInfo={setHoverUserInfo}
+                    ref={showDisplayRef}
                 />
                 {/*
                 TODO: ADD BACK
