@@ -6,6 +6,7 @@ from database.set import Set
 from database.show import Show
 from database.user import User
 from database.showUser import ShowUser
+from database.setName import SetName
 
 def merge_json_data(data1, data2):
     merged = {}
@@ -50,13 +51,36 @@ def import_backup(json_path1, json_path2):
             db.session.flush()
             section_objs[section.id] = section
 
-        # 4. Sets
+                # 4. Sets
+        set_columns = {c.name for c in Set.__table__.columns}
         set_objs = {}
+        set_name_tuples = set()
         for set_data in data["sets"]:
-            _set = Set(**set_data)
+            # Collect set_name and related fields if present
+            set_name = set_data.get("set_name")
+            school_id = set_data.get("school_id")
+            show_id = set_data.get("show_id")
+            set_id = set_data.get("id")
+            section_id = set_data.get("section_id")
+            if set_name and school_id and show_id and set_id and section_id:
+                set_name_tuples.add((set_name, school_id, show_id, set_id, section_id))
+            filtered_set_data = {k: v for k, v in set_data.items() if k in set_columns}
+            _set = Set(**filtered_set_data)
             db.session.add(_set)
             db.session.flush()
             set_objs[_set.id] = _set
+
+        # 4b. Insert unique set_names into SetName table with all parameters
+        for name, school_id, show_id, set_id, section_id in set_name_tuples:
+            set_name_obj = SetName(
+                name=name,
+                school_id=school_id,
+                show_id=show_id,
+                set_id=set_id,
+                section_id=section_id
+            )
+            db.session.add(set_name_obj)
+        db.session.flush()
 
         # 5. Users and ShowUsers
         for user_data in data["users"]:
