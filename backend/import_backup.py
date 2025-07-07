@@ -11,9 +11,11 @@ def merge_json_data(data1, data2):
     merged = {}
     # Use school from the first file
     merged["school"] = data1["school"]
-    # Merge lists
-    for key in ["sections", "sets", "shows", "users"]:
-        merged[key] = data1.get(key, []) + data2.get(key, [])
+    # Merge lists, handling the case where data2 is a list (sets only)
+    for key in ["sections", "shows", "users"]:
+        merged[key] = data1.get(key, [])
+    # 'sets' is special: data1 may have sets, data2 is a list of sets
+    merged["sets"] = data1.get("sets", []) + (data2 if isinstance(data2, list) else data2.get("sets", []))
     return merged
 
 def import_backup(json_path1, json_path2):
