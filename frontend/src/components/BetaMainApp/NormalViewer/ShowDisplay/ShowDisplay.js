@@ -1,18 +1,34 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
-import convertDotToCords from './convertDotToCords';
 
+import {convertDotToCords, convertDotLinkToCords, steps_to_px} from './convertDotToCords';
+import fieldDisplay from './fieldDisplay';
+import showPropHandler from './showPropHandler';
 
 const MAX_ZOOM = 5;
 const MIN_ZOOM = 0.9;
 const SCROLL_SENSITIVITY = 0.0005;
 
+const FUTURE_DOT_COLOR = "rgba(0, 100, 0, 0.8)";
+const PREVIOUS_DOT_COLOR = "rgba(100, 0, 0, 0.8)";
+const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
+const CURRENT_DOT_HIGHLIGHT_COLOR = "rgba(0, 0, 255, 0.4)";
 
+
+/**
+ * ShowDisplay Component
+ * 
+ * This component is responsible for displaying the show data in a canvas format.
+ * It handles panning, zooming, and rendering the user points on the canvas.
+ * @param {Object} props - The properties passed to the component.
+ * @param {Object} ref - The ref to allow parent components to call methods on this component.
+ * @returns {JSX.Element} The rendered canvas element.
+ */
 const ShowDisplay = forwardRef((props, ref) => {
     // Prop Handling
     const {
         data, sets, userOptionsHandler, userData, 
-        token, isOffline, curSet, 
-        audioPlaying, curPlayTime, hoverUserInfo, 
+        token, isOffline, curSetState, getCurSet, 
+        audioPlaying, curShowTimestamp, hoverUserInfo, 
         setHoverUserInfo
     } = props;
 
@@ -28,6 +44,10 @@ const ShowDisplay = forwardRef((props, ref) => {
     const [initialPinchDistance, setInitialPinchDistance] = useState(null);
     const [lastZoom, setLastZoom] = useState(1);
 
+    const [loadedIcons, setLoadedIcons] = useState([])
+
+    
+
     // Refs
     const canvasRef = useRef(null);
 
@@ -41,7 +61,7 @@ const ShowDisplay = forwardRef((props, ref) => {
      */
     const getCurSetID = () => {
         for (let i = 0; i < sets.length; i++) {
-            if (sets[i].show_index === curSet) {
+            if (sets[i].show_index === getCurSet()) {
                 return sets[i].id;
             }
         }
@@ -65,6 +85,28 @@ const ShowDisplay = forwardRef((props, ref) => {
         //          instead of using state like it has been.
     
     }));
+
+    /**
+     * Get Color of Dot
+     * @param {Object} show_user array item of the provided data from Viewer 
+     * @param {Boolean} is_dimmed should the alpha of the color be 0.4?
+     * @param {Boolean} use_section_colors comes from preferences, should the section colors be used?
+     * @returns {Color} color of user
+     */
+    const getDotColor = (show_user, is_dimmed, use_section_colors) => {
+        if (!use_section_colors && !is_dimmed) {
+            return CURRENT_DOT_COLOR;
+        }
+        else if (!use_section_colors) {
+            return CURRENT_DOT_HIGHLIGHT_COLOR;
+        }
+        else if (is_dimmed) {
+            return "rgba(" + show_user.r + ", " + show_user.g + ", " + show_user.b + ", 0.4)"
+        }
+
+        // If the user is highlighted, use the current dot color as the default color
+        return "rgb(" + show_user.r + ", " + show_user.g + ", " + show_user.b + ")";
+    }
 
 
     // RENDER METHOD
@@ -97,6 +139,27 @@ const ShowDisplay = forwardRef((props, ref) => {
         };
 
         /**
+         * Draw a Prop Icon
+         * @param {Float} x 
+         * @param {Float} y 
+         * @param {Integer} dot_icon_id 
+         */
+        const drawProp = (x, y, dot_icon_id) => {
+            // let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
+            // let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
+            let width = steps_to_px(4, canvas.height);
+            let height = steps_to_px(4, canvas.height);
+            
+            let x0 = x - width / 2;
+            let y0 = y - height / 2;
+
+            const icon = showPropHandler.getLoadedIcon(dot_icon_id, loadedIcons, setLoadedIcons, token);
+            
+            // console.log("DRAW PROP: ", icon, x0, y0, width, height);
+            context.drawImage(icon, x0, y0, width, height);
+        }
+
+        /**
          * Clears the screen
          */
         const clear = () => {
@@ -109,7 +172,7 @@ const ShowDisplay = forwardRef((props, ref) => {
                 canvas.height + canvas.height * MIN_ZOOM
             );
             
-            // TODO: drawHashes(canvas, context, userOptions);
+            fieldDisplay.drawField(canvas, context, userOptionsHandler.userOptions);
         };
 
 
@@ -268,8 +331,8 @@ const ShowDisplay = forwardRef((props, ref) => {
                 // TODO: setHadResize(true);
             }
             if (cameraOffset === null) {
-                // setCameraOffset({x: canvas.width / 2, y: canvas.height / 2});
-                setCameraOffset({x: 0, y: 0})
+                setCameraOffset({x: canvas.width / 2, y: canvas.height / 2});
+                // setCameraOffset({x: 0, y: 0})
             }
 
             // Pan and zoom
@@ -280,8 +343,9 @@ const ShowDisplay = forwardRef((props, ref) => {
             const width = canvasRef.current.width;
             const height = canvasRef.current.height;
 
-            const curSetID = getCurSetID(curSet);
+            const curSetID = getCurSetID(getCurSet());
 
+            // Draw all the points
             for (let i = 0; i < data.length; i++) {
                 const show_user = data[i];
                 const dot_links = show_user.dot_links;
@@ -290,8 +354,19 @@ const ShowDisplay = forwardRef((props, ref) => {
                     const dot_link = dot_links[j];
 
                     if (dot_link.set_id === curSetID) {
-                        const cords = convertDotToCords(dot_link.cur_dot.dot_info, width, height);
-                        drawPoint(cords.x, cords.y, "black", "NONE");
+                        // const cords = convertDotToCords(dot_link.cur_dot.dot_info, width, height);
+                        const cords = convertDotLinkToCords(dot_link, width, height, curShowTimestamp,sets);
+                        const color = getDotColor(show_user, false, userOptionsHandler.userOptions.useSectionColors);
+
+                        // Draw the point if it isn't an icon
+                        if (dot_link.cur_dot.dot_icon_id === null) {
+                            drawPoint(cords.x, cords.y, color, show_user.show_user.label);
+                            continue;
+                        } 
+                        
+                        else {
+                            drawProp(cords.x, cords.y, dot_link.cur_dot.dot_icon_id);
+                        }
                         // console.log("Found dot Link: ", dot_link.cur_dot.dot_info, "; which gives cords of: ", cords)
                     }
                 }
@@ -310,7 +385,7 @@ const ShowDisplay = forwardRef((props, ref) => {
         return () => {
             window.cancelAnimationFrame(animationFrameId)
         }
-    }, [curSet])
+    }, [curShowTimestamp, cameraOffset, cameraZoom])
 
 
     /*  -----------------------------  PAN TILT SECTION  ----------------------------- */

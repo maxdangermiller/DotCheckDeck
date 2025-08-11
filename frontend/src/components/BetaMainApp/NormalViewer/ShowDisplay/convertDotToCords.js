@@ -19,6 +19,63 @@ const convertDotToCords = (dot_pos, width, height) => {
     return posFromBits(dot_pos, width, height);
 }
 
+/**
+ * Convert Dot Link to Coordinates
+ * @param {DotLink} dot_link dot link object
+ * @param {Float} width 
+ * @param {Float} height 
+ * @param {Integer} timestamp 
+ * @param {Array[Sets]} sets 
+ * @returns {x: Float, y: Float} cords
+ */
+const convertDotLinkToCords = (dot_link, width, height, timestamp, sets) => {
+    /*
+    Example dot_link object: {
+        counts: 0,
+        cur_dot: {id: 1, dot_info: 346048773, dot_icon_id: null},
+        next_dot: {id: 2, dot_info: 346048773, dot_icon_id: null},
+        set_id: 1,
+        set_name: ""
+    }
+    */
+
+    // Calculate the position of the start and end of the dot link
+    const start = posFromBits(dot_link.cur_dot.dot_info, width, height);
+    const end = posFromBits(dot_link.next_dot.dot_info, width, height);
+
+    const x0 = start.x;
+    const y0 = start.y;
+    const x1 = end.x;
+    const y1 = end.y;
+
+    // console.log("Dot Link Cords: ", dot_link.cur_dot.dot_info, width, height, posFromBits(dot_link.cur_dot.dot_info, width, height));
+
+    const cur_set = sets.find((set) => set.id === dot_link.set_id);
+
+    if (cur_set === undefined) {
+        console.error("Set not found for dot_link", dot_link, sets);
+        return {x: 0, y: 0};
+    }
+
+    const cur_set_start = cur_set.start_time_code;
+    const cur_set_end = cur_set.end_time_code;
+
+    // If the timestamp is outside the range of the dot link, return an error
+    if (timestamp < cur_set_start || timestamp > cur_set_end) {
+        console.error("Timestamp out of range for dot_link", dot_link, timestamp, cur_set_start, cur_set_end);
+        return {x: 0, y: 0};
+    }
+
+    const total_duration = cur_set_end - cur_set_start;
+    const elapsed = timestamp - cur_set_start;
+    const t = total_duration === 0 ? 0 : elapsed / total_duration;
+    const x = x0 + (x1 - x0) * t;
+    const y = y0 + (y1 - y0) * t;
+    // console.log(x,y, x0, y0, x1, y1, t, total_duration, elapsed);
+
+    return {x, y};
+}
+
 // NEW CONVERSIONS
 
 
@@ -449,6 +506,16 @@ const bHashConvert = (bits) => {
     return 0;
 }
 
+/**
+ * Converts the marching steps unit to pixels via the height of window
+ * @param {Float} steps Marching steps unit
+ * @param {Integer} height Height of screen
+ * @returns {Integer} pixels
+ */
+const steps_to_px = (steps, height) => {
+    let oneStep = height / 1920 * 22.5;
+    return steps * oneStep;
+}        
 
-export {convertDotToCords, cordsToDot, dotFromBits};
+export {convertDotToCords, cordsToDot, dotFromBits, steps_to_px, convertDotLinkToCords};
 export default convertDotToCords;

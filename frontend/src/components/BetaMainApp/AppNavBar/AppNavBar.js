@@ -1,11 +1,56 @@
-import React from 'react';
+import React, {useState, forwardRef, useImperativeHandle} from 'react';
 import './AppNavBar.css';
 import logo from '../../../icons/logo.svg';
 import {Nav,  Navbar, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
-const AppNavBar = (props) => {
+const AppNavBar = forwardRef((props, ref) => {
     const { token, loggedIn, logout, data, curSet, isOffline, userData, showSetInfo } = props;
+
+    const [ counts, setCounts ] = useState(0);
+    const [ measures, setMeasures ] = useState("0");
+
+
+    /**
+	 * Update Navigation Bar
+	 * @description This function updates the navigation bar with the current counts and measures.
+	 * It checks if the navbarRef is defined and if it has a current property.
+	 * If it does, it calls the setCounts and setMeasures methods on the navbarRef.
+	 * @param {Integer} counts 
+	 * @param {String} measures 
+	 * @returns 
+	 */
+	const updateNavBar = (counts, measures) => {
+		if (typeof counts === "number") {
+			setCounts(counts);
+		}
+		if (typeof measures === "string") {
+			setMeasures(measures);
+		}
+	}
+
+
+    useImperativeHandle(ref, () => ({
+            
+         /**
+         * Update Navigation Bar
+         * @description This function updates the navigation bar with the current counts and measures.
+         * It checks if the navbarRef is defined and if it has a current property.
+         * If it does, it calls the setCounts and setMeasures methods on the navbarRef.
+         * @param {Integer} counts 
+         * @param {String} measures 
+         * @returns 
+         */
+        updateNavBar(counts, measures) {
+            if (typeof counts === "number") {
+                setCounts(counts);
+            }
+            if (typeof measures === "string") {
+                setMeasures(measures);
+            }
+        }
+    
+    }));
 
     /**
      * Get Current Measure
@@ -95,8 +140,8 @@ const AppNavBar = (props) => {
         // Normal
         return (
             <Nav className="ml-auto">
-                <div className='customNavbarText'>Measure: {getCurrentMeasure()}</div>
-                <div className='customNavbarText'>Counts: {getCurrentCounts()}</div>
+                <div className='customNavbarText'>Measure: {measures}</div>
+                <div className='customNavbarText'>Counts: {counts}</div>
             </Nav>
         );
     }
@@ -130,6 +175,6 @@ const AppNavBar = (props) => {
 	);
 
 
-};
+});
 
 export default AppNavBar;

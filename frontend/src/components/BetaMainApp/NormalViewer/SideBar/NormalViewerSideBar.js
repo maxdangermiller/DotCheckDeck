@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Container, Row, Col } from 'react-bootstrap';
+import SetInput from './setInput';
 
 import './NormalViewerSideBar.css';
+
+import ShowController from './ShowController';
 /*
 import OptionsModal from './ViewerSideBarComponents/OptionsModal';
 import SetNameModel from './ViewerSideBarComponents/SetNameModel';
@@ -37,40 +40,61 @@ const NOT_REHEARSAL_MODE_COLOR = "#4A2545";
 
 const NormalViewerSideBar = (props) => {
     const { 
-        curSet, setInputRef, setCurSetNumb, changeCurSetNumb, getSetName
+        curSetState, 
+        setInputRef,
+
+        getCurSet, 
+        getCurSetNumb,
+        setCurSet,
+        setCurSetNumb, 
+        defaultAnimateSet,
+
+        getSetName,
+
+        audioPlaying,
+        curShowTimestamp,
+        setAudioPlaying,
+        setShowTimestamp,
+        localDataHandler,
+        userOptions,
+        
+        sets
     } = props;
 
+
+    const handelSetBtnControls = (modifier) => {
+        console.log("handelSetBtnControls called with modifier:", modifier);
+        defaultAnimateSet(curSetState + modifier);
+    }
    
 
     return (
         <>
             <div className="sideBarClass">
                 <div className='setInfoDisplay'>
-                    <input 
-                        ref={setInputRef} 
-                        value={curSet} 
-                        className="setNumberInput" 
-                        onChange={(e) => setCurSetNumb(e.target.value)} 
-                        onKeyDown={(e) => changeCurSetNumb(e)}>
-                    </input>
+                    <SetInput 
+                        setInputRef={setInputRef} 
+                        setCurSetNumb={setCurSetNumb} 
+                        curSetState={curSetState} 
+                        getCurSetNumb={getCurSetNumb}
+                    />
+
                     <h1 className='viewerSideBarNameField'>{getSetName()}</h1>
                 </div>
-                {/*
-                <AudioPlayer 
-                    curPlayTime={curPlayTime}
-                    setCurPlayTime={setCurPlayTime}
-                    audio={audio}
+
+                <ShowController 
+                    curShowTimestamp={curShowTimestamp}
+                    setShowTimestamp={setShowTimestamp}
+                    audio={null}
                     audioPlaying={audioPlaying}
                     setAudioPlaying={setAudioPlaying}
-                    updateSetBasedOnAudioTime={updateSetBasedOnAudioTime}
                     handelSetBtnControls={handelSetBtnControls}
                     sets={sets}
-                    curSet={curSet}
+                    curSetState={curSetState}
                     userOptions={userOptions}
                 />
-                */}
 
-                <button onClick={() => changeCurSetNumb(curSet+1)}> Next</button>
+                <button onClick={() => setCurSet(curSetState+1)}> Next</button>
 
                 <div className='optionsDiv'>
                     <div className='optionsDivRow'>
@@ -90,7 +114,7 @@ const NormalViewerSideBar = (props) => {
                 userOptions={userOptions}
                 setUserOptions={setUserOptions} 
                 data={data} 
-                curSet={curSet}
+                curSetState={curSetState}
             />
 
             <SetNameModel 

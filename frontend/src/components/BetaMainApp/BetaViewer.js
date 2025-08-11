@@ -38,6 +38,8 @@ const BetaViewer = (props) => {
     // Use Local Options
     const userOptionsHandler = useUserOptions(userData);
 
+	const navbarRef = useRef(null);
+
 
     /**
      * Fetch the newest update timestamps!
@@ -194,8 +196,18 @@ const BetaViewer = (props) => {
 					let found = false;
 
 					for (let j = 0; j < response.data["band_sections"].length; j++) {
-						if (response.data["band_sections"][j]["id"] === band_section_id) {
-							localData.push({...response.data["band_sections"][j], ...response.data["show_users"][i]});
+						const band_section = response.data["band_sections"][j];
+
+						if (band_section["id"] === band_section_id) {
+							// localData.push({...band_section, ...response.data["show_users"][i]});
+							localData.push({
+								"band_section_id": band_section.id, 
+								"band_section_name": band_section.name,
+								"r": band_section.r, 
+								"g": band_section.g, 
+								"b": band_section.b, 
+								...response.data["show_users"][i]
+						});
 							found = true;
 							break;
 						}
@@ -261,7 +273,7 @@ const BetaViewer = (props) => {
     useEffect(() => {
 		startCaptiveDownload(-1);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
+	}, []);
 
 
 
@@ -276,6 +288,7 @@ const BetaViewer = (props) => {
 				isOffline={isOffline}
 				userData={userData}
 				showSetInfo={true}
+				ref={navbarRef}
 			/>
             <div className="flex-row justify-content-center d-flex align-items-center ViewerFullScreen">
                 <NormalViewer 
@@ -287,6 +300,7 @@ const BetaViewer = (props) => {
                     showID={showID}
                     isOffline={isOffline}
                     logout={logout}
+					navbarRef={navbarRef}
                 />
                 {/*
 				<UserSectionSelection 
