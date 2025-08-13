@@ -236,7 +236,7 @@ function useLocalData(isOffline) {
     const saveCurTimestamps = (timestamp, sn_timestamp) => {
 		// console.log("saving cur timestamps ", timestamp, " ", sn_timestamp);
         setCurDatabaseTimestamp(timestamp);
-        // setCurDatabaseSNTimestamp(sn_timestamp);
+        setCurDatabaseSNTimestamp(sn_timestamp);
 
         localStorage.setItem(LOCAL_TIME_KEY, timestamp);
         localStorage.setItem(LOCAL_SN_TIME_KEY, sn_timestamp);

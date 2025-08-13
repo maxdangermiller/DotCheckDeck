@@ -8,7 +8,7 @@ import {ReactComponent as PlayIcon} from '../../../../icons/circle-play.svg';
 
 const ShowController = (props) => {
     const {
-        curShowTimestamp, setShowTimestamp, audio, 
+        curShowTimestamp, audioTimestampUpdate, audio, 
         audioPlaying, setAudioPlaying, updateSetBasedOnAudioTime, 
         handelSetBtnControls, sets, curSetState, userOptions
     } = props;
@@ -18,7 +18,8 @@ const ShowController = (props) => {
      * @returns {boolean} If the display mode is counts
      */
     const isCountsMode = () => {
-        return userOptions["displayMode"] === 1;
+        return false; // TODO: Implement this based on userOptions
+        // return userOptions["displayMode"] === 1;
     }
 
     /**
@@ -110,7 +111,7 @@ const ShowController = (props) => {
                     audio !== null                   
                     ? <ShowProgressBar 
                         curShowTimestamp={curShowTimestamp} 
-                        setShowTimestamp={setShowTimestamp} 
+                        audioTimestampUpdate={audioTimestampUpdate} 
                         audio={audio} 
                         isPlaying={audioPlaying} 
                         setIsPlaying={setAudioPlaying}

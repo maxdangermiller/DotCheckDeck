@@ -31,17 +31,41 @@ const convertDotToCords = (dot_pos, width, height) => {
 const convertDotLinkToCords = (dot_link, width, height, timestamp, sets) => {
     /*
     Example dot_link object: {
-        counts: 0,
-        cur_dot: {id: 1, dot_info: 346048773, dot_icon_id: null},
-        next_dot: {id: 2, dot_info: 346048773, dot_icon_id: null},
-        set_id: 1,
+        counts: 16
+        
+        set_id: 2
         set_name: ""
+        
+        prev_dot: {id: 1, dot_info: 346048773, dot_icon_id: null, dot_icon: {
+            id: 1
+            school_id: 1
+            show_id: 1
+
+            width_in_steps: 2
+            hight_in_steps: 2
+            
+            created_date: "2023-08-07T14:24:33"
+            last_updated: 900607303
+            last_updated_date: "2023-08-07T15:19:09"
+        }}
+        cur_dot: {id: 2, dot_info: 346048773, dot_icon_id: null, dot_icon: null}
+        next_dot: {id: 3, dot_info: 346048773, dot_icon_id: null, dot_icon: null}
     }
+        
     */
 
     // Calculate the position of the start and end of the dot link
-    const start = posFromBits(dot_link.cur_dot.dot_info, width, height);
-    const end = posFromBits(dot_link.next_dot.dot_info, width, height);
+
+    // Default start will be at the origin
+    const cur_dot_pos = posFromBits(dot_link.cur_dot.dot_info, width, height);
+
+    // If there is no previous dot, then start at the current dot
+    let start = cur_dot_pos;
+    if (dot_link.prev_dot !== null) { start = posFromBits(dot_link.prev_dot.dot_info, width, height); }
+
+    const end = cur_dot_pos;
+    
+    // const start = posFromBits(dot_link.prev_dot.dot_info, width, height);
 
     const x0 = start.x;
     const y0 = start.y;

@@ -10,9 +10,11 @@ import axios from "axios";
 
 
 // Styling
-// TODO: CHANGE OR REMOVE
-// import './BetaViewer.css';
 import 'bootstrap/dist/css/bootstrap.css';
+
+const WINDOW_LOCATION = getApi();
+
+let audio = null;
 
 const NormalViewer = (props) => {
     // Prop Handling
@@ -38,9 +40,9 @@ const NormalViewer = (props) => {
     const setInputRef = useRef(null);
 	const canvasRef = useRef(null);
     const showDisplayRef = useRef(null);
+	const animationRef = useRef(null);  // Store the current animation timeout ID
     const { navbarRef } = props;
 
-	let animationTimeoutID = null; // Store the timeout ID for the animation
 
 	/**
 	 * Update Navigation Bar
@@ -166,27 +168,27 @@ const NormalViewer = (props) => {
 		const animate = (currentStep) => {
 			if (currentStep >= steps) {
 				setShowTimestamp(end_time_code);
-				animationTimeoutID = null; // Reset the timeout ID
 
 				// Fire the callback to update the show display
 				if (showDisplayRef.current) {
 					showDisplayRef.current.update_show_display(localDataHandler.data);
 				}
+
+				animationRef.current = null;
 				return;
 			}
 			const newTime = start_time_code + (step_delta * currentStep);
 			setShowTimestamp(newTime);
-			animationTimeoutID = setTimeout(() => animate(currentStep + 1), step_time);
+
+			animationRef.current = setTimeout(() => animate(currentStep + 1), step_time);
 		}
 
 		// Clear any previous animation timeout
 		// This ensures that if the function is called multiple times, the previous animation is cancelled
 		// This is important to prevent multiple animations from running at the same time
 		// and causing unexpected behavior
-		if (animationTimeoutID !== null) {
-			console.log("Clearing previous animation timeout", animationTimeoutID);
-			clearTimeout(animationTimeoutID);
-		}
+		clearTimeout(animationRef.current);
+
 		// Start the animation
 		animate(0);
 	}
@@ -201,6 +203,29 @@ const NormalViewer = (props) => {
 	 */
 	const defaultAnimateSet = (next_set_index) => {
 		animateSet(curSetState, next_set_index, 50, 50);
+	}
+
+	/**
+	 * Audio Timestamp Update
+	 * @description This function updates the current show timestamp to the given timestamp.
+	 * If the timestamp is invalid, it does nothing.
+	 * If there is no animation in progress, it sets the current show timestamp to the given timestamp.
+	 * If there is an animation in progress, it does nothing and returns false.
+	 * @param {Float} timestamp 
+	 * @returns {Boolean} True if the timestamp was updated, false if the audio needs to be stopped instead
+	 */
+	const audioTimestampUpdate = (timestamp) => {
+		if (isNaN(timestamp) || timestamp === null) {
+			return false;
+		}
+
+		if (animationRef.current === null) {
+			setShowTimestamp(timestamp);
+			return true;
+		} else {
+			return false;
+			// audio.currentTime = timestamp / 1000;
+		}
 	}
 
 	/**
@@ -258,7 +283,7 @@ const NormalViewer = (props) => {
     }, [showDisplayRef]);
 
     useEffect(() => {
-        console.log("Show Timestamp Update: ", curShowTimestamp);
+        // console.log("Show Timestamp Update: ", curShowTimestamp);
 
 		getCurSet();
     }, [curShowTimestamp]);
@@ -267,9 +292,18 @@ const NormalViewer = (props) => {
 		// Once everything is loaded, set the current set state to the first set
 		if (curSetState === -1 && localDataHandler.sets.length !== 0 && localDataHandler.data.length !== 0)	{
 			setCurSetState(0);
+			setShowTimestamp(1);
 		}
     }
     , [localDataHandler.sets, localDataHandler.data]);
+
+	// Get Audio From API
+	useEffect(() => {
+		if (isOffline) { return; }
+		audio = new Audio(WINDOW_LOCATION + "/get-audio?school_code=" + showCode + "&token=" + token);
+		audio.load();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
 
     return (
         <>
@@ -306,10 +340,13 @@ const NormalViewer = (props) => {
                 getSetName={getSetName}
                 getCurSetNumb={getCurSetNumb}
 
+				audio={audio}
 				audioPlaying={audioPlaying}
-                curShowTimestamp={curShowTimestamp}
 				setAudioPlaying={setAudioPlaying}
-				setShowTimestamp={setShowTimestamp}
+
+                curShowTimestamp={curShowTimestamp}
+				audioTimestampUpdate={audioTimestampUpdate}
+
 				localDataHandler={localDataHandler}
 				userOptions={userOptionsHandler}
 

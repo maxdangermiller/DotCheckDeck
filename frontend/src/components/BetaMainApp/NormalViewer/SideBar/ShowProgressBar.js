@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'
 
 const ShowProgressBar = (props) => {
     const {
-        curShowTimestamp, setShowTimestamp, audio, 
+        curShowTimestamp, audioTimestampUpdate, audio, 
         isPlaying, setIsPlaying, updateSetBasedOnAudioTime, 
         isCountsMode, curSetInfo, lastEndTimeCode
     } = props;
@@ -10,7 +10,7 @@ const ShowProgressBar = (props) => {
     /**
      * Units:
      * 
-     * curShowTimestamp: seconds
+     * curShowTimestamp: milliseconds
      * audio.duration: seconds
      * curSetInfo.start_time_code: milliseconds
      * curSetInfo.end_time_code: milliseconds
@@ -58,9 +58,17 @@ const ShowProgressBar = (props) => {
             }
         } else {
             audio.pause();
+            clearInterval(intervalRef.current);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPlaying]);
+
+    useEffect(() => {
+        if (!isPlaying) {
+            audio.currentTime = curShowTimestamp / 1000;
+        }
+    }, [curShowTimestamp]);
+
 
     useEffect(() => {
         // Pause and clean up on unmount
@@ -74,14 +82,20 @@ const ShowProgressBar = (props) => {
     const startNormalTimer = () => {
         // Clear any timers already running
         clearInterval(intervalRef.current);
+
+        audio.currentTime = curShowTimestamp / 1000;
     
         intervalRef.current = setInterval(() => {
             if (audio.ended || !isPlaying) {
                 // Do nothing
             } else if (isPlaying) {
                 // console.log(audio.currentTime)
-                setShowTimestamp(audio.currentTime);
-                updateSetBasedOnAudioTime(audio.currentTime * 1000);
+                if (!audioTimestampUpdate(audio.currentTime * 1000)) {
+                    setIsPlaying(false);
+                    audio.pause();
+                    clearInterval(intervalRef.current);
+                }
+                // updateSetBasedOnAudioTime(audio.currentTime * 1000);
             }
         }, [100]);
     };
@@ -91,8 +105,12 @@ const ShowProgressBar = (props) => {
         clearInterval(intervalRef.current);
         
         intervalRef.current = setInterval(() => {
-            setShowTimestamp(audio.currentTime);
-            updateSetBasedOnAudioTime(audio.currentTime * 1000);
+            if (!audioTimestampUpdate(audio.currentTime * 1000)) {
+                setIsPlaying(false);
+                audio.pause();
+                clearInterval(intervalRef.current);
+            }
+            // updateSetBasedOnAudioTime(audio.currentTime * 1000);
         }, [100]);
     };
 
@@ -107,12 +125,22 @@ const ShowProgressBar = (props) => {
             const msInCount = length / curSetInfo.counts;
             const curValue = (value * msInCount + curSetInfo.start_time_code) / 1000;
 
-            audio.currentTime = curValue;
-            setShowTimestamp(audio.currentTime);
+            if (!audioTimestampUpdate(value * 1000)) {
+                audio.currentTime = value;
+                
+                setIsPlaying(false);
+                audio.pause();
+                clearInterval(intervalRef.current);
+            }
         } 
         else {
-            audio.currentTime = value;
-            setShowTimestamp(audio.currentTime);
+            if (!audioTimestampUpdate(value * 1000)) {
+                audio.currentTime = value;
+
+                setIsPlaying(false);
+                audio.pause();
+                clearInterval(intervalRef.current);
+            }
         }
     };
     
@@ -131,14 +159,14 @@ const ShowProgressBar = (props) => {
 
     const getShowTimestamp = () => {
         if (!isCountsMode) {
-            return curShowTimestamp;
+            return curShowTimestamp / 1000;;
         }
         // IS counts mode
         if (!curSetInfo || curSetInfo.counts <= 0) {
             return 0;
         }
 
-        const curTime = curShowTimestamp * 1000 - curSetInfo.start_time_code;
+        const curTime = curShowTimestamp - curSetInfo.start_time_code;
         const length = curSetInfo.end_time_code - curSetInfo.start_time_code;
         const msInCount = length / curSetInfo.counts;
         const curCount = (curTime / msInCount);

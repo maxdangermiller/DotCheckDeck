@@ -142,18 +142,18 @@ const ShowDisplay = forwardRef((props, ref) => {
          * Draw a Prop Icon
          * @param {Float} x 
          * @param {Float} y 
-         * @param {Integer} dot_icon_id 
+         * @param {DotIcon} dot_icon 
          */
-        const drawProp = (x, y, dot_icon_id) => {
+        const drawProp = (x, y, dot_icon) => {
             // let width = steps_to_px(dot.dot.dot_icon.width_in_steps, canvas.height);
             // let height = steps_to_px(dot.dot.dot_icon.hight_in_steps, canvas.height);
-            let width = steps_to_px(4, canvas.height);
-            let height = steps_to_px(4, canvas.height);
+            let width = steps_to_px(dot_icon.width_in_steps, canvas.height);
+            let height = steps_to_px(dot_icon.hight_in_steps, canvas.height);
             
             let x0 = x - width / 2;
             let y0 = y - height / 2;
 
-            const icon = showPropHandler.getLoadedIcon(dot_icon_id, loadedIcons, setLoadedIcons, token);
+            const icon = showPropHandler.getLoadedIcon(dot_icon.id, loadedIcons, setLoadedIcons, token);
             
             // console.log("DRAW PROP: ", icon, x0, y0, width, height);
             context.drawImage(icon, x0, y0, width, height);
@@ -343,32 +343,25 @@ const ShowDisplay = forwardRef((props, ref) => {
             const width = canvasRef.current.width;
             const height = canvasRef.current.height;
 
-            const curSetID = getCurSetID(getCurSet());
+            const curSet = getCurSet();
 
             // Draw all the points
             for (let i = 0; i < data.length; i++) {
                 const show_user = data[i];
-                const dot_links = show_user.dot_links;
+                const dot_link = show_user.dot_links[curSet];
 
-                for (let j = 0; j < dot_links.length; j++) {
-                    const dot_link = dot_links[j];
+                // const cords = convertDotToCords(dot_link.cur_dot.dot_info, width, height);
+                const cords = convertDotLinkToCords(dot_link, width, height, curShowTimestamp,sets);
+                const color = getDotColor(show_user, false, userOptionsHandler.userOptions.useSectionColors);
 
-                    if (dot_link.set_id === curSetID) {
-                        // const cords = convertDotToCords(dot_link.cur_dot.dot_info, width, height);
-                        const cords = convertDotLinkToCords(dot_link, width, height, curShowTimestamp,sets);
-                        const color = getDotColor(show_user, false, userOptionsHandler.userOptions.useSectionColors);
-
-                        // Draw the point if it isn't an icon
-                        if (dot_link.cur_dot.dot_icon_id === null) {
-                            drawPoint(cords.x, cords.y, color, show_user.show_user.label);
-                            continue;
-                        } 
-                        
-                        else {
-                            drawProp(cords.x, cords.y, dot_link.cur_dot.dot_icon_id);
-                        }
-                        // console.log("Found dot Link: ", dot_link.cur_dot.dot_info, "; which gives cords of: ", cords)
-                    }
+                // Draw the point if it isn't an icon
+                if (dot_link.cur_dot.dot_icon_id === null) {
+                    drawPoint(cords.x, cords.y, color, show_user.show_user.label);
+                    continue;
+                } 
+                
+                else {
+                    drawProp(cords.x, cords.y, dot_link.cur_dot.dot_icon);
                 }
             }
 

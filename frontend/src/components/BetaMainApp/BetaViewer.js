@@ -87,10 +87,7 @@ const BetaViewer = (props) => {
 
 					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
 						console.log(localTimestamp, localSNTimestamp)
-						localDataHandler.setCurDatabaseTimestamp(result.timestamp);
-                    	localDataHandler.setCurDatabaseSNTimestamp(result.set_name_timestamp);
-						localStorage.setItem("database-timestamp", result.timestamp);
-						localStorage.setItem("sn-database-timestamp", result.set_name_timestamp);
+						localDataHandler.saveCurTimestamps(result.timestamp, result.set_name_timestamp);
 					}
 					else if (localTimestamp !== result.timestamp || localSNTimestamp !== result.set_name_timestamp) {
 						setShowUpdatePrompt(true);

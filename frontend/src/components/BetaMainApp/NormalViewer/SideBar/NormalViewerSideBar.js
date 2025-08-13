@@ -51,10 +51,13 @@ const NormalViewerSideBar = (props) => {
 
         getSetName,
 
+        audio,
         audioPlaying,
-        curShowTimestamp,
         setAudioPlaying,
-        setShowTimestamp,
+
+        curShowTimestamp,
+        audioTimestampUpdate,
+
         localDataHandler,
         userOptions,
         
@@ -84,8 +87,8 @@ const NormalViewerSideBar = (props) => {
 
                 <ShowController 
                     curShowTimestamp={curShowTimestamp}
-                    setShowTimestamp={setShowTimestamp}
-                    audio={null}
+                    audioTimestampUpdate={audioTimestampUpdate}
+                    audio={audio}
                     audioPlaying={audioPlaying}
                     setAudioPlaying={setAudioPlaying}
                     handelSetBtnControls={handelSetBtnControls}

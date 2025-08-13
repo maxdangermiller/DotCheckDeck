@@ -27,6 +27,18 @@ import dotCacheManager
 DATA_LOAD_SIZE = 8
 
 
+def constructDotLink(dot: Dot) -> dict:
+	if dot.dot_icon_id is not None:
+		return {
+			"id": dot.id, 
+			"dot_info": dot.posToBits(), 
+			"dot_icon_id": dot.dot_icon_id, 
+			"dot_icon": DotIconSchema().dump(dot.dot_icon)
+		}
+
+	return {"id": dot.id, "dot_info": dot.posToBits(), "dot_icon_id": None, "dot_icon": None}
+
+
 def getDotLinks(sets, showUser: ShowUser) -> list[dict]:
 	dots = list()
 
@@ -42,13 +54,19 @@ def getDotLinks(sets, showUser: ShowUser) -> list[dict]:
 	for i in range(len(dots)):
 		curDot = dots[i]
 
-		curDotInfo = {"id": curDot.id, "dot_info": curDot.posToBits(), "dot_icon_id": curDot.dot_icon_id}
+		prevDotInfo = None
+		curDotInfo = constructDotLink(curDot)
 		nextDotInfo = {"id": -1, "dot_info": -1, "dot_icon_id": -1}
 		
+		# Check if there IS a previous dot
+		if i - 1 >= 0:
+			prevDot = dots[i - 1]
+			prevDotInfo = constructDotLink(prevDot)
+
 		# Check if there IS a next dot
 		if i + 1 < len(dots):
 			nextDot = dots[i + 1]
-			nextDotInfo = {"id": nextDot.id, "dot_info": nextDot.posToBits(), "dot_icon_id": nextDot.dot_icon_id}
+			nextDotInfo = constructDotLink(nextDot)
 
 		# Create Default Set Name
 		setName = ""
@@ -61,11 +79,12 @@ def getDotLinks(sets, showUser: ShowUser) -> list[dict]:
 
 		dotCords.append({
 			"set_id": curDot.set_id,
-			"counts": sets[i].counts,
 			"set_name": setName,
+			"counts": sets[i].counts,
 			
 			"cur_dot": curDotInfo,
-			"next_dot": nextDotInfo
+			"next_dot": nextDotInfo,
+			"prev_dot": prevDotInfo
 		})
 
 	return dotCords
@@ -430,7 +449,7 @@ def auditCacheData(show: Show, data: dict, sinceVersion: int) -> bool:
 			elif update.updateType == dotCacheManager.UpdateType.MAJOR_UPDATE:
 				getShowData(show)
 				# No need to process anything else
-				return
+				return True
 
 
 		data["update_version"] = showUpdate.databaseVersion
@@ -486,7 +505,7 @@ def getBufferedDotsNew(show: Show, dataSection: int, userDatabaseVersion: int):
 		output["update_version"] = data["update_version"]
 		output["total_data_sections"] = lastDataSection
 
-		if userDatabaseVersion is None:
+		if userDatabaseVersion is -1:
 			userDatabaseVersion = output["update_version"]
 
 		auditCacheData(show, data, userDatabaseVersion)
@@ -505,7 +524,7 @@ class APIGetData(Resource):
 		dataSection = int(request.args.get('data_section', 0))
 
 		# Allow a user to pass what database version they're currently on
-		userDatabaseVersion = request.args.get('database_version', None)
+		userDatabaseVersion = int(request.args.get('database_version', -1))
 
 		# REQUIRE A SHOW CODE
 		if showCode is None:
