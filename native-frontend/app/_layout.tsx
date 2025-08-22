@@ -13,6 +13,8 @@ import localStorage from './scripts/localStorage';
 import axios from "axios";
 import NavBar from "./components/NavBar";
 
+import index from "./index";
+
 
 /*
 import Activate from './Activate';
@@ -229,6 +231,7 @@ function App() {
 			{/* Home Page */}
 			<Stack.Screen 
 				name="index" 
+				component={index}
 				options={defaultScreenOptions} 
 			/>
 

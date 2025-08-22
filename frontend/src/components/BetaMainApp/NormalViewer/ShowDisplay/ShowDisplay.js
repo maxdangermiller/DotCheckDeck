@@ -348,6 +348,7 @@ const ShowDisplay = forwardRef((props, ref) => {
             // Draw all the points
             for (let i = 0; i < data.length; i++) {
                 const show_user = data[i];
+
                 const dot_link = show_user.dot_links[curSet];
 
                 // const cords = convertDotToCords(dot_link.cur_dot.dot_info, width, height);
@@ -368,7 +369,7 @@ const ShowDisplay = forwardRef((props, ref) => {
             ctx.restore()
             animationFrameId = requestAnimationFrame(() => render(ctx))
         }
-
+        
         try {
             render(context)
         } catch (error) {
