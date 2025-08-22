@@ -161,10 +161,16 @@ class UserModelView(SecureModelView):
 	page_size = 50
 
 
+class SetModelView(SecureModelView):
+	column_searchable_list = ['show.name', 'school.name', 'showIndex', 'set_numb']
+	column_filters = ['show.name', 'school.name', 'showIndex', 'set_numb']
+	page_size = 50
+
+
 admin.add_view(DotModelView(Dot, db.session))
 admin.add_view(SecureModelView(DotIcon, db.session))
 admin.add_view(SecureModelView(SetName, db.session))
-admin.add_view(SecureModelView(Set, db.session))
+admin.add_view(SetModelView(Set, db.session))
 admin.add_view(SecureModelView(ShowUser, db.session))
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(SecureModelView(BandSection, db.session))
