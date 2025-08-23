@@ -156,14 +156,28 @@ class DotModelView(SecureModelView):
 
 
 class UserModelView(SecureModelView):
-	column_searchable_list = ['email', 'first_name', 'last_name']
-	column_filters = ['email', 'first_name', 'last_name', 'is_admin', 'send_admin_email', 'activated_date']
+	column_searchable_list = ['school.name', 'email', 'first_name', 'last_name']
+	column_filters = ['school.name', 'is_admin', 'send_admin_email', 'activated_date']
+	column_exclude_list = ['password_hash', ]
+	column_editable_list = ['first_name', 'last_name', 'is_admin', 'send_admin_email', 'verified_date']
+
+	page_size = 50
+
+
+class ShowUserModelView(SecureModelView):
+	column_searchable_list = ['school.name', 'show.name', 'label']
+	column_filters = ['school.name', 'show.name', 'label', 'is_prop', 'is_section_leader', 'is_drum_major', 'is_locked', 'is_stationary', 'band_section.name']
+	column_exclude_list = ['created_date', ]
+	column_editable_list = ['is_prop', 'is_section_leader', 'is_drum_major', 'is_locked', 'is_stationary']
+
 	page_size = 50
 
 
 class SetModelView(SecureModelView):
 	column_searchable_list = ['show.name', 'school.name', 'showIndex', 'set_numb']
 	column_filters = ['show.name', 'school.name', 'showIndex', 'set_numb']
+	column_editable_list = ['showIndex', 'notes']
+	column_editable_list = ['showIndex', 'start_time_code', 'end_time_code']
 	page_size = 50
 
 
@@ -171,7 +185,7 @@ admin.add_view(DotModelView(Dot, db.session))
 admin.add_view(SecureModelView(DotIcon, db.session))
 admin.add_view(SecureModelView(SetName, db.session))
 admin.add_view(SetModelView(Set, db.session))
-admin.add_view(SecureModelView(ShowUser, db.session))
+admin.add_view(ShowUserModelView(ShowUser, db.session))
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(SecureModelView(BandSection, db.session))
 admin.add_view(ShowModelView(Show, db.session))

@@ -51,9 +51,9 @@ def import_backup(json_path1, json_path2):
             section = BandSection.query.filter(BandSection.name == section_data["name"]).first()
 
             if section is None:
-                section_data["created_date"] = convert_date_str(section_data["created_date"])
-                section_data["last_updated"] = convert_date_str(section_data["last_updated"])
-                section_data["last_updated_date"] = convert_date_str(section_data["last_updated_date"])
+                # section_data["created_date"] = convert_date_str(section_data["created_date"])
+                # section_data["last_updated"] = convert_date_str(section_data["last_updated"])
+                # section_data["last_updated_date"] = convert_date_str(section_data["last_updated_date"])
 
                 section = BandSection(**section_data)
                 db.session.add(section)
@@ -158,6 +158,7 @@ def import_backup(json_path1, json_path2):
 
                 if show_user is not None:
                     show_user.user = user
+                    show_user.band_section = 
                 else:
                     print(f"SHOW USER {show_user_data['label']}  {show_user_data['symbol']}")
             else:

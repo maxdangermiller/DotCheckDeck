@@ -51,8 +51,8 @@ class Show(CacheableMixin, db.Model):
 		self.last_set_name_update = newUpdateCode
 	
 	def __repr__(self):
-		return f"Show({self.code})"
+		return f"Show({self.name}-{self.code})"
 
 	def __str__(self):
-		return f"Show({self.code})"
+		return self.name
 
