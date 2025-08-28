@@ -82,14 +82,24 @@ def addUpdate(updateShow: Show, databaseVersion: int, updates: list[Update]):
 	print("\r\nMaking new update: ", update)
 	show_update_reference.append(update)
 
+"""
 def getUpdatesForShow(show: Show) -> list[ShowUpdate]:
 	for _show in show_update_reference:
 		if _show["id"] == show.id:
 			return _show["showUpdates"]
 	
 	return []
+"""
 
-def getUpdatesForShow(show: Show, sinceVersion: int) -> list[ShowUpdate]:
+def getUpdatesForShow(show: Show, sinceVersion=-1) -> list[ShowUpdate]:
+	if sinceVersion == -1:
+		for _show in show_update_reference:
+			if _show["id"] == show.id:
+				return _show["showUpdates"]
+		
+		return []
+	
+	
 	updates = []
 
 	for _show in show_update_reference:

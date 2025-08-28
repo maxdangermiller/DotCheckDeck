@@ -58,7 +58,7 @@ const convertDotLinkToCords = (dot_link, width, height, timestamp, sets) => {
 
     // Default start will be at the origin
     const cur_dot_pos = posFromBits(dot_link.cur_dot.dot_info, width, height);
-
+    
     // If there is no previous dot, then start at the current dot
     let start = cur_dot_pos;
     if (dot_link.prev_dot !== null) { start = posFromBits(dot_link.prev_dot.dot_info, width, height); }
@@ -86,7 +86,8 @@ const convertDotLinkToCords = (dot_link, width, height, timestamp, sets) => {
 
     // If the timestamp is outside the range of the dot link, return an error
     if (timestamp < cur_set_start || timestamp > cur_set_end) {
-        console.error("Timestamp out of range for dot_link", dot_link, timestamp, cur_set_start, cur_set_end);
+        // console.log(cur_set)
+        // console.error("Timestamp out of range for dot_link", dot_link, timestamp, cur_set_start, cur_set_end);
         return {x: 0, y: 0};
     }
 

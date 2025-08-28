@@ -8,6 +8,7 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, unset_jwt_cookies, jwt_required, \
 	JWTManager, create_refresh_token
+
 import pytz
 from azure.communication.email import EmailClient
 import json
@@ -151,7 +152,7 @@ class SchoolModelView(SecureModelView):
 
 class DotModelView(SecureModelView):
 	column_searchable_list = ['show_user.label', 'show.code', 'set.set_numb', 'school.name']
-	column_filters = ['show_user.label', 'show.code', 'set.set_numb', 'school.name']
+	column_filters = ['show_user.label', 'show_user.id', 'show.name', 'set.set_numb', 'school.name']
 	page_size = 50
 
 
@@ -175,10 +176,25 @@ class ShowUserModelView(SecureModelView):
 
 class SetModelView(SecureModelView):
 	column_searchable_list = ['show.name', 'school.name', 'showIndex', 'set_numb']
-	column_filters = ['show.name', 'school.name', 'showIndex', 'set_numb']
-	column_editable_list = ['showIndex', 'notes']
-	column_editable_list = ['showIndex', 'start_time_code', 'end_time_code']
+	column_filters = ['show.name', 'school.name', 'showIndex', 'set_numb', 'id']
+	column_editable_list = ['showIndex', 'notes', 'start_time_code', 'end_time_code']
 	page_size = 50
+
+
+class BandSectionModelView(SecureModelView):
+	column_searchable_list = ['show.name', 'school.name', 'name']
+	column_filters = ['show.name', 'school.name', 'name', 'id']
+	column_editable_list = ['name', 'color_r', 'color_g', 'color_b']
+	page_size = 50
+
+	
+	def formfield_for_manytomany(self, db_field, request, **kwargs):
+		if db_field.name == "show_users":
+			# Apply your filtering logic here
+			# Example: Only show related objects where 'is_active' is True
+			kwargs["queryset"] = ShowUser.query.filter_by(show_id = 9)
+		return super().formfield_for_manytomany(db_field, request, **kwargs)
+		
 
 
 admin.add_view(DotModelView(Dot, db.session))
@@ -187,7 +203,7 @@ admin.add_view(SecureModelView(SetName, db.session))
 admin.add_view(SetModelView(Set, db.session))
 admin.add_view(ShowUserModelView(ShowUser, db.session))
 admin.add_view(UserModelView(User, db.session))
-admin.add_view(SecureModelView(BandSection, db.session))
+admin.add_view(BandSectionModelView(BandSection, db.session))
 admin.add_view(ShowModelView(Show, db.session))
 admin.add_view(SchoolModelView(School, db.session))
 

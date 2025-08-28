@@ -38,7 +38,7 @@ def import_backup(json_path1, json_path2):
 
         # 2. Shows
         show_id = input("Add everything to Show ID: ")
-        imp_show_id = input("Get everything from Show ID: ")
+        # imp_show_id = input("Get everything from Show ID: ")
         show = Show.query.filter(Show.id == show_id).first()
 
         if show is None:
@@ -46,30 +46,43 @@ def import_backup(json_path1, json_path2):
             return
 
         # 3. Sections
+        """
         section_objs = {}
         for section_data in data["sections"]:
-            section = BandSection.query.filter(BandSection.name == section_data["name"]).first()
+            section = BandSection.query.filter(BandSection.name == section_data["name"], BandSection.show_id == show.id).first()
 
             if section is None:
                 # section_data["created_date"] = convert_date_str(section_data["created_date"])
                 # section_data["last_updated"] = convert_date_str(section_data["last_updated"])
                 # section_data["last_updated_date"] = convert_date_str(section_data["last_updated_date"])
 
-                section = BandSection(**section_data)
+                section = BandSection(
+                    name = section_data["name"],
+                    color_r = section_data["color_r"],
+                    color_g = section_data["color_g"],
+                    color_b = section_data["color_b"],
+                    created_date = convert_date_str(section_data["created_date"]),
+                    last_updated = section_data["last_updated"],
+                    last_updated_date = convert_date_str(section_data["last_updated_date"]),
+                    show_id = show.id,
+                    school_id = show.school_id
+
+
+                )
                 db.session.add(section)
             else:
                 section.color_r = section_data["color_r"]
                 section.color_g = section_data["color_g"]
                 section.color_b = section_data["color_b"]
 
-            section_objs[section.id] = section
+            section_objs[section_data["id"]] = section
 
         # Add all the band sections
         db.session.commit()
-        
+        """
 
         # 4. Sets
-        set_columns = {c.name for c in Set.__table__.columns}
+        # set_columns = {c.name for c in Set.__table__.columns}
         set_objs = {}
         set_name_tuples = set()
         for set_data in data["sets"]:
@@ -84,43 +97,38 @@ def import_backup(json_path1, json_path2):
             if set_name and school_id and show_id and set_id and section_id:
                 set_name_tuples.add((set_name, school_id, show_id, set_id, section_id))
 
-            _set = Set.query.filter(Set.set_numb == set_data["set_numb"]).first()
+            _set = Set.query.filter(Set.set_numb == set_data["set_numb"], Set.show_id == show.id).first()
 
             if _set is None:
                 print(f"Set {set_data['set_numb']} can't be found")
-                """
-                filtered_set_data = {k: v for k, v in set_data.items() if (k in set_columns and k is not "id")}
-                filtered_set_data = {
-                    "start_time_code": set_data["start_time_code"],
-                    "end_time_code": set_data["end_time_code"],
-                    "notes": set_data["notes"],
-                    "set_numb": set_data["set_numb"],
-                    "counts": set_data["start_time_code"],
-                    
-                }
-                _set = Set(**filtered_set_data)
-                """
             else:
                 _set.start_time_code = set_data["start_time_code"]
                 _set.end_time_code = set_data["end_time_code"]
                 _set.notes = set_data["notes"]      
-                set_objs[_set.id] = _set
+                set_objs[set_id] = _set
 
+        db.session.commit()
+
+        """
         # 4b. Insert unique set_names into SetName table with all parameters
         for name, school_id, show_id, set_id, section_id in set_name_tuples:
+            section = BandSection.query.filter(BandSection.name == section_objs[section_id]["name"], BandSection.show_id == show.id).first()
+            found_set = Set.query.filter(Set.index == set_objs[set_id]["id"])
+
             set_name_obj = SetName(
                 name=name,
-                school_id=school_id,
-                show_id=show_id,
-                set_id=set_id,
-                section_id=section_id
+                school_id=show.school_id,
+                show_id=show.id,
+                set_id=found_set.id,
+                section_id=section.id
             )
             db.session.add(set_name_obj)
 
         db.session.commit()
-        # db.session.flush()
+        """
 
         # 5. Users and ShowUsers
+        """
         for user_data in data["users"]:
             user = User.query.filter(User.email == user_data["email"]).first()
 
@@ -147,6 +155,8 @@ def import_backup(json_path1, json_path2):
                 if int(show_user_dict["show_id"]) == int(imp_show_id):
                     show_user_data = show_user_dict
                     break
+                else:
+                    print(f"Found wrong show_user: {show_user_dict}")
 
             if len(show_user_data.items()) is not 0:
 
@@ -158,14 +168,22 @@ def import_backup(json_path1, json_path2):
 
                 if show_user is not None:
                     show_user.user = user
-                    show_user.band_section = 
+
+                    try:
+                        if show_user_data["section_id"] is not None:
+
+                            show_user.band_section_id = section_objs[show_user_data["section_id"]].id
+                            db.session.commit()
+                    except:
+                        print(section_objs, show_user_data["section_id"])
                 else:
-                    print(f"SHOW USER {show_user_data['label']}  {show_user_data['symbol']}")
+                    print(f"SHOW USER {show_user_data['label']}  {show_user_data['symbol']} not Found!")
             else:
-                print(f"SHOW USER {show_user_data}")
+                print(f"SHOW USER {show_user_data} not Found!")
 
 
         db.session.commit()
+        """
         print("Backup data from both files imported successfully.")
 
 if __name__ == "__main__":

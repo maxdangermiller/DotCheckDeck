@@ -157,7 +157,7 @@ const NormalViewer = (props) => {
 		// let start_time_code = curSet.start_time_code;
 		let start_time_code = curShowTimestamp;
 		let end_time_code = nextSet.start_time_code;
-		console.log("Starting animation from set " + cur_set_index + " to set " + next_set_index, start_time_code, end_time_code);
+		console.log("Starting animation from set " + cur_set_index + " to set " + next_set_index, start_time_code, nextSet);
 
 		if (cur_set_index > next_set_index) {
 			// start_time_code = curSet.start_time_code;

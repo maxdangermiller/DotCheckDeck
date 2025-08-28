@@ -351,9 +351,16 @@ const ShowDisplay = forwardRef((props, ref) => {
 
                 const dot_link = show_user.dot_links[curSet];
 
+                if (dot_link === undefined) {
+                    // console.log("Show User ", show_user, " doesn't have a dot link for " + curSet);
+                    continue;
+                }
+
                 // const cords = convertDotToCords(dot_link.cur_dot.dot_info, width, height);
                 const cords = convertDotLinkToCords(dot_link, width, height, curShowTimestamp,sets);
                 const color = getDotColor(show_user, false, userOptionsHandler.userOptions.useSectionColors);
+
+                // console
 
                 // Draw the point if it isn't an icon
                 if (dot_link.cur_dot.dot_icon_id === null) {
