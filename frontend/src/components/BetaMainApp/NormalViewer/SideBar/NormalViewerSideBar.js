@@ -57,6 +57,7 @@ const NormalViewerSideBar = (props) => {
 
         curShowTimestamp,
         audioTimestampUpdate,
+        isAnimating,
 
         localDataHandler,
         userOptions,
@@ -64,10 +65,19 @@ const NormalViewerSideBar = (props) => {
         sets
     } = props;
 
+    const [animateTarget, setAnimateTarget] = useState(0);
 
     const handelSetBtnControls = (modifier) => {
-        console.log("handelSetBtnControls called with modifier:", modifier);
-        defaultAnimateSet(curSetState + modifier);
+        let target = 0;
+        if (!isAnimating()) {
+            target = getCurSet() + modifier;
+        } else {
+            target = animateTarget + modifier;
+        }
+        setAnimateTarget(target);
+
+        console.log("handelSetBtnControls called with modifier:", modifier, ". Targeting: ", animateTarget);
+        defaultAnimateSet(target);
     }
    
 

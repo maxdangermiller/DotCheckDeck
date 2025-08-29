@@ -116,6 +116,8 @@ const AppNavBar = (props) => {
 
                     {isAdminAuthorized() ? <Nav.Link href="/admin">Admin</Nav.Link> : null}
 
+                    <Nav.Link href="/beta/app">Beta</Nav.Link>
+
                     <Navbar.Text style={{fontWeight: "bold", paddingRight: "12px"}}>|</Navbar.Text>
 				</Nav>
                 

@@ -141,6 +141,15 @@ const AdminPropsPage = (_props) => {
         })
     }
 
+    const getIconImage = (prop) => {
+        console.log(prop.dots[0].dot_icon)
+        if (prop.dots[0].dot_icon === null) {
+            return null
+        }
+
+        return <img src={WINDOW_LOCATION + "/get-icon/" + prop.dots[0].dot_icon.id + "?token=" + token} alt="Image"  height={24}/>
+    }
+
     return(
         <>
         <Table striped bordered hover>
@@ -165,7 +174,7 @@ const AdminPropsPage = (_props) => {
                             <td><div className={CELL_STYLE}> <Boolean state={prop.is_locked}/> </div></td>
                             <td><div className={CELL_STYLE}> <Boolean state={prop.is_stationary}/> </div></td>
                             <td><div className={CELL_STYLE}> {convertIndicesListToRangeString(prop.dots, sets)} </div></td>
-                            <td><div className={CELL_STYLE}> <img src={WINDOW_LOCATION + "/get-icon/" + prop.dots[0].dot_icon.id + "?token=" + token} alt="Image"  height={24}/> </div></td>
+                            <td><div className={CELL_STYLE}> {getIconImage(prop)} </div></td>
                             <td><div className={CELL_STYLE}>
                                 {
                                     prop.is_stationary ?

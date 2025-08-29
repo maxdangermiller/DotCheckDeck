@@ -40,7 +40,7 @@ const NormalViewer = (props) => {
     const setInputRef = useRef(null);
 	const canvasRef = useRef(null);
     const showDisplayRef = useRef(null);
-	const animationRef = useRef(null);  // Store the current animation timeout ID
+	const animationRef = useRef(null);  // Store the current animation timeout ID and the target timestamp ie {'timeout': 649, 'target_timestamp': 532404}
     const { navbarRef } = props;
 
 
@@ -108,6 +108,22 @@ const NormalViewer = (props) => {
     }
 
 	/**
+	 * Get Current Animation Set Number
+	 * @returns {String} set number
+	 */
+	const getCurAnimationSetNumb = () => {
+		if (isAnimating()) {
+			const target_timestamp = animationRef.current.target_timestamp;
+			const set = localDataHandler.sets.find((set) => set.start_time_code <= target_timestamp && target_timestamp + 1 < set.end_time_code);
+
+			setCurSetState(set.show_index);
+			return set.set_numb;
+		}
+
+		return getCurSetNumb();
+	}
+
+	/**
 	 * Set the current set index
 	 * @description This function sets the current set index to the given index.
 	 * It also updates the current show timestamp to the start time code of the new set.
@@ -138,6 +154,10 @@ const NormalViewer = (props) => {
         }
     }
 
+	const isAnimating = () => {
+		return animationRef.current !== null;
+	}
+
 	/**
 	 * 
 	 * @param {Integer} cur_set_index 
@@ -150,18 +170,19 @@ const NormalViewer = (props) => {
 		const nextSet = localDataHandler.sets[next_set_index];
 		
 		if (curSet === undefined || nextSet === undefined) {
-			console.error("Current or next set is undefined, cannot animate");
+			console.error("[NormalViewer > animateSet()]Current or next set is undefined, or target set is out of range, cannot animate");
 			return;
 		}
 		
 		// let start_time_code = curSet.start_time_code;
 		let start_time_code = curShowTimestamp;
 		let end_time_code = nextSet.start_time_code;
-		console.log("Starting animation from set " + cur_set_index + " to set " + next_set_index, start_time_code, nextSet);
+		console.log("Starting animation from set " + cur_set_index + " to set " + next_set_index, start_time_code);
 
-		if (cur_set_index > next_set_index) {
-			// start_time_code = curSet.start_time_code;
-			// end_time_code = nextSet.start_time_code;
+
+		if (cur_set_index === 0) {
+			setShowTimestamp(end_time_code);
+			return;
 		}
 
 		const step_delta = (end_time_code - start_time_code) / steps;
@@ -180,14 +201,22 @@ const NormalViewer = (props) => {
 			const newTime = start_time_code + (step_delta * currentStep);
 			setShowTimestamp(newTime);
 
-			animationRef.current = setTimeout(() => animate(currentStep + 1), step_time);
+			const newRef = {
+				'timeout': setTimeout(() => animate(currentStep + 1), step_time), 
+				'target_timestamp': end_time_code
+			}
+
+			animationRef.current = newRef;
+			// console.log(animationRef.current)
 		}
 
 		// Clear any previous animation timeout
 		// This ensures that if the function is called multiple times, the previous animation is cancelled
 		// This is important to prevent multiple animations from running at the same time
 		// and causing unexpected behavior
-		clearTimeout(animationRef.current);
+		if (animationRef.current !== null) {
+			clearTimeout(animationRef.current.timeout);
+		}
 
 		// Start the animation
 		animate(0);
@@ -219,7 +248,7 @@ const NormalViewer = (props) => {
 			return false;
 		}
 
-		if (animationRef.current === null) {
+		if (!isAnimating()) {
 			setShowTimestamp(timestamp);
 			return true;
 		} else {
@@ -338,7 +367,8 @@ const NormalViewer = (props) => {
                 setCurSet={setCurSet}
 				defaultAnimateSet={defaultAnimateSet}
                 getSetName={getSetName}
-                getCurSetNumb={getCurSetNumb}
+                getCurSetNumb={getCurAnimationSetNumb}
+				getCurAnimationSet={getCurAnimationSetNumb}
 
 				audio={audio}
 				audioPlaying={audioPlaying}
@@ -346,6 +376,7 @@ const NormalViewer = (props) => {
 
                 curShowTimestamp={curShowTimestamp}
 				audioTimestampUpdate={audioTimestampUpdate}
+				isAnimating={isAnimating}
 
 				localDataHandler={localDataHandler}
 				userOptions={userOptionsHandler}
