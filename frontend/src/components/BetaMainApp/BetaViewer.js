@@ -45,9 +45,7 @@ const BetaViewer = (props) => {
      * Fetch the newest update timestamps!
      */
 	const getDatabaseVersion = () => {
-        const { localTimestamp, localSNTimestamp } = localDataHandler.getLocalTimestamps();
-
-		// console.log(localTimestamp, localSNTimestamp);
+        const [ localTimestamp, localSNTimestamp ] = localDataHandler.getLocalTimestamps();
 
 		if (isOffline) {
 			console.log("Detected offline usage")
@@ -62,12 +60,9 @@ const BetaViewer = (props) => {
 
 		// If we just updated less than MIN_TIMESTAMP_INTERVAL seconds ago, don't update
 		let curTime = (new Date()).getTime();
+
+		// If we haven't met the minimum interval then we won't worry about it
 		if (curTime - lastCheckedVersionTime <= MIN_TIMESTAMP_INTERVAL) { 
-			if (localTimestamp !== localDataHandler.curDatabaseTimestamp || localSNTimestamp !== localDataHandler.curDatabaseSNTimestamp) {
-				console.log("Using old data")
-				localDataHandler.setCurDatabaseTimestamp(localTimestamp);
-				localDataHandler.setCurDatabaseSNTimestamp(localSNTimestamp);
-			}
 			return;
 		}
 
@@ -78,12 +73,17 @@ const BetaViewer = (props) => {
 
 		setShowUpdatePrompt(false);
 
-		console.log("Getting updated database version")
+		console.log("(getDatabaseVersion) -> Fetching updated database version")
+
+		// Fetch the database version from the backend server
 		fetch(WINDOW_LOCATION + "/database-version?show_code=" + showCode + "&token=" + token)
 			.then(res => res.json())
 			.then(
 				(result) => {
 					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
+					setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
+
+					/*
 
 					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
 						console.log(localTimestamp, localSNTimestamp)
@@ -95,8 +95,7 @@ const BetaViewer = (props) => {
 
 						if (localTimestamp !== localDataHandler.curDatabaseTimestamp || localSNTimestamp !== localDataHandler.curDatabaseSNTimestamp) {
 							console.log("Using old data")
-							localDataHandler.setCurDatabaseTimestamp(localTimestamp);
-							localDataHandler.setCurDatabaseSNTimestamp(localSNTimestamp);
+							localDataHandler.saveCurTimestamps(localTimestamp, localSNTimestamp);
 						}
 					} 
 					else if (localTimestamp !== localDataHandler.curDatabaseTimestamp || localSNTimestamp !== localDataHandler.curDatabaseSNTimestamp) {
@@ -104,7 +103,9 @@ const BetaViewer = (props) => {
 						localDataHandler.setCurDatabaseTimestamp(localTimestamp);
                     	localDataHandler.setCurDatabaseSNTimestamp(localSNTimestamp);
 					}
+					*/
 
+					// Set our last checked time to the current time
 					lastCheckedVersionTime = curTime;
 				},
 				// Note: it's important to handle errors here
@@ -123,11 +124,12 @@ const BetaViewer = (props) => {
      * @param {String} show_code 
      * @param {String} _token 
      * @param {Integer} data_section starting at 0
+	 * @param {Integer} database_version database timestamp
      * @returns {AxiosPromise} axios request
      */
-    const retrieveDataFromAPI = (show_code, _token, data_section) => {
+    const retrieveDataFromAPI = (show_code, _token, data_section, database_version) => {
         const url = WINDOW_LOCATION + "/api/get-data?show_code=" + show_code 
-			+ "&data_section=" + data_section + "&token=" + _token;
+			+ "&data_section=" + data_section + "&database_version=" + database_version + "&token=" + _token;
 			
         return axios({
             method: "GET",
@@ -153,7 +155,7 @@ const BetaViewer = (props) => {
         try {
 			// console.log("Retrieving Data Section " + dataSection);
 
-            retrieveDataFromAPI(showCode, token, dataSection).then((response) => {     
+            retrieveDataFromAPI(showCode, token, dataSection, timestamp).then((response) => {     
 
                 // Test if everything is loaded
                 if (response.data.error !== undefined && response.data.error === "Data Section Out Of Range")  {
@@ -249,28 +251,57 @@ const BetaViewer = (props) => {
 
     /**
      * Start Captive Download
+	 * @param {Integer} cur_timestamp
      */
-    const startCaptiveDownload = (timestamp) => {
+    const startCaptiveDownload = (cur_timestamp) => {
 		if (localDataHandler.data.length !== 0) {
 			// TODO: Remove
 			console.log("PREVENTING NEW DOWNLOAD!")
 			return
 		}
+
         console.log("Starting Captive Download")
         setIsDownloading(true);
 		setDownloadingProgress(0);
 
 		try {
-			captiveDownload([], timestamp, 0);
+			// captiveDownload([], cur_timestamp, 0);
 		} catch (error) {
 			window.location.href = "/error?message=An Unknown Error occurred. Press 'Go Back' to return&return=/app";
 		}
     }
 
+	// When the newest timestamps changes, this checks if they're different from what is currently displayed
     useEffect(() => {
-		startCaptiveDownload(-1);
+		// If there aren't new timestamps, don't worry about doing anything
+		if (newestTimestamps["data"] === -1) {
+			return;
+		}
+
+		// Check if the timestamps match and that there's valid data. 
+		// If it is valid it will then be automatically loaded
+		if (localDataHandler.checkLocalData(newestTimestamps["data"])) {
+			console.log("Everything looks fine and dandy")
+		}
+		else {
+			console.log("Something is wrong with the local saved data");
+			startCaptiveDownload(localDataHandler.curDatabaseTimestamp);
+		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [newestTimestamps]);
+
+	// On component mount, get the latest version of the database
+	useEffect(() => {
+		getDatabaseVersion();
 	}, []);
+
+
+	if (newestTimestamps["data"] === -1) {
+		return <div className="d-flex flex-column justify-content-center align-items-center fullScreen">
+			Silly
+		</div>
+	}
 
 
 

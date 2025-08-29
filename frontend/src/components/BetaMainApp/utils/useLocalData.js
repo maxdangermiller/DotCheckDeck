@@ -29,6 +29,7 @@ function useLocalData(isOffline) {
 				if (parsedSets.length === 0) { return false; }
 
 				// Check version number
+				/*
 				if (!isOffline) {
 					for (let i = 0; i < parsedSets.length; i++) {
 						let timestamp = parsedSets[i].update_timestamp;
@@ -38,22 +39,38 @@ function useLocalData(isOffline) {
 						}
 					}
 				}
+				*/
 
 				console.log("USING LOCAL SETS!", parsedSets);
 				setSets(parsedSets);
 				return true;
 			}
+
+			console.warn("(useLocalData.checkLocalSets) > Rejecting local sets because they DON'T EXIST");
 			return false;
 		} catch {
+			console.warn("(useLocalData.checkLocalSets) > Rejecting local sets because it CAUSED AN ERROR");
 			return false;
 		}
 	}
 
+	const getLocalSets = () => {
+		let localSets = window.localStorage.getItem(LOCAL_SETS_KEY);
+		return JSON.parse(localSets);
+	}
+
     /**
      * Grabs data from local storage and saves them to the data state object
+	 * @param {Integer} target_timestamp
      * @returns {boolean} should be updating?
      */
-	const checkLocalData = () => {
+	const checkLocalData = (target_timestamp) => {
+
+		if (sets.length === 0 && !checkLocalSets()) {
+			console.warn("(useLocalData.checkLocalData) > Rejecting local data because it has NO LOCAL SETS");
+			return false;
+		}
+
 		let localData = window.localStorage.getItem(LOCAL_DATA_KEY);
 		try {
 			if (localData !== "" && localData !== null) {
@@ -61,19 +78,45 @@ function useLocalData(isOffline) {
 
 				// Check version number
 				if (!isOffline) {
-					for (let i = 0; i < parsedData.length; i++) {
-						let timestamp = parsedData[i].update_timestamp;
-						if (timestamp !== curDatabaseTimestamp) {
-							console.log("Found timestamp of: " + timestamp + ", when the current timestamp is: " + curDatabaseTimestamp)
-							// Start UPDATING THOSE SETS
-							return false;
-						}
+					const [ ts, snTS ] = getLocalTimestamps();
+
+					if (ts !== target_timestamp) {
+						console.warn(
+							"(useLocalData.checkLocalData) > Rejecting local data because it's timestamp of", 
+							ts, 
+							"does not match the target timestamp of",
+							target_timestamp
+						);
+						return false;
 					}
 				}
 
-				if (parsedData.length < sets.length || sets.length === 0) {
-					console.log("USING INCOMPLETE LOCAL DATA!", parsedData.length, sets.length);
-					// setData(parsedData);
+				let num_sets = sets.length;
+
+				if (num_sets === 0) {
+					// If the sets haven't been loaded yet, go ahead and load it
+					if (!checkLocalSets()) {
+						console.warn("(useLocalData.checkLocalData) > Rejecting local data because it has NO LOCAL SETS");
+						return false;
+					}
+					num_sets = getLocalSets().length;
+				}
+
+				// Check to see if we have all the dot links we should
+				let n = 0;		// Counter to keep track of missing dot_links
+				
+				// First loop through each show_user
+				for (let i = 0; i < parsedData.length; i++) {
+					const show_user_data = parsedData[i];
+					const dot_links = show_user_data["dot_links"];
+
+					if (dot_links.length < sets.length) {
+						n++
+					}
+				}
+
+				if (n > 0) {
+					console.warn("(useLocalData.checkLocalData) > Rejecting local data because it is MISSING", n, "DOT LINKS");
 					return false;
 				}
 
@@ -82,8 +125,11 @@ function useLocalData(isOffline) {
 
 				return true;
 			}
+
+			console.warn("(useLocalData.checkLocalData) > Rejecting local data because it DOESN'T EXIST");
 			return false;
 		} catch {
+			console.warn("(useLocalData.checkLocalData) > Rejecting local data because it CAUSED AN ERROR");
 			return false;
 		}
 	}
@@ -259,9 +305,16 @@ function useLocalData(isOffline) {
      */
     const getLocalTimestamps = () => {
         try {
+			console.log(parseInt(localStorage.getItem(LOCAL_TIME_KEY)))
 			const localTimestamp = parseInt(localStorage.getItem(LOCAL_TIME_KEY));
             const localSNTimestamp = parseInt(localStorage.getItem(LOCAL_SN_TIME_KEY));
-			return { localTimestamp: localTimestamp, localSNTimestamp: localSNTimestamp }; 
+
+			// If we're loading the timestamps, it makes sense to also update the state variable
+			// TODO: Confirm this doesn't break anything 
+			setCurDatabaseTimestamp(localTimestamp);
+			setCurDatabaseSNTimestamp(localSNTimestamp);
+
+			return [ localTimestamp, localSNTimestamp ]; 
 		} catch (error) {
 			console.log("NO SAVED TIMESTAMP!");
 		}

@@ -6,7 +6,6 @@ import NormalViewerSideBar from './SideBar/NormalViewerSideBar';
 
 // Utilities
 import getApi from '../../utils/getApi';
-import axios from "axios";
 
 
 // Styling
@@ -299,22 +298,13 @@ const NormalViewer = (props) => {
     	return set_numb;
     }
     const getSetName = () => {
-        return "NO NAME"
+        return "NO NAME";
     }
-
-    // TODO: REMOVE - for testing only
-    useEffect(() => {
-        if (showDisplayRef !== null) {
-            const data = localDataHandler.data;
-
-            showDisplayRef.current.update_show_display(data)
-        }
-    }, [showDisplayRef]);
 
     useEffect(() => {
         // console.log("Show Timestamp Update: ", curShowTimestamp);
-
 		getCurSet();
+		showDisplayRef.current.update_show_display(localDataHandler.data)
     }, [curShowTimestamp]);
 
     useEffect(() => {
