@@ -1,6 +1,5 @@
-from database import ma, db
+from database import db
 from cache import regions, CacheableMixin, query_callable
-from datetime import datetime
 from database.utils import generateUpdateCode
 import random
 import string
@@ -41,13 +40,12 @@ class Show(CacheableMixin, db.Model):
 
 	def changeUpdateTime(self):
 		newUpdateCode = generateUpdateCode()
-		print("UPDATE!!!!!!", newUpdateCode)
+		print(f"(Show: {self.name}) >  created new update code of {newUpdateCode}")
 		self.last_update = newUpdateCode
-		# addUpdate(self, newUpdateCode)
 	
 	def changeSetNameUpdateTime(self):
 		newUpdateCode = generateUpdateCode()
-		print("UPDATE!!!!!!", newUpdateCode)
+		print(f"(Show: {self.name}) >  created new SET NAME update code of {newUpdateCode}")
 		self.last_set_name_update = newUpdateCode
 	
 	def __repr__(self):

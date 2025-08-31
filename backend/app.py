@@ -31,7 +31,7 @@ from database.show import Show
 from database.school import School
 from database.schemas import DotSchema, DotIconSchema, SetNameSchema, SetSchema, BandSectionSchema, ShowUserSchema, UserSchema, ShowSchema, SchoolSchema
 
-from api.apiGetData import APIGetData
+from api.apiGetData import APIGetData, APIGetUpdates
 
 # TODO: Redis Queue
 # from rq import Queue
@@ -2779,6 +2779,7 @@ api.add_resource(GetSectionsResource, '/get-sections')
 # V2 Data Handling
 # TODO: Implement
 api.add_resource(APIGetData, "/api/get-data")
+api.add_resource(APIGetUpdates, "/api/get-updates")
 
 # Auth
 api.add_resource(ShowCodeAuthResource, '/show-code-auth')

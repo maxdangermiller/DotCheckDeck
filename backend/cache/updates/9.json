@@ -1,0 +1,12 @@
+[
+    {
+        "databaseVersion": 462040775,
+        "time": "2025-08-31 15:36:04",
+        "updates": [
+            {
+                "updateType": "BAND_SECTION",
+                "updateObj": "<class 'dict'>: {'color_g': 74, 'school_id': 1, 'show_id': 9, 'created_date': '2025-08-28T07:45:01', 'name': 'Battery', 'id': 64, 'color_b': 155, 'set_names': {}, 'last_updated': 740073170, 'last_updated_date': '2025-08-28T08:43:58.924252', 'color_r': 47}"
+            }
+        ]
+    }
+]

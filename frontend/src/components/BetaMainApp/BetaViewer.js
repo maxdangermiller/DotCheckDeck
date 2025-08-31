@@ -80,30 +80,10 @@ const BetaViewer = (props) => {
 			.then(res => res.json())
 			.then(
 				(result) => {
-					console.log("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
+					console.debug("(getDatabaseVersion) -> ", result.timestamp, result.set_name_timestamp)
+
+					// Save the timestamps
 					setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
-
-					/*
-
-					if (localTimestamp === null || localSNTimestamp === null || isNaN(localTimestamp) || isNaN(localSNTimestamp)) {
-						console.log(localTimestamp, localSNTimestamp)
-						localDataHandler.saveCurTimestamps(result.timestamp, result.set_name_timestamp);
-					}
-					else if (localTimestamp !== result.timestamp || localSNTimestamp !== result.set_name_timestamp) {
-						setShowUpdatePrompt(true);
-					 	setNewestTimestamps({data: result.timestamp, sn: result.set_name_timestamp});
-
-						if (localTimestamp !== localDataHandler.curDatabaseTimestamp || localSNTimestamp !== localDataHandler.curDatabaseSNTimestamp) {
-							console.log("Using old data")
-							localDataHandler.saveCurTimestamps(localTimestamp, localSNTimestamp);
-						}
-					} 
-					else if (localTimestamp !== localDataHandler.curDatabaseTimestamp || localSNTimestamp !== localDataHandler.curDatabaseSNTimestamp) {
-						console.log("Using old data")
-						localDataHandler.setCurDatabaseTimestamp(localTimestamp);
-                    	localDataHandler.setCurDatabaseSNTimestamp(localSNTimestamp);
-					}
-					*/
 
 					// Set our last checked time to the current time
 					lastCheckedVersionTime = curTime;
@@ -128,8 +108,15 @@ const BetaViewer = (props) => {
      * @returns {AxiosPromise} axios request
      */
     const retrieveDataFromAPI = (show_code, _token, data_section, database_version) => {
+		let v = database_version;
+
+		// Make sure we don't get a non existent number
+		if (Number.isNaN(database_version)) {
+			v = -1;
+		}  
+
         const url = WINDOW_LOCATION + "/api/get-data?show_code=" + show_code 
-			+ "&data_section=" + data_section + "&database_version=" + database_version + "&token=" + _token;
+			+ "&data_section=" + data_section + "&database_version=" + v + "&token=" + _token;
 			
         return axios({
             method: "GET",
@@ -243,6 +230,7 @@ const BetaViewer = (props) => {
                 }
             })
         } catch (error) {
+			console.error(error)
             window.location.href = "/error?message=An Unknown Problem Occurred (Captive Download Error 10). \r\nIt is recommended to press the 'Reset Client' button&return=/app";
         }
 
@@ -260,12 +248,12 @@ const BetaViewer = (props) => {
 			return
 		}
 
-        console.log("Starting Captive Download")
-        setIsDownloading(true);
-		setDownloadingProgress(0);
-
 		try {
-			// captiveDownload([], cur_timestamp, 0);
+			console.log("Starting Captive Download")
+			setIsDownloading(true);
+			setDownloadingProgress(0);
+
+			captiveDownload([], cur_timestamp, 0);
 		} catch (error) {
 			window.location.href = "/error?message=An Unknown Error occurred. Press 'Go Back' to return&return=/app";
 		}
@@ -281,7 +269,7 @@ const BetaViewer = (props) => {
 		// Check if the timestamps match and that there's valid data. 
 		// If it is valid it will then be automatically loaded
 		if (localDataHandler.checkLocalData(newestTimestamps["data"])) {
-			console.log("Everything looks fine and dandy")
+			console.log("Everything looks fine and dandy", localDataHandler.data)
 		}
 		else {
 			console.log("Something is wrong with the local saved data");
@@ -341,7 +329,7 @@ const BetaViewer = (props) => {
 				/>
 				<UpdatePrompt
 					show={showUpdatePrompt}
-					setShow={setShowUpdatePrompt}
+					setShow={setShowUpdatePrompt}   
 					update={changeTimestampsToNewUpdate}
 				/>
                 */}

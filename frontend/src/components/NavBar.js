@@ -39,7 +39,7 @@ const NavBar = (props) => {
 						: null
 					}
 					<Nav.Link href="/about">About Us</Nav.Link>
-					<Nav.Link href="/beta/viewer">Beta</Nav.Link>
+					<Nav.Link href="/beta/app">Beta</Nav.Link>
 				</Nav>
 				<Nav className="mr-auto">
 					{

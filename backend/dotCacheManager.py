@@ -1,6 +1,7 @@
 from enum import Enum
 from datetime import datetime
 import pytz
+import json
 
 from database.show import Show
 
@@ -26,7 +27,7 @@ class UpdateType(Enum):
 	MAJOR_UPDATE = 9
 
 class Update:
-	def __init__(self, updateType: UpdateType, updateObj: any) -> None:
+	def __init__(self, updateType: UpdateType, updateObj: any) -> None: # type: ignore
 		self.updateType = updateType
 		self.updateObj = updateObj
 	
@@ -35,6 +36,12 @@ class Update:
 	
 	def __repr__(self) -> str:
 		return self.__str__()
+	
+	def to_dict(self):
+		return {
+			"updateType": self.updateType.name,
+			"updateObj": f"{type(self.updateObj)}: {self.updateObj}"
+		}
 
 class ShowUpdate:
 	def __init__(self, databaseVersion: int, updates: list[Update]) -> None:
@@ -47,6 +54,35 @@ class ShowUpdate:
 	
 	def __repr__(self) -> str:
 		return self.__str__()
+	
+	def to_dict(self):
+		dict_updates = []
+
+		for update in self.updates:
+			dict_updates.append(update.to_dict())
+
+		return {
+			"databaseVersion": self.databaseVersion,
+			"time": self.time.strftime("%Y-%m-%d %H:%M:%S"),
+			"updates": dict_updates
+		}
+
+
+def storeUpdate(show:Show, update:ShowUpdate):
+	file_path = f"./cache/updates/{show.id}.json"
+
+	try:
+		with open(file_path, 'r') as f:
+			data = json.load(f)
+	except (FileNotFoundError, json.JSONDecodeError):
+		# Initialize as an empty list if the JSON file is expected to be an array
+		data = []
+	
+	data.append(update.to_dict())
+
+	with open(file_path, 'w') as f:
+		json.dump(data, f, indent=4) # indent for readability
+
 
 # Add an update tracker
 # Called when there's a change made
@@ -81,6 +117,7 @@ def addUpdate(updateShow: Show, databaseVersion: int, updates: list[Update]):
 
 	print("\r\nMaking new update: ", update)
 	show_update_reference.append(update)
+	storeUpdate(show=updateShow, update=newUpdateObj)
 
 """
 def getUpdatesForShow(show: Show) -> list[ShowUpdate]:
@@ -127,7 +164,7 @@ def getUpdatesForShow(show: Show, sinceVersion=-1) -> list[ShowUpdate]:
 	
 	return since_version_updates
 
-def getUpdateCodeTime(show: Show, databaseVersion: int) -> int:
+def getUpdateCodeTime(show: Show, databaseVersion: int):
 	showUpdates = getUpdatesForShow(show)
 
 	for showUpdate in showUpdates:

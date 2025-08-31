@@ -28,20 +28,7 @@ function useLocalData(isOffline) {
 				if (parsedSets === undefined) { return false; }
 				if (parsedSets.length === 0) { return false; }
 
-				// Check version number
-				/*
-				if (!isOffline) {
-					for (let i = 0; i < parsedSets.length; i++) {
-						let timestamp = parsedSets[i].update_timestamp;
-						if (timestamp !== curDatabaseTimestamp) {
-							// Start UPDATING THOSE SETS
-							return false;
-						}
-					}
-				}
-				*/
-
-				console.log("USING LOCAL SETS!", parsedSets);
+				// console.log("USING LOCAL SETS!", parsedSets);
 				setSets(parsedSets);
 				return true;
 			}
@@ -305,14 +292,17 @@ function useLocalData(isOffline) {
      */
     const getLocalTimestamps = () => {
         try {
-			console.log(parseInt(localStorage.getItem(LOCAL_TIME_KEY)))
 			const localTimestamp = parseInt(localStorage.getItem(LOCAL_TIME_KEY));
             const localSNTimestamp = parseInt(localStorage.getItem(LOCAL_SN_TIME_KEY));
 
 			// If we're loading the timestamps, it makes sense to also update the state variable
 			// TODO: Confirm this doesn't break anything 
-			setCurDatabaseTimestamp(localTimestamp);
-			setCurDatabaseSNTimestamp(localSNTimestamp);
+			if (localTimestamp !== NaN && localSNTimestamp !== NaN) {
+				setCurDatabaseTimestamp(localTimestamp);
+				setCurDatabaseSNTimestamp(localSNTimestamp);
+			} else {
+				return [ -1, -1 ]
+			}
 
 			return [ localTimestamp, localSNTimestamp ]; 
 		} catch (error) {

@@ -299,6 +299,7 @@ const NormalViewer = (props) => {
     }
     const getSetName = () => {
         return "NO NAME";
+		
     }
 
     useEffect(() => {
@@ -307,14 +308,13 @@ const NormalViewer = (props) => {
 		showDisplayRef.current.update_show_display(localDataHandler.data)
     }, [curShowTimestamp]);
 
+	// Once everything is loaded, set the current set state to the first set
     useEffect(() => {
-		// Once everything is loaded, set the current set state to the first set
 		if (curSetState === -1 && localDataHandler.sets.length !== 0 && localDataHandler.data.length !== 0)	{
 			setCurSetState(0);
 			setShowTimestamp(1);
 		}
-    }
-    , [localDataHandler.sets, localDataHandler.data]);
+    }, [localDataHandler.sets, localDataHandler.data]);
 
 	// Get Audio From API
 	useEffect(() => {

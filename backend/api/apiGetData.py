@@ -516,7 +516,6 @@ def getBufferedDotsNew(show: Show, dataSection: int, userDatabaseVersion: int):
 		return getShowData(show)
 
 
-
 class APIGetData(Resource):
 	@jwt_required()
 	def get(self):
@@ -538,4 +537,31 @@ class APIGetData(Resource):
 			return "INVALID SHOW CODE", 404
 
 		return getBufferedDotsNew(show, dataSection, userDatabaseVersion), 200
-	
+
+
+class APIGetUpdates(Resource):
+	@jwt_required()
+	def get(self):
+		showCode = request.args.get('show_code', None)
+		userDatabaseVersion = int(request.args.get('database_version', -1))
+
+		# REQUIRE A SHOW CODE
+		if showCode is None:
+			return "Missing Show Code", 404
+		
+		# Attempt to load the Show with that code
+		show = Show.query.filter(Show.code == showCode).first()
+
+		# Check to see if we got a show obj
+		if show is None:
+			return "INVALID SHOW CODE", 404
+		
+		updates = dotCacheManager.getUpdatesForShow(show, sinceVersion=userDatabaseVersion)
+		print(updates)
+		out = []
+
+		for update in updates:
+			out.append({"database_version": update.databaseVersion, "time": update.time})
+		
+		return out, 200
+		
