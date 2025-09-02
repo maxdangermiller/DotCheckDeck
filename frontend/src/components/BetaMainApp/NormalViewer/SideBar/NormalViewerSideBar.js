@@ -12,30 +12,12 @@ import NotesModel from './ViewerSideBarComponents/NotesModel';
 import AdminNotesModel from './ViewerSideBarComponents/AdminNotesModel';
 import AudioPlayer from './ViewerSideBarComponents/AudioPlayer';
 
-// Settings
-import {ReactComponent as SettingsIcon} from '../../../icons/circle-gear.svg';
-// Sets/counts display modes
-import {ReactComponent as DisplayModeIconSets} from '../../../icons/display-mode-icon-s.svg';
-import {ReactComponent as DisplayModeIconCounts} from '../../../icons/display-mode-icon-c.svg';
-// Rehearsal Mode
-import {ReactComponent as RehearsalModeIcon} from '../../../icons/hourglass-half.svg';
-// Edit
-import {ReactComponent as EditSetIcon} from '../../../icons/pencil.svg';
-// Notes
-import {ReactComponent as NotesIcon} from '../../../icons/book.svg';
-// Dot Cords (?)
-import {ReactComponent as ShowDotCordsIcon} from '../../../icons/question.svg';
 */
 
+import { SettingsButton, DisplayModeButton, RehearsalModeButton, EditSetButton, NotesButton, DotCordsButton } from './SideBarButtons';
+import { DisplayMode } from '../normal_viewer_utils'
+
 import 'bootstrap/dist/css/bootstrap.css';
-
-
-const NORMAL_BTN_COLOR = "#474747";
-const NOT_FOLLOWING_USER_COLOR = "#474747";
-const FOLLOWING_USER_COLOR = "#ECA72C";
-const NOTES_AVAILABLE_COLOR = "#047d5d";
-const REHEARSAL_MODE_COLOR = "#824C71";
-const NOT_REHEARSAL_MODE_COLOR = "#4A2545";
 
 
 const NormalViewerSideBar = (props) => {
@@ -59,13 +41,22 @@ const NormalViewerSideBar = (props) => {
         audioTimestampUpdate,
         isAnimating,
 
+
         localDataHandler,
-        userOptions,
+        userOptionsHandler,
         
         sets
     } = props;
 
     const [animateTarget, setAnimateTarget] = useState(0);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showEditSetName, setShowEditSetName] = useState(false);
+    const [showNotes, setShowNotes] = useState(false);
+    const [tempCurSetInfo, setTempCurSetInfo] = useState({});
+    
+    // Expose user options for various child components
+    const { setUserOptions, userOptions } = userOptionsHandler;
+
 
     const handelSetBtnControls = (modifier) => {
         let target = 0;
@@ -79,7 +70,15 @@ const NormalViewerSideBar = (props) => {
         console.log("handelSetBtnControls called with modifier:", modifier, ". Targeting: ", animateTarget);
         defaultAnimateSet(target);
     }
-   
+
+    const getDisplayMode = () => {
+        return userOptions.displayMode;
+    }
+
+    const setDisplayMode = (mode) => {
+        setUserOptions({...userOptions,  "displayMode": mode});
+    }
+
 
     return (
         <>
@@ -104,18 +103,20 @@ const NormalViewerSideBar = (props) => {
                     handelSetBtnControls={handelSetBtnControls}
                     sets={sets}
                     curSetState={curSetState}
-                    userOptions={userOptions}
+                    userOptionsHandler={userOptionsHandler}
                 />
-
-                <button onClick={() => setCurSet(curSetState+1)}> Next</button>
 
                 <div className='optionsDiv'>
                     <div className='optionsDivRow'>
-
+                        <SettingsButton setShowSettings={setShowSettings}/>
+                        <DisplayModeButton getDisplayMode={getDisplayMode} setDisplayMode={setDisplayMode} />
+                        <RehearsalModeButton />
                     </div>
 
                     <div className='optionsDivRow'>
-
+                        <EditSetButton isOffline={false} openEditSetName={() => {}} localDataHandler={localDataHandler} />
+                        <NotesButton curSetInfo={{}} setShowNotes={() => {}} />
+                        <DotCordsButton userOptions={userOptions} setFollowingUser={() => {}} />
                     </div>
                 </div>
             </div>
@@ -159,5 +160,7 @@ const NormalViewerSideBar = (props) => {
         </>
     );
 };
+
+
 
 export default NormalViewerSideBar;

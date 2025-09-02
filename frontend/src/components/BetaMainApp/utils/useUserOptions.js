@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+import { DisplayMode } from '../NormalViewer/normal_viewer_utils';
+
 const LOCAL_USER_OPTIONS_KEY = "beta-local-user-options";
 
 const DEFAULT_USER_OPTIONS = {
@@ -10,7 +12,7 @@ const DEFAULT_USER_OPTIONS = {
 	"moveSpeed": 10, "useActualSetLength": false,
 	"dimOtherUsers": false, "showCollegeHash": true,
 	"followingUser": false, "useCollegeHash": false,
-	"basicUseCollegeHash": false, "displayMode": 0
+	"basicUseCollegeHash": false, "displayMode": DisplayMode.SETS_MODE
 };
 
 // Display Mode: 0="sets" 1="counts"

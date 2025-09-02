@@ -10,7 +10,7 @@ const ShowController = (props) => {
     const {
         curShowTimestamp, audioTimestampUpdate, audio, 
         audioPlaying, setAudioPlaying, updateSetBasedOnAudioTime, 
-        handelSetBtnControls, sets, curSetState, userOptions
+        handelSetBtnControls, sets, curSetState, userOptionsHandler
     } = props;
 
     /**

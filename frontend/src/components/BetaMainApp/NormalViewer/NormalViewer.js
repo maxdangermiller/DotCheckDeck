@@ -6,6 +6,7 @@ import NormalViewerSideBar from './SideBar/NormalViewerSideBar';
 
 // Utilities
 import getApi from '../../utils/getApi';
+import { DisplayMode } from './normal_viewer_utils'
 
 
 // Styling
@@ -34,6 +35,7 @@ const NormalViewer = (props) => {
 	const [curShowTimestamp, setShowTimestamp] = useState(0);                                   // Current timestamp in the Show
 	const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);     // Check if we're in landscape
 	const [hoverUserInfo, setHoverUserInfo] = useState({show: false, dot: null});               // Store Data about the user that's being hovered over (ie Name & Label)
+
 
     // Refs
     const setInputRef = useRef(null);
@@ -186,6 +188,9 @@ const NormalViewer = (props) => {
 
 		const step_delta = (end_time_code - start_time_code) / steps;
 		const animate = (currentStep) => {
+			// If the current step has exceeded or is equal to the number of steps, 
+			// then just set the show timestamp to whatever the last step is supposed to be.
+			// Then end the animation.
 			if (currentStep >= steps) {
 				setShowTimestamp(end_time_code);
 
@@ -197,16 +202,17 @@ const NormalViewer = (props) => {
 				animationRef.current = null;
 				return;
 			}
+
+			// Otherwise take another step
+
 			const newTime = start_time_code + (step_delta * currentStep);
 			setShowTimestamp(newTime);
 
-			const newRef = {
+			// Create a new reference
+			animationRef.current = {
 				'timeout': setTimeout(() => animate(currentStep + 1), step_time), 
 				'target_timestamp': end_time_code
 			}
-
-			animationRef.current = newRef;
-			// console.log(animationRef.current)
 		}
 
 		// Clear any previous animation timeout
@@ -299,7 +305,6 @@ const NormalViewer = (props) => {
     }
     const getSetName = () => {
         return "NO NAME";
-		
     }
 
     useEffect(() => {
@@ -308,13 +313,14 @@ const NormalViewer = (props) => {
 		showDisplayRef.current.update_show_display(localDataHandler.data)
     }, [curShowTimestamp]);
 
-	// Once everything is loaded, set the current set state to the first set
     useEffect(() => {
+		// Once everything is loaded, set the current set state to the first set
 		if (curSetState === -1 && localDataHandler.sets.length !== 0 && localDataHandler.data.length !== 0)	{
 			setCurSetState(0);
 			setShowTimestamp(1);
 		}
-    }, [localDataHandler.sets, localDataHandler.data]);
+    }
+    , [localDataHandler.sets, localDataHandler.data]);
 
 	// Get Audio From API
 	useEffect(() => {
@@ -369,7 +375,7 @@ const NormalViewer = (props) => {
 				isAnimating={isAnimating}
 
 				localDataHandler={localDataHandler}
-				userOptions={userOptionsHandler}
+				userOptionsHandler={userOptionsHandler}
 
 				sets={localDataHandler.sets}
 			/>
