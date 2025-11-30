@@ -7,12 +7,17 @@ import NormalViewerSideBar from './SideBar/NormalViewerSideBar';
 // Utilities
 import getApi from '../../utils/getApi';
 import { DisplayMode } from './normal_viewer_utils'
+import { is_set_motion } from '../utils/dataAlgos';
 
 
 // Styling
 import 'bootstrap/dist/css/bootstrap.css';
 
 const WINDOW_LOCATION = getApi();
+
+// When a user skips a set, how much faster should the animation be than real time?
+const BUTTON_SPEED_MODIFIER = 10;  
+
 
 let audio = null;
 
@@ -180,6 +185,18 @@ const NormalViewer = (props) => {
 		let end_time_code = nextSet.start_time_code;
 		console.log("Starting animation from set " + cur_set_index + " to set " + next_set_index, start_time_code);
 
+		let motion = is_set_motion(localDataHandler.data, cur_set_index, next_set_index);
+		console.log("Motion detected between sets: ", motion);
+
+		if (!motion) {
+			setShowTimestamp(end_time_code);
+
+			// Fire the callback to update the show display
+			if (showDisplayRef.current) {
+				showDisplayRef.current.update_show_display(localDataHandler.data);
+			}
+		}
+
 
 		if (cur_set_index === 0) {
 			setShowTimestamp(end_time_code);
@@ -210,7 +227,7 @@ const NormalViewer = (props) => {
 
 			// Create a new reference
 			animationRef.current = {
-				'timeout': setTimeout(() => animate(currentStep + 1), step_time), 
+				'timeout': setTimeout(() => animate(currentStep + 1), step_time / BUTTON_SPEED_MODIFIER), 
 				'target_timestamp': end_time_code
 			}
 		}

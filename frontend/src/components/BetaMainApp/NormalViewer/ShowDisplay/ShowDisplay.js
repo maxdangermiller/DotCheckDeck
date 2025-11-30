@@ -346,13 +346,14 @@ const ShowDisplay = forwardRef((props, ref) => {
             const curSet = getCurSet();
 
             // Draw all the points
+            // Loop through each show user in the data
             for (let i = 0; i < data.length; i++) {
                 const show_user = data[i];
 
                 const dot_link = show_user.dot_links[curSet];
 
                 if (dot_link === undefined) {
-                    // console.log("Show User ", show_user, " doesn't have a dot link for " + curSet);
+                    console.log("[ShowDisplay.js -> render]: Show User ", show_user, " doesn't have a dot link for " + curSet);
                     continue;
                 }
 
