@@ -15,9 +15,6 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 const WINDOW_LOCATION = getApi();
 
-// When a user skips a set, how much faster should the animation be than real time?
-const BUTTON_SPEED_MODIFIER = 10;  
-
 
 let audio = null;
 
@@ -227,7 +224,7 @@ const NormalViewer = (props) => {
 
 			// Create a new reference
 			animationRef.current = {
-				'timeout': setTimeout(() => animate(currentStep + 1), step_time / BUTTON_SPEED_MODIFIER), 
+				'timeout': setTimeout(() => animate(currentStep + 1), step_time / userOptionsHandler.userOptions.moveSpeed), 
 				'target_timestamp': end_time_code
 			}
 		}

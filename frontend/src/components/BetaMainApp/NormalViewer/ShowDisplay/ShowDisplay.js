@@ -13,6 +13,8 @@ const PREVIOUS_DOT_COLOR = "rgba(100, 0, 0, 0.8)";
 const CURRENT_DOT_COLOR = "rgb(0, 0, 255)";
 const CURRENT_DOT_HIGHLIGHT_COLOR = "rgba(0, 0, 255, 0.4)";
 
+const DOT_RELATIVE_SIZE = 0.006; // As a fraction of the screen height
+
 
 /**
  * ShowDisplay Component
@@ -33,12 +35,18 @@ const ShowDisplay = forwardRef((props, ref) => {
     } = props;
 
 
-    // State
+    /*  ------------------------------  STATE SECTION  ------------------------------- */
+
+    // Display State
     const [curDimensions, setDimensions]  = useState({"w": 0, "h": 0});
     const [cameraZoom, setCameraZoom] = useState(1);
     const [translation, setTranslation] = useState({x: 0, y: 0});
     const [cameraOffset, setCameraOffset] = useState({x: 0, y: 0});
+    const [followDot, setFollowDot] = useState(undefined);
+    const [hoverDot, setHoverDot] = useState(undefined);
 
+
+    // Pan and Zoom State
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [initialPinchDistance, setInitialPinchDistance] = useState(null);
@@ -51,8 +59,10 @@ const ShowDisplay = forwardRef((props, ref) => {
     // Refs
     const canvasRef = useRef(null);
 
+    // Update Canvas Callback
     const update_canvas = (new_dot_links) => {
-
+        // Currently no need to do anything, 
+        // as the render method uses the props directly
     }
 
     /**
@@ -126,7 +136,7 @@ const ShowDisplay = forwardRef((props, ref) => {
         const drawPoint = (x, y, color, label) => {
             context.beginPath();
             context.fillStyle = color;
-            context.arc(x, y, canvas.height * 0.006, 0, 2 * Math.PI);
+            context.arc(x, y, canvas.height * DOT_RELATIVE_SIZE, 0, 2 * Math.PI);
             context.fill();
             context.closePath();
 
@@ -357,7 +367,6 @@ const ShowDisplay = forwardRef((props, ref) => {
                     continue;
                 }
 
-                // const cords = convertDotToCords(dot_link.cur_dot.dot_info, width, height);
                 const cords = convertDotLinkToCords(dot_link, width, height, curShowTimestamp,sets);
                 const color = getDotColor(show_user, false, userOptionsHandler.userOptions.useSectionColors);
 
@@ -388,6 +397,84 @@ const ShowDisplay = forwardRef((props, ref) => {
             window.cancelAnimationFrame(animationFrameId)
         }
     }, [curShowTimestamp, cameraOffset, cameraZoom])
+
+
+    /*  ----------------------------  USER HOVER SECTION  ---------------------------- */
+    const check_user_hover = (event) => {
+
+        let left = canvasRef.current.offsetLeft + canvasRef.current.clientLeft;
+        let top = canvasRef.current.offsetTop + canvasRef.current.clientTop;
+
+        let x = (event.pageX - left - translation.x) / translation.s;
+        let y = (event.pageY - top - translation.y) / translation.s;
+
+        // console.log(x, y);
+
+        const dot_margin = Math.max(canvasRef.current.height, canvasRef.current.width) * DOT_RELATIVE_SIZE;
+
+        let wasOnDot = false;
+
+        const userOptions = userOptionsHandler.userOptions;
+        const curSet = getCurSet();
+
+
+        for (let i = 0; i < data.length; i++) {
+            const show_user = data[i];
+
+            const dot_link = show_user.dot_links[curSet];
+
+            if (dot_link === undefined) {
+                console.log("[ShowDisplay.js -> render]: Show User ", show_user, " doesn't have a dot link for " + curSet);
+                continue;
+            }
+
+            const cords = convertDotLinkToCords(dot_link, canvasRef.current.width, canvasRef.current.height, curShowTimestamp,sets);
+
+            // Draw the dot isn't an icon, use dot_margin
+            if (dot_link.cur_dot.dot_icon_id === null) {
+                if (cordsWithinMargin(x, y, cords, dot_margin, dot_margin)) {
+                    // console.log("Hovering over user ", show_user.show_user.label);
+                    userOptionsHandler.changeHighlightUser(show_user.show_user.id, show_user.show_user.label)
+                    return;
+                }
+            }
+            // If it is an icon, use half the width and height as margin
+            else {
+                const icon_width = steps_to_px(dot_link.cur_dot.dot_icon.width_in_steps, canvasRef.current.height);
+                const icon_height = steps_to_px(dot_link.cur_dot.dot_icon.hight_in_steps, canvasRef.current.height);
+                if (cordsWithinMargin(x, y, cords, icon_width / 2, icon_height / 2)) {
+                    // console.log("Hovering over icon ", show_user.show_user.label);
+                    userOptionsHandler.changeHighlightUser(show_user.show_user.id, show_user.show_user.label)
+                    return;
+                }
+            }
+        }
+
+        // If we didn't find anything that we are hovering over, clear the highlight
+        // TODO: Figure out why this causes problems
+        // userOptionsHandler.selectUserForHighlighting();
+        return;
+    }
+
+
+    /**
+     * Cords within margin
+     * @param {Float} x 
+     * @param {Float} y 
+     * @param {Object[Int, Int]} target_cords 
+     * @param {Float} x_margin 
+     * @param {Float} y_margin 
+     * @returns {Boolean} is within margin
+     */
+    const cordsWithinMargin = (x, y, target_cords, x_margin, y_margin) => {
+        if (Math.abs(x - target_cords.x) > x_margin) {
+            return false;
+        }
+        if (Math.abs(y - target_cords.y) > y_margin) {
+            return false;
+        }
+        return true;
+    }
 
 
     /*  -----------------------------  PAN TILT SECTION  ----------------------------- */
@@ -445,8 +532,7 @@ const ShowDisplay = forwardRef((props, ref) => {
     const onPointerDown = (e) => {
         setIsDragging(true);
         setDragStart( getRelEventLocation(e) );
-        // TODO: DOT HOVER
-        // dotHover(e);
+        check_user_hover(e);
     }
 
 
@@ -471,8 +557,7 @@ const ShowDisplay = forwardRef((props, ref) => {
         if (isDragging) {
             setCameraOffset({x: getEventLocation(e).x/cameraZoom - dragStart.x, y: getEventLocation(e).y/cameraZoom - dragStart.y});
         }
-        // TODO: DOT HOVER
-        // dotHover(e);
+        check_user_hover(e);
     }
 
     /**
@@ -488,8 +573,7 @@ const ShowDisplay = forwardRef((props, ref) => {
             setIsDragging(false);
             handlePinch(e)
         }
-        // TODO: DOT HOVER
-        // dotHover(e);
+        check_user_hover(e);
     }
 
     /**
@@ -534,6 +618,32 @@ const ShowDisplay = forwardRef((props, ref) => {
             // console.log(Math.max(tempCameraZoom, MIN_ZOOM))
         }
     }
+
+
+    // Pay attention to mouse and touch events that happen outside of the canvas as well
+    // This prevents dragging from getting "stuck" if the user moves their mouse too fast
+    useEffect(() => {
+
+        // Attach event listeners
+        document.addEventListener('pointerdown', onPointerDown);
+        document.addEventListener('touchstart', (e) => handleTouch(e, onPointerDown));
+        document.addEventListener('mouseup', onPointerUp);
+        document.addEventListener('touchend', (e) => handleTouch(e, onPointerUp));
+        document.addEventListener('mousemove', onPointerMove);
+        document.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove));
+        document.addEventListener('mousemove', onPointerMove);
+
+        // Clean up the event listener when the component unmounts
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown);
+            document.removeEventListener('touchstart', (e) => handleTouch(e, onPointerDown));
+            document.removeEventListener('mouseup', onPointerUp);
+            document.removeEventListener('touchend', (e) => handleTouch(e, onPointerUp));
+            document.removeEventListener('mousemove', onPointerMove);
+            document.removeEventListener('touchmove', (e) => handleTouch(e, onPointerMove));
+            document.removeEventListener('mousemove', onPointerMove);
+        };
+    }, []);
 
 
     return <canvas
